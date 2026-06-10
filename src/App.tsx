@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import Markdown from 'react-markdown';
 import { GameState, INITIAL_MEMBERS, ChatMessage, MessageRole, Member, TheqooPost, SetupStep } from './types';
 import { callGeminiAPI } from './geminiService';
+import { getSceneConfig } from './sceneConfig';
 
 const LOCAL_STORAGE_KEY = 'star_reality_kpop_game_state';
 
@@ -459,7 +460,7 @@ const CharacterCreationWizard = ({ onComplete, members }: { onComplete: (data: a
                   <div className="space-y-2">
                     <label className="text-xs font-black text-[#A0663A] uppercase">选择模型</label>
                     <div className="grid grid-cols-2 gap-2">
-                      {[{id:'deepseek-v4-flash',name:'Flash',desc:'快速省钱'},{id:'deepseek-v4-pro',name:'Pro',desc:'质量更好'}].map(m => (
+                      {[{id:'deepseek-v4-flash',name:'Flash',desc:'快速省钱'},{id:'deepseek-v3',name:'V3',desc:'质量更好'}].map(m => (
                         <button key={m.id} onClick={() => setData({...data, playerModel: m.id})}
                           className={`p-3 rounded-xl border text-left transition-all ${data.playerModel === m.id ? 'bg-[#F5E6D0] border-[#C4936A] text-[#A0663A]' : 'bg-white border-[#EAE0D5] text-[#3D2B1F]'}`}>
                           <div className="font-bold text-[11px]">{m.name}</div>
@@ -794,7 +795,7 @@ export default function App() {
     try {
       const response = await Promise.race([
         callGeminiAPI(stateToUse.history.slice(-10), stateToUse),
-        new Promise((_, reject) => setTimeout(() => reject(new Error("通讯超时，请重试。")), 180000))
+        new Promise((_, reject) => setTimeout(() => reject(new Error("通讯超时，请重试。")), 60000))
       ]) as string;
       processAIResponse(response, stateToUse);
     } catch(e) {
@@ -918,9 +919,22 @@ export default function App() {
   const sidebarLabel = isMomMode ? '母女信任度' : isCPMode ? (lang === 'traditional' ? 'CP 羈絆值' : 'CP 羁绊值') : (lang === 'traditional' ? '角色狀態' : '角色状态');
   const modeLabel = isMomMode ? '宝妈' : isCPMode ? '助攻' : '攻略';
 
+  const sceneConfig = getSceneConfig(gameState.currentScene);
+
   return (
-    <div className="flex h-screen overflow-hidden relative"
-      style={{ background: wallpaper ? `url(${wallpaper}) center/cover no-repeat` : '#FAF7F2' }}>
+    <div className="flex h-screen overflow-hidden relative">
+      {/* 场景背景层 */}
+      <div
+        className="absolute inset-0 z-0 transition-all duration-700 scene-fade"
+        style={{ background: wallpaper ? `url(${wallpaper}) center/cover no-repeat` : sceneConfig.bg }}
+      />
+      {/* 场景叠加层 */}
+      <div
+        className="absolute inset-0 z-0"
+        style={{ background: wallpaper ? 'transparent' : sceneConfig.overlay }}
+      />
+      {/* 内容层 */}
+      <div className="absolute inset-0 z-10 flex h-screen overflow-hidden relative">
       {showConfirmReset && (
         <div className="absolute inset-0 z-[100] bg-black/60 backdrop-blur-md flex items-center justify-center p-4">
           <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-white rounded-[3rem] p-10 max-w-sm w-full shadow-2xl text-center space-y-6 border border-[#EAE0D5]">
@@ -943,7 +957,7 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      <aside className="w-72 border-r border-[#EAE0D5] flex-shrink-0 flex-col hidden lg:flex" style={{background: wallpaper ? 'rgba(250,247,242,0.85)' : '#FAF7F2'}}>
+      <aside className="w-72 border-r border-[#EAE0D5] flex-shrink-0 flex-col hidden lg:flex" style={{background: 'rgba(250,247,242,0.88)'}}>
         <div className="p-6 border-b border-[#EAE0D5]">
           <h1 className="text-base font-black text-[#C4936A] tracking-tighter flex items-center gap-2"><Gamepad2 className="w-5 h-5" /> 爱豆收集梦想生活</h1>
           <div className="flex items-center gap-2 mt-2">
@@ -1012,7 +1026,7 @@ export default function App() {
         </div>
       </aside>
 
-      <main className="flex-1 flex flex-col h-full lg:rounded-l-[2rem] lg:shadow-sm overflow-hidden" style={{background: wallpaper ? 'rgba(255,255,255,0.82)' : 'white'}}>
+      <main className="flex-1 flex flex-col h-full lg:rounded-l-[2rem] lg:shadow-sm overflow-hidden" style={{background: 'rgba(255,255,255,0.85)'}}>
         <header className="h-16 bg-white border-b border-[#EAE0D5] px-4 flex items-center justify-between z-10 flex-shrink-0">
           <div className="flex items-center gap-3">
             <button onClick={handleReset} className="lg:hidden p-2 text-[#C4936A] hover:bg-[#F5E6D0] rounded-xl"><RefreshCw className="w-4 h-4" /></button>
@@ -1130,6 +1144,7 @@ export default function App() {
         </div>
       </main>
 
+      </div>
       <script src="https://cdn.jsdelivr.net/npm/opencc-js@1.0.5/dist/umd/full.js"></script>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&display=swap');
