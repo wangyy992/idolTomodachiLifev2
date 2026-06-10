@@ -1,12 +1,61 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Noto+Sans+KR:wght@300;400;700&display=swap');
 @import "tailwindcss";
 
-@theme {
-  --font-sans: "Outfit", "Noto Sans KR", ui-sans-serif, system-ui, sans-serif;
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
 body {
-  margin: 0;
+  font-family: 'Noto Sans SC', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow: hidden;
+  background: #0d1117;
+  touch-action: manipulation;
+}
+
+input, textarea, select {
+  font-size: 16px !important;
+  touch-action: manipulation;
+}
+
+/* 防止iOS橡皮筋滚动 */
+#root {
+  width: 100vw;
+  height: 100dvh;
+  overflow: hidden;
+  position: fixed;
+}
+
+/* 自定义滚动条 */
+.custom-scroll::-webkit-scrollbar {
+  width: 3px;
+}
+.custom-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scroll::-webkit-scrollbar-thumb {
+  background: rgba(196, 147, 106, 0.4);
+  border-radius: 10px;
+}
+
+/* 对话框文字动画 */
+@keyframes fadeInChar {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.dialogue-text {
+  animation: fadeInChar 0.3s ease-in;
+}
+
+/* 场景切换淡入淡出 */
+@keyframes sceneFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.scene-fade {
+  animation: sceneFadeIn 0.3s ease-in-out;
 }
