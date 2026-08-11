@@ -6,6 +6,7 @@ import { GameState, INITIAL_MEMBERS, ChatMessage, MessageRole, Member, TheqooPos
 import { callGeminiAPI } from './geminiService';
 import { getSceneConfig } from './sceneConfig';
 import WorldView from './WorldView';
+import { nextTime, type WorldLocation, type Activity } from './worldConfig';
 
 const LOCAL_STORAGE_KEY = 'star_reality_kpop_game_state';
 
@@ -690,6 +691,9 @@ export default function App() {
   const [isTraditional, setIsTraditional] = useState(false);
   const [showSaveSlots, setShowSaveSlots] = useState(false);
   const [worldMode, setWorldMode] = useState(true); // 俯视世界视图 ⟷ 剧情对话
+  const [worldDay, setWorldDay] = useState(1);
+  const [worldSlot, setWorldSlot] = useState(0);
+  const [worldLocation, setWorldLocation] = useState('practice_room');
   const [wallpaper, setWallpaper] = useState<string>(() => localStorage.getItem('wallpaper') || '');
 
   const handleWallpaperUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -906,11 +910,20 @@ export default function App() {
     await handleAIStep(textToSend, nextState);
   };
 
-  // 从俯视世界点击爱豆 → 切回剧情，预填“走近”动作交给 DeepSeek 生成相遇剧情
-  const handleTalkTo = (m: Member) => {
+  // 从俯视世界点击爱豆 → 切回剧情，预填带场景/心情语境的“走近”动作交给 DeepSeek
+  const handleTalkTo = (m: Member, ctx?: { location: WorldLocation; activity: Activity }) => {
     setWorldMode(false);
     const isTw = (gameState as any).language === 'traditional';
-    setInput(isTw ? `（我走近${m.name}，和ta打個招呼）` : `（我走近${m.name}，和ta打个招呼）`);
+    const where = ctx ? `在${ctx.location.label}` : '';
+    const doing = ctx ? `（她正${ctx.activity.label}，${ctx.activity.mood}）` : '';
+    setInput(isTw
+      ? `（我${where}走近${m.name}，和ta打個招呼）${doing}`
+      : `（我${where}走近${m.name}，和ta打个招呼）${doing}`);
+  };
+
+  const handleAdvanceTime = () => {
+    const { day, slot } = nextTime(worldDay, worldSlot);
+    setWorldDay(day); setWorldSlot(slot);
   };
 
   if (gameState.setupStep === SetupStep.CREATION) return <CharacterCreationWizard onComplete={handleCreationComplete} members={gameState.members} />;
@@ -926,7 +939,6 @@ export default function App() {
 
   // 俯视世界里出现的爱豆：优先玩家关注的对象，否则取前若干位
   const worldMembers = targetMembers.length > 0 ? targetMembers : gameState.members.slice(0, 6);
-  const worldScene = getSceneConfig('练习室');
 
   const lang = (gameState as any).language || 'simplified';
   const sidebarLabel = isMomMode ? '母女信任度' : isCPMode ? (lang === 'traditional' ? 'CP 羈絆值' : 'CP 羁绊值') : (lang === 'traditional' ? '角色狀態' : '角色状态');
@@ -1102,8 +1114,11 @@ export default function App() {
           <WorldView
             members={worldMembers}
             playerName={gameState.playerName}
-            sceneConfig={worldScene}
-            sceneLabel={lang === 'traditional' ? '練習室' : '练习室'}
+            day={worldDay}
+            slot={worldSlot}
+            locationId={worldLocation}
+            onTravel={setWorldLocation}
+            onAdvanceTime={handleAdvanceTime}
             onTalk={handleTalkTo}
             lang={lang}
           />
