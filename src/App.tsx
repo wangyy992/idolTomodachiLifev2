@@ -950,6 +950,23 @@ export default function App() {
       return { ...prev, matchmakes: cur.includes(key) ? cur.filter(k => k !== key) : [...cur, key] };
     });
   };
+  // 爱豆两两相遇 → 按撮合意图/既有张力结算关系
+  const handleIdolEncounter = (aId: string, bId: string, kind: 'romance' | 'tension' | 'friendly') => {
+    setGameState(prev => {
+      const rels = { ...(prev.worldRelations || {}) };
+      const k = pairKey(aId, bId);
+      const rel = rels[k] || { affinity: 0, tension: 0 };
+      const affGain = kind === 'romance' ? 2 : kind === 'tension' ? 0 : 1;
+      const tenDelta = kind === 'romance' ? -1 : kind === 'tension' ? 1 : 0;
+      rels[k] = {
+        ...rel,
+        affinity: Math.min(100, (rel.affinity || 0) + affGain),
+        tension: Math.max(0, Math.min(100, (rel.tension || 0) + tenDelta)),
+      };
+      return { ...prev, worldRelations: rels };
+    });
+  };
+
   const handleConfess = (id: string) => {
     setGameState(prev => {
       const k = pairKey(PLAYER, id);
@@ -1161,6 +1178,7 @@ export default function App() {
             onSetIntent={handleSetIntent}
             onToggleMatchmake={handleToggleMatchmake}
             onConfess={handleConfess}
+            onIdolEncounter={handleIdolEncounter}
           />
         </div>
         ) : (

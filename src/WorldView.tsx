@@ -3,7 +3,7 @@ import { MessageCircle, Clock, CalendarDays, ChevronRight, X, Users } from 'luci
 import { Member } from './types';
 import { getSceneConfig } from './sceneConfig';
 import RelationPanel from './RelationPanel';
-import type { WorldRelation, Intent } from './relations';
+import { pairKey, type WorldRelation, type Intent } from './relations';
 import {
   WORLD_LOCATIONS, TIME_SLOTS, AWAY, getActivity, idolsAt, getLocation,
   type Activity, type WorldLocation,
@@ -46,6 +46,9 @@ const SPRITE = 58;
 const TALK_DIST = 9;
 const IDOL_SPEED = 7;
 const PLAYER_SPEED = 22;
+const ENCOUNTER_DIST = 11;       // 爱豆相遇触发距离（百分比）
+const ENCOUNTER_COOLDOWN = 4500; // 同一对相遇冷却（ms）
+const BUBBLE_TTL = 2200;         // 相遇气泡存活（ms）
 
 function rand(min: number, max: number) { return min + Math.random() * (max - min); }
 function clamp(v: number, lo: number, hi: number) { return v < lo ? lo : v > hi ? hi : v; }
@@ -62,7 +65,7 @@ function moveToward(e: Entity, speed: number, dt: number): boolean {
 
 export default function WorldView({
   members, playerName, day, slot, locationId, onTravel, onAdvanceTime, onTalk, lang,
-  relations, intents, matchmakes, onSetIntent, onToggleMatchmake, onConfess,
+  relations, intents, matchmakes, onSetIntent, onToggleMatchmake, onConfess, onIdolEncounter,
 }: {
   members: Member[];
   playerName: string;
@@ -77,6 +80,7 @@ export default function WorldView({
   onSetIntent: (id: string, intent: Intent) => void;
   onToggleMatchmake: (key: string) => void;
   onConfess: (id: string) => void;
+  onIdolEncounter: (aId: string, bId: string, kind: 'romance' | 'tension' | 'friendly') => void;
 }) {
   const tw = lang === 'traditional';
   const location = getLocation(locationId) || WORLD_LOCATIONS[0];
@@ -92,6 +96,11 @@ export default function WorldView({
   const [nearId, setNearId] = useState<string | null>(null);
   const [showSchedule, setShowSchedule] = useState(false);
   const [showRelations, setShowRelations] = useState(false);
+  const bubblesRef = useRef<{ key: string; x: number; y: number; emoji: string; born: number }[]>([]);
+  const cooldownRef = useRef<Map<string, number>>(new Map());
+  // 让主循环拿到最新的 props（循环用空依赖挂载）
+  const encRef = useRef({ matchmakes, relations, onIdolEncounter });
+  encRef.current = { matchmakes, relations, onIdolEncounter };
 
   // 重建当前地点在场的实体（换地点/换时段/换成员时）
   useEffect(() => {
@@ -165,8 +174,22 @@ export default function WorldView({
             e.tx = e.x; e.ty = e.y; if (dx) e.facing = dx < 0 ? 'left' : 'right'; e.moving = true;
           } else moveToward(e, PLAYER_SPEED, dt);
         } else {
-          if (e.moving) { const arrived = moveToward(e, IDOL_SPEED, dt); if (arrived) { e.moving = false; e.waitAcc = rand(0.6, 2.4); } }
-          else { e.waitAcc -= dt; if (e.waitAcc <= 0) { e.tx = rand(BOUND.minX, BOUND.maxX); e.ty = rand(BOUND.minY, BOUND.maxY); e.moving = true; } }
+          if (e.moving) { const arrived = moveToward(e, IDOL_SPEED, dt); if (arrived) { e.moving = false; e.waitAcc = rand(0.5, 2.0); } }
+          else {
+            e.waitAcc -= dt;
+            if (e.waitAcc <= 0) {
+              // 有一定概率朝另一个爱豆走过去（社交聚集 → 自然产生相遇）
+              const others = ents.filter(x => !x.isPlayer && x !== e);
+              if (others.length && Math.random() < 0.5) {
+                const o = others[Math.floor(Math.random() * others.length)];
+                e.tx = clamp(o.x + rand(-5, 5), BOUND.minX, BOUND.maxX);
+                e.ty = clamp(o.y + rand(-5, 5), BOUND.minY, BOUND.maxY);
+              } else {
+                e.tx = rand(BOUND.minX, BOUND.maxX); e.ty = rand(BOUND.minY, BOUND.maxY);
+              }
+              e.moving = true;
+            }
+          }
         }
         if (e.moving) { e.frameAcc += dt; if (e.frameAcc > 0.11) { e.frameAcc = 0; e.frame = (e.frame + 1) % FRAMES; } }
         else e.frame = 0;
@@ -177,6 +200,29 @@ export default function WorldView({
         for (const e of ents) { if (e.isPlayer) continue; const d = Math.hypot(e.x - player.x, e.y - player.y); if (d < best) { best = d; near = e.id; } }
         setNearId(prev => (prev === near ? prev : near));
       }
+
+      // 爱豆两两相遇：走近且过了冷却 → 触发一次互动
+      const idols = ents.filter(e => !e.isPlayer && e.member);
+      const { matchmakes, relations, onIdolEncounter } = encRef.current;
+      for (let i = 0; i < idols.length; i++) {
+        for (let j = i + 1; j < idols.length; j++) {
+          const a = idols[i], b = idols[j];
+          if (Math.hypot(a.x - b.x, a.y - b.y) > ENCOUNTER_DIST) continue;
+          const key = pairKey(a.id, b.id);
+          const last = cooldownRef.current.get(key) || 0;
+          if (now - last < ENCOUNTER_COOLDOWN) continue;
+          cooldownRef.current.set(key, now);
+          const rel = relations[key];
+          const kind: 'romance' | 'tension' | 'friendly' =
+            matchmakes.includes(key) ? 'romance' : (rel && rel.tension >= 45 ? 'tension' : 'friendly');
+          const emoji = kind === 'romance' ? '💗' : kind === 'tension' ? '⚡' : '💬';
+          bubblesRef.current.push({ key: key + now, x: (a.x + b.x) / 2, y: Math.min(a.y, b.y), emoji, born: now });
+          onIdolEncounter(a.id, b.id, kind);
+        }
+      }
+      // 清理过期气泡
+      if (bubblesRef.current.length) bubblesRef.current = bubblesRef.current.filter(bb => now - bb.born < BUBBLE_TTL);
+
       renderAcc += dt; if (renderAcc > 0.033) { renderAcc = 0; setTick(t => (t + 1) % 1000000); }
       raf = requestAnimationFrame(loop);
     };
@@ -261,6 +307,18 @@ export default function WorldView({
               <div className={`${!e.isPlayer ? 'cursor-pointer' : ''} ${isNear ? 'drop-shadow-[0_0_8px_rgba(196,147,106,0.9)]' : ''}`}>
                 <PixelSprite strip={stripsRef.current[e.id] ?? null} facing={e.facing} frame={e.frame} size={SPRITE} />
               </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* 爱豆相遇气泡 */}
+      <div className="absolute inset-0 z-20 pointer-events-none">
+        {bubblesRef.current.map(bb => {
+          const age = clamp((performance.now() - bb.born) / BUBBLE_TTL, 0, 1);
+          return (
+            <div key={bb.key} className="absolute text-2xl" style={{ left: `${bb.x}%`, top: `${bb.y}%`, transform: `translate(-50%, -170%) translateY(${-age * 26}px)`, opacity: 1 - age }}>
+              {bb.emoji}
             </div>
           );
         })}
