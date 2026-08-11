@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { MessageCircle, Clock, CalendarDays, ChevronRight, X, Users } from 'lucide-react';
+import { MessageCircle, Clock, CalendarDays, ChevronRight, X, Users, Rss } from 'lucide-react';
 import { Member } from './types';
 import { getSceneConfig } from './sceneConfig';
 import RelationPanel from './RelationPanel';
@@ -65,7 +65,7 @@ function moveToward(e: Entity, speed: number, dt: number): boolean {
 
 export default function WorldView({
   members, playerName, day, slot, locationId, onTravel, onAdvanceTime, onTalk, lang,
-  relations, intents, matchmakes, onSetIntent, onToggleMatchmake, onConfess, onIdolEncounter,
+  relations, intents, matchmakes, onSetIntent, onToggleMatchmake, onConfess, onIdolEncounter, worldFeed,
 }: {
   members: Member[];
   playerName: string;
@@ -81,6 +81,7 @@ export default function WorldView({
   onToggleMatchmake: (key: string) => void;
   onConfess: (id: string) => void;
   onIdolEncounter: (aId: string, bId: string, kind: 'romance' | 'tension' | 'friendly') => void;
+  worldFeed: { id: string; text: string; kind: string; day: number; slot: number }[];
 }) {
   const tw = lang === 'traditional';
   const location = getLocation(locationId) || WORLD_LOCATIONS[0];
@@ -96,6 +97,7 @@ export default function WorldView({
   const [nearId, setNearId] = useState<string | null>(null);
   const [showSchedule, setShowSchedule] = useState(false);
   const [showRelations, setShowRelations] = useState(false);
+  const [showFeed, setShowFeed] = useState(false);
   const bubblesRef = useRef<{ key: string; x: number; y: number; emoji: string; born: number }[]>([]);
   const cooldownRef = useRef<Map<string, number>>(new Map());
   // 让主循环拿到最新的 props（循环用空依赖挂载）
@@ -269,6 +271,10 @@ export default function WorldView({
 
       {/* 右上：日程 + 推进时间 */}
       <div className="absolute top-3 right-3 z-30 flex gap-2">
+        <button onClick={() => setShowFeed(true)} className="relative px-3 py-1.5 rounded-xl bg-white/90 text-[#3D2B1F] text-[11px] font-black flex items-center gap-1.5 hover:bg-white transition-all shadow">
+          <Rss className="w-3.5 h-3.5" /> {tw ? '動態' : '动态'}
+          {worldFeed.length > 0 && <span className="absolute -top-1 -right-1 min-w-[15px] h-[15px] px-1 rounded-full bg-[#e84393] text-white text-[8px] flex items-center justify-center">{worldFeed.length}</span>}
+        </button>
         <button onClick={() => setShowRelations(true)} className="px-3 py-1.5 rounded-xl bg-white/90 text-[#3D2B1F] text-[11px] font-black flex items-center gap-1.5 hover:bg-white transition-all shadow">
           <Users className="w-3.5 h-3.5" /> {tw ? '關係' : '关系'}
         </button>
@@ -341,6 +347,31 @@ export default function WorldView({
           );
         })}
       </div>
+
+      {/* 世界动态流 */}
+      {showFeed && (
+        <div className="absolute inset-0 z-40 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setShowFeed(false)}>
+          <div className="bg-white rounded-2xl p-5 max-w-md w-full max-h-[80%] overflow-auto shadow-2xl" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-base font-black text-[#3D2B1F] flex items-center gap-2"><Rss className="w-4 h-4 text-[#C4936A]" /> {tw ? '世界動態' : '世界动态'}</h3>
+              <button onClick={() => setShowFeed(false)} className="p-1.5 rounded-lg hover:bg-[#F5E6D0] text-[#A0663A]"><X className="w-4 h-4" /></button>
+            </div>
+            {worldFeed.length === 0 ? (
+              <div className="text-[11px] text-[#A0663A] py-3">{tw ? '暫無動態。推進時段後，其它地點的愛豆也會各自相處，這裡會記錄下來。' : '暂无动态。推进时段后，其它地点的爱豆也会各自相处，这里会记录下来。'}</div>
+            ) : (
+              <div className="space-y-2">
+                {worldFeed.map(f => (
+                  <div key={f.id} className="flex items-center gap-2 bg-[#FAF7F2] rounded-xl p-2.5 border border-[#EAE0D5]">
+                    <span className="text-base">{f.kind === 'romance' ? '💗' : f.kind === 'tension' ? '⚡' : '💬'}</span>
+                    <span className="text-[11px] font-bold text-[#3D2B1F] flex-1">{f.text}</span>
+                    <span className="text-[9px] text-[#A0663A] whitespace-nowrap">D{f.day}·{TIME_SLOTS[f.slot]}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* 关系网面板 */}
       {showRelations && (

@@ -6,8 +6,8 @@ import { GameState, INITIAL_MEMBERS, ChatMessage, MessageRole, Member, TheqooPos
 import { callGeminiAPI } from './geminiService';
 import { getSceneConfig } from './sceneConfig';
 import WorldView from './WorldView';
-import { nextTime, type WorldLocation, type Activity } from './worldConfig';
-import { seedIdolRelations, pairKey, PLAYER, type Intent } from './relations';
+import { nextTime, idolsAt, WORLD_LOCATIONS, type WorldLocation, type Activity } from './worldConfig';
+import { seedIdolRelations, pairKey, deriveType, hasFlag, PLAYER, type Intent } from './relations';
 
 const LOCAL_STORAGE_KEY = 'star_reality_kpop_game_state';
 
@@ -691,10 +691,17 @@ export default function App() {
   const [showDrawer, setShowDrawer] = useState(false);
   const [isTraditional, setIsTraditional] = useState(false);
   const [showSaveSlots, setShowSaveSlots] = useState(false);
-  const [worldMode, setWorldMode] = useState(true); // 俯视世界视图 ⟷ 剧情对话
-  const [worldDay, setWorldDay] = useState(1);
-  const [worldSlot, setWorldSlot] = useState(0);
-  const [worldLocation, setWorldLocation] = useState('practice_room');
+  const [worldMode, setWorldMode] = useState(true); // 俯视世界视图 ⟷ 剧情对话（临时UI，不持久化）
+  const [toasts, setToasts] = useState<{ id: string; text: string; kind: string }[]>([]);
+  const worldDay = gameState.worldDay ?? 1;
+  const worldSlot = gameState.worldSlot ?? 0;
+  const worldLocation = gameState.worldLocation ?? 'practice_room';
+  const setWorldLocation = (loc: string) => setGameState(p => ({ ...p, worldLocation: loc }));
+  const pushToast = (text: string, kind: string) => {
+    const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+    setToasts(t => [...t, { id, text, kind }]);
+    setTimeout(() => setToasts(t => t.filter(x => x.id !== id)), 4800);
+  };
   const [wallpaper, setWallpaper] = useState<string>(() => localStorage.getItem('wallpaper') || '');
 
   const handleWallpaperUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -753,6 +760,7 @@ export default function App() {
     return text;
   };
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const prevTypesRef = useRef<Record<string, string> | null>(null);
 
   useEffect(() => { localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(gameState)); }, [gameState]);
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [gameState.history]);
@@ -765,6 +773,43 @@ export default function App() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gameState.setupStep]);
+
+  // 关系跳档里程碑 → toast
+  useEffect(() => {
+    if (gameState.setupStep === SetupStep.CREATION) return;
+    const RANK: Record<string, number> = { 陌生: 0, 眼熟: 1, 普通认识: 2, 朋友: 3, 好友: 4, 挚友: 5, 暧昧: 5, 深度暧昧: 6, 恋人: 7, 疏远: -1, 交恶: -2 };
+    const NOTABLE = new Set(['朋友', '好友', '挚友', '暧昧', '深度暧昧', '恋人', '交恶']);
+    const rels = gameState.worldRelations || {};
+    const intents = gameState.relationIntents || {};
+    const matchmakes = gameState.matchmakes || [];
+    const targets = gameState.members.filter(m => (gameState.targets || []).includes(m.id));
+    const cur: Record<string, string> = {};
+    // 玩家↔爱豆
+    for (const m of targets) {
+      const confessed = hasFlag(rels[pairKey(PLAYER, m.id)], 'confessed');
+      cur[`P:${m.id}`] = deriveType(m.affection || 0, 0, { romance: intents[m.id] === 'romance', confessed });
+    }
+    // 爱豆↔爱豆
+    for (const [k, r] of Object.entries(rels)) {
+      const [a, b] = k.split('|');
+      if (a === PLAYER || b === PLAYER) continue;
+      cur[k] = deriveType(r.affinity, r.tension, { romance: matchmakes.includes(k), confessed: hasFlag(r, 'confessed') });
+    }
+    const prev = prevTypesRef.current;
+    if (prev) {
+      for (const [k, t] of Object.entries(cur)) {
+        const old = prev[k];
+        if (old && old !== t && NOTABLE.has(t) && ((RANK[t] ?? 0) > (RANK[old] ?? 0) || t === '交恶')) {
+          const label = (id: string) => id === PLAYER ? '你' : (gameState.members.find(m => m.id === id)?.name || id);
+          const who = k.startsWith('P:') ? `你 和 ${label(k.slice(2))}` : `${label(k.split('|')[0])} 和 ${label(k.split('|')[1])}`;
+          const emoji = t === '恋人' ? '💞' : (t === '暧昧' || t === '深度暧昧') ? '💗' : t === '交恶' ? '💥' : '✨';
+          pushToast(`${who} 现在是「${t}」${emoji}`, t === '交恶' ? 'tension' : (RANK[t] >= 5 ? 'romance' : 'friendly'));
+        }
+      }
+    }
+    prevTypesRef.current = cur;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gameState.worldRelations, gameState.members, gameState.relationIntents, gameState.matchmakes, gameState.setupStep]);
 
   const handleCreationComplete = (data: any) => {
     const isCPMode = data.gameMode === 'CPCP';
@@ -958,9 +1003,35 @@ export default function App() {
       : `（我${where}走近${m.name}，和ta打个招呼）${doing}`);
   };
 
+  // 推进时段：先结算"你不在场"的其它地点里同处一地的爱豆对（后台世界推进），再跳时间
   const handleAdvanceTime = () => {
-    const { day, slot } = nextTime(worldDay, worldSlot);
-    setWorldDay(day); setWorldSlot(slot);
+    setGameState(prev => {
+      const day = prev.worldDay ?? 1, slot = prev.worldSlot ?? 0;
+      const here = prev.worldLocation ?? 'practice_room';
+      const rels = { ...(prev.worldRelations || {}) };
+      const feed = [...(prev.worldFeed || [])];
+      const tmembers = prev.members.filter(m => (prev.targets || []).includes(m.id));
+      for (const L of WORLD_LOCATIONS) {
+        if (L.id === here) continue; // 你在的地方已经现场结算过
+        const present = idolsAt(tmembers, L.id, day, slot);
+        for (let i = 0; i < present.length; i++) {
+          for (let j = i + 1; j < present.length; j++) {
+            if (Math.random() > 0.6) continue;
+            const a = present[i], b = present[j], k = pairKey(a.id, b.id);
+            const match = (prev.matchmakes || []).includes(k);
+            const cur = rels[k] || { affinity: 0, tension: 0 };
+            rels[k] = {
+              ...cur,
+              affinity: Math.min(100, (cur.affinity || 0) + (match ? 2 : 1)),
+              tension: Math.max(0, (cur.tension || 0) + ((cur.tension || 0) >= 50 ? (match ? -1 : 1) : 0)),
+            };
+            feed.unshift({ id: `${k}-${day}-${slot}-${Math.random().toString(36).slice(2, 6)}`, text: `${a.name} × ${b.name} 在${L.label}相处`, kind: match ? 'romance' : 'friendly', day, slot });
+          }
+        }
+      }
+      const nt = nextTime(day, slot);
+      return { ...prev, worldRelations: rels, worldFeed: feed.slice(0, 15), worldDay: nt.day, worldSlot: nt.slot };
+    });
   };
 
   // 关系意图 / 撮合 / 表白
@@ -1022,6 +1093,17 @@ export default function App() {
 
   return (
     <div className="flex h-screen overflow-hidden relative">
+      {/* 关系里程碑 toast */}
+      {toasts.length > 0 && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[200] flex flex-col items-center gap-2 pointer-events-none">
+          {toasts.map(t => (
+            <motion.div key={t.id} initial={{ opacity: 0, y: -12, scale: 0.9 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0 }}
+              className={`px-4 py-2 rounded-full text-xs font-black text-white shadow-lg ${t.kind === 'romance' ? 'bg-[#e84393]' : t.kind === 'tension' ? 'bg-[#c0392b]' : 'bg-[#C4936A]'}`}>
+              {t.text}
+            </motion.div>
+          ))}
+        </div>
+      )}
       {/* 场景背景层 */}
       <div
         className="absolute inset-0 z-0 transition-all duration-700 scene-fade"
@@ -1202,6 +1284,7 @@ export default function App() {
             onToggleMatchmake={handleToggleMatchmake}
             onConfess={handleConfess}
             onIdolEncounter={handleIdolEncounter}
+            worldFeed={gameState.worldFeed || []}
           />
         </div>
         ) : (

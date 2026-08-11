@@ -144,6 +144,11 @@ export interface GameState {
   worldRelations?: Record<string, { affinity: number; tension: number; note?: string; flags?: string[] }>;
   relationIntents?: Record<string, 'romance' | 'friend' | 'none'>; // 玩家对某爱豆的意图（key=成员id）
   matchmakes?: string[]; // 玩家想撮合的爱豆对（pairKey）
+  // 自由世界运行状态（持久化）
+  worldDay?: number;
+  worldSlot?: number;
+  worldLocation?: string;
+  worldFeed?: { id: string; text: string; kind: string; day: number; slot: number }[]; // 世界动态流
 }
 
 export const INITIAL_MEMBERS: Member[] = [
