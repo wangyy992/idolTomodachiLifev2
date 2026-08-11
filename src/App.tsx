@@ -764,7 +764,7 @@ export default function App() {
 
   useEffect(() => { localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(gameState)); }, [gameState]);
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [gameState.history]);
-  useEffect(() => { setApiKeyMissing(!import.meta.env.VITE_DEEPSEEK_API_KEY); }, []);
+  // 密钥现由服务端持有，前端不再探测（真缺失时由 /api/chat 报错提示）
 
   // 首次进入世界时，用各成员的 initialRelationships 播种爱豆↔爱豆关系
   useEffect(() => {

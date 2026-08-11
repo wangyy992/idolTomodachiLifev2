@@ -4,9 +4,7 @@ import { PLAYER } from './relations';
 export async function callGeminiAPI(messages: ChatMessage[], gameState: GameState) {
   const playerApiKey = (gameState as any).playerApiKey || '';
   const playerModel = (gameState as any).playerModel || 'deepseek-v4-flash';
-  const deepseekKey = playerApiKey || import.meta.env.VITE_DEEPSEEK_API_KEY || '';
-  if (!deepseekKey) throw new Error('API Key missing.');
-  // 玩家自填key时使用玩家选择的模型，否则用默认flash
+  // 密钥不在前端保存：玩家自填则随请求带上，否则由服务端 /api/chat 用环境变量补上
   const modelToUse = playerApiKey ? playerModel : 'deepseek-v4-flash';
 
   const isCPMode = gameState.gameMode === 'CPCP';

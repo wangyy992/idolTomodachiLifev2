@@ -7,7 +7,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const { messages, model, temperature, top_p, max_tokens, apiKey } = req.body;
 
-  const key = apiKey || process.env.VITE_DEEPSEEK_API_KEY;
+  // 服务端专用密钥（DEEPSEEK_API_KEY 不会进前端包）；兼容旧的 VITE_ 命名
+  const key = apiKey || process.env.DEEPSEEK_API_KEY || process.env.VITE_DEEPSEEK_API_KEY;
   if (!key) {
     return res.status(400).json({ error: 'API Key missing' });
   }
