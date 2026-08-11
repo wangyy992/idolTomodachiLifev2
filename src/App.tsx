@@ -5,6 +5,7 @@ import Markdown from 'react-markdown';
 import { GameState, INITIAL_MEMBERS, ChatMessage, MessageRole, Member, TheqooPost, SetupStep } from './types';
 import { callGeminiAPI } from './geminiService';
 import { getSceneConfig } from './sceneConfig';
+import WorldView from './WorldView';
 
 const LOCAL_STORAGE_KEY = 'star_reality_kpop_game_state';
 
@@ -688,6 +689,7 @@ export default function App() {
   const [showDrawer, setShowDrawer] = useState(false);
   const [isTraditional, setIsTraditional] = useState(false);
   const [showSaveSlots, setShowSaveSlots] = useState(false);
+  const [worldMode, setWorldMode] = useState(true); // 俯视世界视图 ⟷ 剧情对话
   const [wallpaper, setWallpaper] = useState<string>(() => localStorage.getItem('wallpaper') || '');
 
   const handleWallpaperUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -904,6 +906,13 @@ export default function App() {
     await handleAIStep(textToSend, nextState);
   };
 
+  // 从俯视世界点击爱豆 → 切回剧情，预填“走近”动作交给 DeepSeek 生成相遇剧情
+  const handleTalkTo = (m: Member) => {
+    setWorldMode(false);
+    const isTw = (gameState as any).language === 'traditional';
+    setInput(isTw ? `（我走近${m.name}，和ta打個招呼）` : `（我走近${m.name}，和ta打个招呼）`);
+  };
+
   if (gameState.setupStep === SetupStep.CREATION) return <CharacterCreationWizard onComplete={handleCreationComplete} members={gameState.members} />;
 
   const isCPMode = gameState.gameMode === 'CPCP';
@@ -914,6 +923,10 @@ export default function App() {
   const daughterProfile = (gameState as any).daughterProfile;
   const momTrustLevel = (gameState as any).momTrustLevel || 50;
   const roundCount = gameState.turnCount || 0;
+
+  // 俯视世界里出现的爱豆：优先玩家关注的对象，否则取前若干位
+  const worldMembers = targetMembers.length > 0 ? targetMembers : gameState.members.slice(0, 6);
+  const worldScene = getSceneConfig('练习室');
 
   const lang = (gameState as any).language || 'simplified';
   const sidebarLabel = isMomMode ? '母女信任度' : isCPMode ? (lang === 'traditional' ? 'CP 羈絆值' : 'CP 羁绊值') : (lang === 'traditional' ? '角色狀態' : '角色状态');
@@ -934,7 +947,7 @@ export default function App() {
         style={{ background: wallpaper ? 'transparent' : sceneConfig.overlay }}
       />
       {/* 内容层 */}
-      <div className="absolute inset-0 z-10 flex h-screen overflow-hidden relative">
+      <div className="absolute inset-0 z-10 flex overflow-hidden">
       {showConfirmReset && (
         <div className="absolute inset-0 z-[100] bg-black/60 backdrop-blur-md flex items-center justify-center p-4">
           <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-white rounded-[3rem] p-10 max-w-sm w-full shadow-2xl text-center space-y-6 border border-[#EAE0D5]">
@@ -1048,6 +1061,14 @@ export default function App() {
           {apiKeyMissing && <div className="bg-[#F5E6D0] text-[#A0663A] text-[10px] font-black px-3 py-1 rounded-full border border-[#EAE0D5] animate-pulse">API KEY MISSING</div>}
           <div className="flex items-center gap-3">
             <button
+              onClick={() => setWorldMode(v => !v)}
+              className={`flex items-center gap-1.5 text-[11px] font-black px-3 py-1.5 rounded-xl border transition-all ${worldMode ? 'bg-[#C4936A] text-white border-[#C4936A]' : 'bg-[#F5E6D0] text-[#A0663A] border-[#EAE0D5] hover:bg-[#EAE0D5]'}`}
+              title={lang === 'traditional' ? '切換俯視世界 / 劇情' : '切换俯视世界 / 剧情'}
+            >
+              {worldMode ? <Zap className="w-3.5 h-3.5" /> : <Users className="w-3.5 h-3.5" />}
+              {worldMode ? (lang === 'traditional' ? '劇情' : '剧情') : (lang === 'traditional' ? '世界' : '世界')}
+            </button>
+            <button
               onClick={() => {
                 const newVal = !isTraditional;
                 setIsTraditional(newVal);
@@ -1076,6 +1097,19 @@ export default function App() {
           </div>
         </header>
 
+        {worldMode ? (
+        <div className="flex-1 overflow-hidden relative">
+          <WorldView
+            members={worldMembers}
+            playerName={gameState.playerName}
+            sceneConfig={worldScene}
+            sceneLabel={lang === 'traditional' ? '練習室' : '练习室'}
+            onTalk={handleTalkTo}
+            lang={lang}
+          />
+        </div>
+        ) : (
+        <>
         <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 custom-scrollbar" style={{background: "transparent"}}>
           <AnimatePresence initial={false}>
             {gameState.history.map((msg, i) => {
@@ -1142,6 +1176,8 @@ export default function App() {
             <button onClick={() => handleSend()} disabled={isLoading || !input.trim()} className="bg-[#C4936A] text-white px-5 rounded-3xl active:scale-95 disabled:opacity-50 flex-shrink-0 hover:bg-[#A0663A] transition-all"><Send className="w-5 h-5" /></button>
           </div>
         </div>
+        </>
+        )}
       </main>
 
       </div>
