@@ -140,6 +140,10 @@ export interface GameState {
     background: string;
   };
   momTrustLevel?: number;
+  // 自由世界关系系统
+  worldRelations?: Record<string, { affinity: number; tension: number; note?: string; flags?: string[] }>;
+  relationIntents?: Record<string, 'romance' | 'friend' | 'none'>; // 玩家对某爱豆的意图（key=成员id）
+  matchmakes?: string[]; // 玩家想撮合的爱豆对（pairKey）
 }
 
 export const INITIAL_MEMBERS: Member[] = [

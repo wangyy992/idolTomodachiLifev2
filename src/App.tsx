@@ -7,6 +7,7 @@ import { callGeminiAPI } from './geminiService';
 import { getSceneConfig } from './sceneConfig';
 import WorldView from './WorldView';
 import { nextTime, type WorldLocation, type Activity } from './worldConfig';
+import { seedIdolRelations, pairKey, PLAYER, type Intent } from './relations';
 
 const LOCAL_STORAGE_KEY = 'star_reality_kpop_game_state';
 
@@ -757,6 +758,14 @@ export default function App() {
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [gameState.history]);
   useEffect(() => { setApiKeyMissing(!import.meta.env.VITE_DEEPSEEK_API_KEY); }, []);
 
+  // 首次进入世界时，用各成员的 initialRelationships 播种爱豆↔爱豆关系
+  useEffect(() => {
+    if (gameState.setupStep !== SetupStep.CREATION && !gameState.worldRelations) {
+      setGameState(prev => prev.worldRelations ? prev : { ...prev, worldRelations: seedIdolRelations(prev.members) });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gameState.setupStep]);
+
   const handleCreationComplete = (data: any) => {
     const isCPMode = data.gameMode === 'CPCP';
     const isMomMode = data.gameMode === 'mom';
@@ -913,6 +922,11 @@ export default function App() {
   // 从俯视世界点击爱豆 → 切回剧情，预填带场景/心情语境的“走近”动作交给 DeepSeek
   const handleTalkTo = (m: Member, ctx?: { location: WorldLocation; activity: Activity }) => {
     setWorldMode(false);
+    // 相遇即让好感微涨（占位：M3b 会改由 DeepSeek 结算 deltas）
+    setGameState(prev => ({
+      ...prev,
+      members: prev.members.map(x => x.id === m.id ? { ...x, affection: Math.min(100, (x.affection || 0) + 1) } : x),
+    }));
     const isTw = (gameState as any).language === 'traditional';
     const where = ctx ? `在${ctx.location.label}` : '';
     const doing = ctx ? `（她正${ctx.activity.label}，${ctx.activity.mood}）` : '';
@@ -924,6 +938,26 @@ export default function App() {
   const handleAdvanceTime = () => {
     const { day, slot } = nextTime(worldDay, worldSlot);
     setWorldDay(day); setWorldSlot(slot);
+  };
+
+  // 关系意图 / 撮合 / 表白
+  const handleSetIntent = (id: string, intent: Intent) => {
+    setGameState(prev => ({ ...prev, relationIntents: { ...(prev.relationIntents || {}), [id]: intent } }));
+  };
+  const handleToggleMatchmake = (key: string) => {
+    setGameState(prev => {
+      const cur = prev.matchmakes || [];
+      return { ...prev, matchmakes: cur.includes(key) ? cur.filter(k => k !== key) : [...cur, key] };
+    });
+  };
+  const handleConfess = (id: string) => {
+    setGameState(prev => {
+      const k = pairKey(PLAYER, id);
+      const rels = { ...(prev.worldRelations || {}) };
+      const rel = rels[k] || { affinity: 0, tension: 0 };
+      rels[k] = { ...rel, flags: Array.from(new Set([...(rel.flags || []), 'confessed'])) };
+      return { ...prev, worldRelations: rels };
+    });
   };
 
   if (gameState.setupStep === SetupStep.CREATION) return <CharacterCreationWizard onComplete={handleCreationComplete} members={gameState.members} />;
@@ -1121,6 +1155,12 @@ export default function App() {
             onAdvanceTime={handleAdvanceTime}
             onTalk={handleTalkTo}
             lang={lang}
+            relations={gameState.worldRelations || {}}
+            intents={gameState.relationIntents || {}}
+            matchmakes={gameState.matchmakes || []}
+            onSetIntent={handleSetIntent}
+            onToggleMatchmake={handleToggleMatchmake}
+            onConfess={handleConfess}
           />
         </div>
         ) : (

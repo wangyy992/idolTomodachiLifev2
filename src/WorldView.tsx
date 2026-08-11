@@ -1,7 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { MessageCircle, Clock, CalendarDays, ChevronRight, X } from 'lucide-react';
+import { MessageCircle, Clock, CalendarDays, ChevronRight, X, Users } from 'lucide-react';
 import { Member } from './types';
 import { getSceneConfig } from './sceneConfig';
+import RelationPanel from './RelationPanel';
+import type { WorldRelation, Intent } from './relations';
 import {
   WORLD_LOCATIONS, TIME_SLOTS, AWAY, getActivity, idolsAt, getLocation,
   type Activity, type WorldLocation,
@@ -60,6 +62,7 @@ function moveToward(e: Entity, speed: number, dt: number): boolean {
 
 export default function WorldView({
   members, playerName, day, slot, locationId, onTravel, onAdvanceTime, onTalk, lang,
+  relations, intents, matchmakes, onSetIntent, onToggleMatchmake, onConfess,
 }: {
   members: Member[];
   playerName: string;
@@ -68,6 +71,12 @@ export default function WorldView({
   onAdvanceTime: () => void;
   onTalk: (m: Member, ctx: { location: WorldLocation; activity: Activity }) => void;
   lang: string;
+  relations: Record<string, WorldRelation>;
+  intents: Record<string, Intent>;
+  matchmakes: string[];
+  onSetIntent: (id: string, intent: Intent) => void;
+  onToggleMatchmake: (key: string) => void;
+  onConfess: (id: string) => void;
 }) {
   const tw = lang === 'traditional';
   const location = getLocation(locationId) || WORLD_LOCATIONS[0];
@@ -82,6 +91,7 @@ export default function WorldView({
   const [, setTick] = useState(0);
   const [nearId, setNearId] = useState<string | null>(null);
   const [showSchedule, setShowSchedule] = useState(false);
+  const [showRelations, setShowRelations] = useState(false);
 
   // 重建当前地点在场的实体（换地点/换时段/换成员时）
   useEffect(() => {
@@ -213,6 +223,9 @@ export default function WorldView({
 
       {/* 右上：日程 + 推进时间 */}
       <div className="absolute top-3 right-3 z-30 flex gap-2">
+        <button onClick={() => setShowRelations(true)} className="px-3 py-1.5 rounded-xl bg-white/90 text-[#3D2B1F] text-[11px] font-black flex items-center gap-1.5 hover:bg-white transition-all shadow">
+          <Users className="w-3.5 h-3.5" /> {tw ? '關係' : '关系'}
+        </button>
         <button onClick={() => setShowSchedule(true)} className="px-3 py-1.5 rounded-xl bg-white/90 text-[#3D2B1F] text-[11px] font-black flex items-center gap-1.5 hover:bg-white transition-all shadow">
           <CalendarDays className="w-3.5 h-3.5" /> {tw ? '日程' : '日程'}
         </button>
@@ -270,6 +283,15 @@ export default function WorldView({
           );
         })}
       </div>
+
+      {/* 关系网面板 */}
+      {showRelations && (
+        <RelationPanel
+          members={members} relations={relations} intents={intents} matchmakes={matchmakes}
+          onSetIntent={onSetIntent} onToggleMatchmake={onToggleMatchmake} onConfess={onConfess}
+          onClose={() => setShowRelations(false)} lang={lang}
+        />
+      )}
 
       {/* 日程面板 */}
       {showSchedule && (
