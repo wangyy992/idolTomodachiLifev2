@@ -1,4 +1,5 @@
 import { ChatMessage, MessageRole, GameState, SetupStep } from './types';
+import { PLAYER } from './relations';
 
 export async function callGeminiAPI(messages: ChatMessage[], gameState: GameState) {
   const playerApiKey = (gameState as any).playerApiKey || '';
@@ -770,7 +771,40 @@ ${romanceOutputFormat}`;
   const languageInstruction = (gameState as any).language === 'traditional'
     ? '請使用繁體中文（台灣用語）進行所有輸出，包括劇情正文、對話、選項和所有文字。禁止輸出簡體中文。\n\n'
     : '';
-  const systemPrompt = languageInstruction + (isCPMode ? cpPrompt : isMomMode ? momPrompt : romancePrompt);
+
+  // ==== 关系系统模块（M3b）：意图/撮合/爱豆间关系 + RELDELTA 输出要求 ====
+  const relIntents: Record<string, string> = (gameState as any).relationIntents || {};
+  const matchmakes: string[] = (gameState as any).matchmakes || [];
+  const worldRelations: Record<string, any> = (gameState as any).worldRelations || {};
+  const nameOf = (id: string) => gameState.members.find(m => m.id === id)?.name || id;
+  const tset = new Set(gameState.targets || []);
+
+  const intentLines = (gameState.targets || [])
+    .map(id => { const it = relIntents[id]; if (it === 'romance') return `想攻略 ${nameOf(id)}（往恋爱方向发展）`; if (it === 'friend') return `只想和 ${nameOf(id)} 做朋友，不要恋爱线`; return null; })
+    .filter(Boolean);
+  const matchLines = matchmakes.map(k => {
+    const [a, b] = k.split('|'); const r = worldRelations[k];
+    return `撮合 ${nameOf(a)} × ${nameOf(b)}${r ? `（当前亲密${r.affinity}/张力${r.tension}）` : ''}`;
+  });
+  const idolPairLines: string[] = [];
+  Object.entries(worldRelations).forEach(([k, r]: any) => {
+    const [a, b] = k.split('|');
+    if (a === PLAYER || b === PLAYER || !tset.has(a) || !tset.has(b)) return;
+    idolPairLines.push(`${nameOf(a)}×${nameOf(b)}：亲密${r.affinity} 张力${r.tension}${r.note ? ' —— ' + r.note : ''}`);
+  });
+
+  const relationModule = isMomMode ? '' : `
+
+════════════════════════
+【关系系统】
+${intentLines.length ? '玩家的意图：\n- ' + intentLines.join('\n- ') + '\n' : ''}${matchLines.length ? '玩家想撮合的CP（在剧情里为这些CP自然制造靠近/暧昧的机会，但须符合两人性格，不强行）：\n- ' + matchLines.join('\n- ') + '\n' : ''}${idolPairLines.length ? '爱豆之间当前关系：\n- ' + idolPairLines.join('\n- ') + '\n' : ''}
+【爱豆间关系变化输出】本轮若有爱豆之间（不含玩家）的互动导致关系变化，在最后追加一个块（没有变化就不要输出）：
+RELDELTA_START
+{"pairs":[{"a":"英文id","b":"英文id","affinity":本轮增量整数-5到5,"tension":本轮增量整数-5到5,"memory":"一句话本轮记忆"}]}
+RELDELTA_END
+a/b 必须用成员英文id，只写真正发生了互动的爱豆对。`;
+
+  const systemPrompt = languageInstruction + (isCPMode ? cpPrompt : isMomMode ? momPrompt : romancePrompt) + relationModule;
 
   try {
     const cleanHistory = messages.slice(-10).map(msg => ({

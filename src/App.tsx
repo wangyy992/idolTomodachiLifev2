@@ -834,6 +834,9 @@ export default function App() {
     if (snapshotBlock) { remaining = snapshotBlock.remaining; try { snapshot = JSON.parse(snapshotBlock.content); } catch(e) {} }
     const musicBlock = extractBlock(remaining, 'MUSICSHOW_START', 'MUSICSHOW_END');
     if (musicBlock) { remaining = musicBlock.remaining; try { musicResult = JSON.parse(musicBlock.content); } catch(e) {} }
+    let relDeltas: any = null;
+    const relBlock = extractBlock(remaining, 'RELDELTA_START', 'RELDELTA_END');
+    if (relBlock) { remaining = relBlock.remaining; try { relDeltas = JSON.parse(relBlock.content); } catch(e) {} }
 
     const options = parseOptions(remaining);
     const contentBlocks = parseContentBlocks(remaining);
@@ -877,6 +880,26 @@ export default function App() {
       if (musicResult) next.musicShowHistory = [...(next.musicShowHistory || []), musicResult];
       if (newCards.length > 0) next.collectedCards = [...(next.collectedCards || []), ...newCards];
       if (newCards.length > 0 && prev.setupStep === SetupStep.CARDS) next.setupStep = SetupStep.STARTED;
+
+      // RELDELTA：把 DeepSeek 输出的爱豆间关系增量应用到关系网
+      if (relDeltas?.pairs && Array.isArray(relDeltas.pairs)) {
+        const clampR = (v: number) => (v < 0 ? 0 : v > 100 ? 100 : v);
+        const rels = { ...(next.worldRelations || {}) };
+        for (const p of relDeltas.pairs) {
+          if (!p || !p.a || !p.b) continue;
+          const a = p.a === 'player' ? PLAYER : p.a;
+          const b = p.b === 'player' ? PLAYER : p.b;
+          const k = pairKey(a, b);
+          const cur = rels[k] || { affinity: 0, tension: 0 };
+          rels[k] = {
+            ...cur,
+            affinity: clampR((cur.affinity || 0) + (Number(p.affinity) || 0)),
+            tension: clampR((cur.tension || 0) + (Number(p.tension) || 0)),
+            ...(p.memory ? { note: String(p.memory) } : {}),
+          };
+        }
+        next.worldRelations = rels;
+      }
 
       next.turnCount = (prev.turnCount || 0) + 1;
 
