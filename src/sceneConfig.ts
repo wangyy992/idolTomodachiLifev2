@@ -74,6 +74,11 @@ export const SCENE_CONFIG: Record<string, {
     bg: 'linear-gradient(180deg, #0d0d0d 0%, #1a0a1a 30%, #2d1040 60%, #1a0828 100%)',
     overlay: 'rgba(0,0,0,0.2)',
   },
+  'concert': {
+    label: '演唱会现场',
+    bg: 'radial-gradient(120% 90% at 50% 0%, #3a1a5a 0%, #24123f 35%, #140a26 70%, #0a0514 100%)',
+    overlay: 'rgba(20,0,40,0.25)',
+  },
 };
 
 // 场景名映射（AI输出的中文场景名 → 场景ID）
