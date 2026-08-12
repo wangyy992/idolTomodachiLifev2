@@ -65,7 +65,7 @@ function moveToward(e: Entity, speed: number, dt: number): boolean {
 
 export default function WorldView({
   members, playerName, day, slot, locationId, onTravel, onAdvanceTime, onTalk, lang,
-  relations, intents, matchmakes, onSetIntent, onToggleMatchmake, onConfess, onIdolEncounter, worldFeed,
+  relations, intents, matchmakes, onSetIntent, onToggleMatchmake, onConfess, onIdolEncounter, worldFeed, onWatchEncounter,
 }: {
   members: Member[];
   playerName: string;
@@ -82,6 +82,7 @@ export default function WorldView({
   onConfess: (id: string) => void;
   onIdolEncounter: (aId: string, bId: string, kind: 'romance' | 'tension' | 'friendly') => void;
   worldFeed: { id: string; text: string; kind: string; day: number; slot: number }[];
+  onWatchEncounter: (a: Member, b: Member, ctx: { location: WorldLocation }) => void;
 }) {
   const tw = lang === 'traditional';
   const location = getLocation(locationId) || WORLD_LOCATIONS[0];
@@ -95,6 +96,7 @@ export default function WorldView({
   const keysRef = useRef<Set<string>>(new Set());
   const [, setTick] = useState(0);
   const [nearId, setNearId] = useState<string | null>(null);
+  const [watchable, setWatchable] = useState<{ aId: string; bId: string } | null>(null);
   const [showSchedule, setShowSchedule] = useState(false);
   const [showRelations, setShowRelations] = useState(false);
   const [showFeed, setShowFeed] = useState(false);
@@ -222,6 +224,21 @@ export default function WorldView({
           onIdolEncounter(a.id, b.id, kind);
         }
       }
+      // 可围观的爱豆对：两人靠近，且玩家也在旁边
+      let wpair: { aId: string; bId: string } | null = null;
+      if (player) {
+        let wbest = 16;
+        for (let i = 0; i < idols.length; i++) {
+          for (let j = i + 1; j < idols.length; j++) {
+            const a = idols[i], b = idols[j];
+            if (Math.hypot(a.x - b.x, a.y - b.y) > ENCOUNTER_DIST + 3) continue;
+            const dp = Math.hypot(player.x - (a.x + b.x) / 2, player.y - (a.y + b.y) / 2);
+            if (dp < wbest) { wbest = dp; wpair = { aId: a.id, bId: b.id }; }
+          }
+        }
+      }
+      setWatchable(prev => (prev?.aId === wpair?.aId && prev?.bId === wpair?.bId ? prev : wpair));
+
       // 清理过期气泡
       if (bubblesRef.current.length) bubblesRef.current = bubblesRef.current.filter(bb => now - bb.born < BUBBLE_TTL);
 
@@ -329,6 +346,21 @@ export default function WorldView({
           );
         })}
       </div>
+
+      {/* 围观爱豆相遇 */}
+      {watchable && (() => {
+        const a = ents.find(e => e.id === watchable.aId);
+        const b = ents.find(e => e.id === watchable.bId);
+        if (!a || !b || !a.member || !b.member) return null;
+        const mx = (a.x + b.x) / 2, my = Math.min(a.y, b.y);
+        return (
+          <div className="absolute z-[25]" style={{ left: `${mx}%`, top: `${my}%`, transform: 'translate(-50%, -230%)' }}>
+            <button onClick={() => onWatchEncounter(a.member!, b.member!, { location })} className="px-3 py-1.5 rounded-full bg-[#3D2B1F] text-white text-[10px] font-black flex items-center gap-1 shadow-lg hover:bg-black transition-all animate-bounce whitespace-nowrap">
+              👀 {tw ? '圍觀' : '围观'} {a.name}×{b.name}
+            </button>
+          </div>
+        );
+      })()}
 
       {/* 底部：地点切换栏 */}
       <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-30 flex gap-1.5 px-2 py-1.5 rounded-2xl bg-black/40 backdrop-blur max-w-[95%] overflow-x-auto">

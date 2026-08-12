@@ -1004,6 +1004,18 @@ export default function App() {
   };
 
   // 推进时段：先结算"你不在场"的其它地点里同处一地的爱豆对（后台世界推进），再跳时间
+  // 围观两个爱豆相遇 → 切到剧情，让 DeepSeek 演这场戏（关系模块已在 prompt 里，结算走 RELDELTA）
+  const handleWatchEncounter = (a: Member, b: Member, ctx: { location: WorldLocation }) => {
+    setWorldMode(false);
+    const k = pairKey(a.id, b.id);
+    const isMatch = (gameState.matchmakes || []).includes(k);
+    const isTw = (gameState as any).language === 'traditional';
+    const hint = isMatch ? '（我想撮合她们，留意有没有暧昧的火花）' : '';
+    setInput(isTw
+      ? `（我在${ctx.location.label}，看到 ${a.name} 和 ${b.name} 湊在一起，我在旁邊靜靜觀察她們的互動）${hint}`
+      : `（我在${ctx.location.label}，看到 ${a.name} 和 ${b.name} 凑在一起，我在旁边静静观察她们的互动）${hint}`);
+  };
+
   const handleAdvanceTime = () => {
     setGameState(prev => {
       const day = prev.worldDay ?? 1, slot = prev.worldSlot ?? 0;
@@ -1285,6 +1297,7 @@ export default function App() {
             onConfess={handleConfess}
             onIdolEncounter={handleIdolEncounter}
             worldFeed={gameState.worldFeed || []}
+            onWatchEncounter={handleWatchEncounter}
           />
         </div>
         ) : (
