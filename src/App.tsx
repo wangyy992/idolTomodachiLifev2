@@ -8,6 +8,7 @@ import { getSceneConfig } from './sceneConfig';
 import WorldView from './WorldView';
 import FaceCustomizer, { SpritePreview } from './FaceCustomizer';
 import SceneView from './SceneView';
+import WorldPanel from './WorldPanel';
 import { getPlayerAppearance, getDefaultAppearance, type Appearance } from './spriteUtils';
 import { nextTime, idolsAt, getLocation, WORLD_LOCATIONS, type WorldLocation, type Activity } from './worldConfig';
 import { seedIdolRelations, pairKey, deriveType, hasFlag, PLAYER, type Intent } from './relations';
@@ -1213,7 +1214,7 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      <aside className="w-72 border-r border-[#DAD8EE] flex-shrink-0 flex-col hidden lg:flex" style={{background: 'rgba(250,247,242,0.88)'}}>
+      <aside className="w-72 border-r border-[#DAD8EE] flex-shrink-0 flex-col hidden lg:flex" style={{background: 'rgba(243,242,250,0.92)'}}>
         <div className="p-6 border-b border-[#DAD8EE]">
           <h1 className="text-base font-black text-[#5B6BB0] tracking-tighter flex items-center gap-2"><Gamepad2 className="w-5 h-5" /> 爱豆收集梦想生活</h1>
           <div className="flex items-center gap-2 mt-2">
@@ -1222,6 +1223,19 @@ export default function App() {
           </div>
         </div>
         <div className="flex-1 overflow-y-auto p-5 space-y-6 custom-scrollbar">
+          {worldMode && !isMomMode && !isCPMode ? (
+            <WorldPanel
+              members={worldMembers}
+              playerName={gameState.playerName}
+              playerAppearance={gameState.playerAppearance}
+              appearances={gameState.appearances || {}}
+              relations={gameState.worldRelations || {}}
+              intents={gameState.relationIntents || {}}
+              day={worldDay} slot={worldSlot}
+              onCustomize={setCustomizing}
+              lang={lang}
+            />
+          ) : (
           <section>
             <h3 className="text-[10px] font-black text-[#454F87] uppercase tracking-widest mb-3 flex items-center gap-2"><Users className="w-3 h-3" /> {sidebarLabel}</h3>
             {isCPMode ? (
@@ -1258,6 +1272,7 @@ export default function App() {
               ))}</div>
             )}
           </section>
+          )}
         </div>
         <div className="p-5 border-t border-[#DAD8EE] space-y-3">
           <button onClick={saveGame} className="w-full flex items-center justify-center gap-2 py-3 bg-[#5B6BB0] text-white rounded-2xl text-[10px] font-black uppercase hover:bg-[#454F87] transition-all">{lang === "traditional" ? "💾 存檔" : "💾 存档"}</button>

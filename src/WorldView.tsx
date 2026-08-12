@@ -49,6 +49,12 @@ const PLAYER_SPEED = 22;
 const ENCOUNTER_DIST = 11;       // 爱豆相遇触发距离（百分比）
 const ENCOUNTER_COOLDOWN = 4500; // 同一对相遇冷却（ms）
 const BUBBLE_TTL = 2200;         // 相遇气泡存活（ms）
+// 时段光照氛围（上午暖 / 下午亮 / 晚上暮色）
+const TIME_TINT = [
+  'linear-gradient(180deg, rgba(255,214,170,0.16) 0%, rgba(255,190,140,0.05) 40%, transparent 75%)',
+  'linear-gradient(180deg, rgba(255,255,255,0.05) 0%, transparent 60%)',
+  'linear-gradient(180deg, rgba(60,40,110,0.30) 0%, rgba(20,12,45,0.42) 60%, rgba(8,5,22,0.5) 100%)',
+];
 
 function rand(min: number, max: number) { return min + Math.random() * (max - min); }
 function clamp(v: number, lo: number, hi: number) { return v < lo ? lo : v > hi ? hi : v; }
@@ -273,6 +279,9 @@ export default function WorldView({
       <div className="absolute inset-0" style={{ background: 'radial-gradient(120% 80% at 50% 0%, rgba(255,240,210,0.18), transparent 55%)' }} />
       <div className="absolute left-0 right-0" style={{ top: `${BOUND.minY - 6}%`, bottom: 0, background: 'linear-gradient(180deg, rgba(0,0,0,0.05), rgba(0,0,0,0.35))' }} />
       <div className="absolute inset-0" style={{ background: sceneConfig.overlay }} />
+      {/* 时段氛围 + 暗角 */}
+      <div className="absolute inset-0 pointer-events-none transition-all duration-700" style={{ background: TIME_TINT[slot] || TIME_TINT[1] }} />
+      <div className="absolute inset-0 pointer-events-none" style={{ boxShadow: 'inset 0 0 140px 30px rgba(10,6,25,0.35)' }} />
 
       {/* 顶部：时间 + 地点 + 日程按钮 */}
       <div className="absolute top-3 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center gap-1.5">
