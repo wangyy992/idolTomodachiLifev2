@@ -1,20 +1,41 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# 爱豆收集梦想生活 · Idol Tomodachi Life
 
-# Run and deploy your AI Studio app
+一个「Tomodachi Life 式」的韩娱自由世界游戏。玩家和爱豆以像素小人的形态生活在同一张地图上：爱豆按各自的日程自主行动，玩家走近就能触发对话，爱豆之间靠近也会自然产生互动，所有剧情由 DeepSeek 实时生成。
 
-This contains everything you need to run your app locally.
+## 玩法概览
 
-View your app in AI Studio: https://ai.studio/apps/59bbbc7c-1812-4a88-b47f-b0859e3257a6
+- **自由世界地图**：WASD / 点地板移动，9 个地点（练习室、打歌后台、打歌舞台、综艺棚、演唱会现场、宿舍、咖啡厅、便利店、汉江），带时段光照氛围。
+- **自主日程**：每位爱豆按 `(成员, 天, 时段)` 的确定性日程在不同地点活动；没人时「推进时段」等日程变化。
+- **身份系统**：建号时选身份，四层联动——
+  - **起点**：身份决定开场地点（工作人员→后台、粉丝→演唱会现场、女友→宿舍…）
+  - **地图门禁**：进不去的地点在地图上上锁，点击弹出符合身份的提示
+  - **起始好感**：关系型身份自带好感下限（现任女友 62 / 青梅发小 40 / 前任 34 / 暗恋 18）
+  - **剧情框定**：AI 按身份收着写选项与叙事
+- **恋爱 + 拉郎**：攻略你的自担，或撮合爱豆两两成 CP；关系网面板管理意图/撮合/表白。
+- **视觉小说场景**：走近爱豆进入 VN 对话（打字机、聚光、对话气泡、字母选项）。
+- **捏脸**：像素小人换肤色 / 发色 / 半半染 / 服装 / 帽子（多风格待素材）。
+- **剧情回顾**：把对话记录整理成漂亮的故事时间线。
+- **杂项内容块**：打歌结算 / 音番排名、theqoo 帖、KakaoTalk / Weverse / bubble 社媒气泡、收集卡片、存档读档。
+- 繁简双语，桌面 + 手机端适配。
 
-## Run Locally
+## 本地运行
 
-**Prerequisites:**  Node.js
+**前置**：Node.js
 
+```bash
+npm install
+npm run dev
+```
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+## AI 配置
+
+游戏通过 `/api/chat`（Vercel Serverless）代理调用 DeepSeek。
+
+- **部署时**：在环境变量里设置 `VITE_DEEPSEEK_API_KEY`（或 `DEEPSEEK_API_KEY`）。
+- **本地 / 无部署时**：在建号界面直接填入自己的 DeepSeek key，即可免费无限玩。
+
+## 技术栈
+
+React 19 · Vite 6 · TypeScript · Tailwind CSS v4 · motion/react · 像素精灵 HSL 分层换色
+
+> 本作为韩娱向平行世界虚构文游，所有角色剧情均为虚构创作。

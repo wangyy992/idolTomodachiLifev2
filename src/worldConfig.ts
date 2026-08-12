@@ -157,6 +157,15 @@ export function getAccessibleLocations(identity?: string[]): Set<string> {
   return allowed;
 }
 
+// 建号时给玩家看的身份摘要：从哪开场、能进哪些私密场所、和爱豆的起始熟悉度
+export function identitySummary(identity: string[]): { startLabel: string; affFloor: number; unlocked: string[] } {
+  const startLabel = getLocation(getStartLocation(identity))?.label || '练习室';
+  const affFloor = startingAffection(identity);
+  const acc = getAccessibleLocations(identity);
+  const unlocked = [...acc].filter(l => !PUBLIC_LOCS.includes(l)).map(l => getLocation(l)?.label || l);
+  return { startLabel, affFloor, unlocked };
+}
+
 // 进不去的地点，给一句符合身份的解释
 export function lockReason(locationId: string, tw: boolean): string {
   switch (locationId) {

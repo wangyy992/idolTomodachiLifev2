@@ -10,7 +10,7 @@ import FaceCustomizer, { SpritePreview } from './FaceCustomizer';
 import SceneView from './SceneView';
 import WorldPanel from './WorldPanel';
 import { getPlayerAppearance, getDefaultAppearance, type Appearance } from './spriteUtils';
-import { nextTime, idolsAt, getLocation, getStartLocation, startingAffection, WORLD_LOCATIONS, type WorldLocation, type Activity } from './worldConfig';
+import { nextTime, idolsAt, getLocation, getStartLocation, startingAffection, identitySummary, WORLD_LOCATIONS, type WorldLocation, type Activity } from './worldConfig';
 import { seedIdolRelations, pairKey, deriveType, hasFlag, PLAYER, type Intent } from './relations';
 
 const LOCAL_STORAGE_KEY = 'star_reality_kpop_game_state';
@@ -538,6 +538,34 @@ const CharacterCreationWizard = ({ onComplete, members }: { onComplete: (data: a
                   <button key={i} onClick={() => setData({...data, identity: data.identity.includes(i) ? data.identity.filter(x => x !== i) : [...data.identity, i]})} className={`p-3 rounded-xl border text-[11px] transition-all ${data.identity.includes(i) ? 'bg-[#E7E6F6] border-[#5B6BB0] text-[#454F87] font-bold' : 'bg-white border-[#DAD8EE] text-[#2A2A3D]'}`}>{i}</button>
                 ))}</div>
                 <input type="text" value={customIdentity} onChange={e => setCustomIdentity(e.target.value)} placeholder={T('或手动输入自定义身份...','或手動輸入自訂身份...')} className="w-full bg-white border border-[#DAD8EE] rounded-xl p-3 text-base focus:ring-1 focus:ring-[#5B6BB0] outline-none text-[#2A2A3D]" onKeyDown={(e) => { if (e.key === 'Enter') { const val = customIdentity.trim(); if (val && !data.identity.includes(val)) { setData({...data, identity: [...data.identity, val]}); setCustomIdentity(''); } e.preventDefault(); } }} />
+                {(() => {
+                  const chosen = [...data.identity, ...(customIdentity.trim() ? [customIdentity.trim()] : [])];
+                  if (chosen.length === 0) return null;
+                  const s = identitySummary(chosen);
+                  return (
+                    <div className="rounded-2xl bg-gradient-to-br from-[#F3F2FA] to-[#E7E6F6] border border-[#DAD8EE] p-3.5 flex flex-col gap-2.5">
+                      <div className="text-[10px] font-black text-[#454F87] uppercase tracking-widest flex items-center gap-1.5"><Sparkles className="w-3 h-3" /> {T('这个身份意味着','這個身份意味著')}</div>
+                      <div className="flex items-start gap-2 text-[12px] text-[#3c3752]">
+                        <MapPin className="w-3.5 h-3.5 text-[#5B6BB0] mt-0.5 flex-shrink-0" />
+                        {(() => {
+                          const extra = s.unlocked.filter(l => l !== s.startLabel);
+                          const tail = extra.length > 0
+                            ? T(`；还能进入 ${extra.join('、')}`, `；還能進入 ${extra.join('、')}`)
+                            : s.unlocked.length === 0
+                              ? T('；只能在公开场合接触她们', '；只能在公開場合接觸她們')
+                              : '';
+                          return <span>{T('从','從')}<b className="text-[#5B6BB0]">{s.startLabel}</b>{T('开始','開始')}{tail}</span>;
+                        })()}
+                      </div>
+                      <div className="flex items-start gap-2 text-[12px] text-[#3c3752]">
+                        <Heart className="w-3.5 h-3.5 text-[#FF7A93] mt-0.5 flex-shrink-0" />
+                        <span>{s.affFloor > 0
+                          ? <>{T('你们本来就认识，起始好感 ','你們本來就認識，起始好感 ')}<b className="text-[#FF7A93]">{s.affFloor}</b></>
+                          : T('从陌生人开始，好感需要慢慢积累', '從陌生人開始，好感需要慢慢累積')}</span>
+                      </div>
+                    </div>
+                  );
+                })()}
               </>)}
 
               {cur === 'idols' && <MemberPicker label={T('选择你的自担','選擇您的自擔')} />}

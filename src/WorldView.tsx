@@ -482,11 +482,13 @@ export default function WorldView({
                       const a = getActivity(m.id, day, i);
                       const here = a.available && a.loc === locationId;
                       const loc = a.loc === AWAY ? null : getLocation(a.loc);
+                      const gated = a.available && a.loc !== AWAY && !accessible.has(a.loc);
                       return (
                         <td key={i} className={`py-2 px-2 ${i === slot ? 'bg-[#F3F2FA]' : ''}`}>
-                          <div className={`flex items-center gap-1 ${a.available ? 'text-[#2A2A3D]' : 'text-[#B0A89E] line-through'}`}>
-                            {loc && <span>{loc.icon}</span>}
+                          <div className={`flex items-center gap-1 ${!a.available ? 'text-[#B0A89E] line-through' : gated ? 'text-[#B0A89E]' : 'text-[#2A2A3D]'}`}>
+                            {loc && <span className={gated ? 'grayscale opacity-70' : ''}>{loc.icon}</span>}
                             <span className="font-bold">{a.label}</span>
+                            {gated && <Lock className="w-2.5 h-2.5 text-[#B0A89E]" />}
                             {here && i === slot && <span className="text-[8px] text-[#5B6BB0] font-black">· 在这</span>}
                           </div>
                         </td>
@@ -496,7 +498,7 @@ export default function WorldView({
                 ))}
               </tbody>
             </table>
-            <p className="text-[10px] text-[#454F87] mt-3">{tw ? '劃掉=在外地/聯繫不上。點下方地點欄過去找人；沒人就「推進時段」等日程變化。' : '划掉=在外地/联系不上。点下方地点栏过去找人；没人就「推进时段」等日程变化。'}</p>
+            <p className="text-[10px] text-[#454F87] mt-3 flex items-center gap-1 flex-wrap">{tw ? '劃掉=在外地/聯繫不上；' : '划掉=在外地/联系不上；'}<Lock className="w-2.5 h-2.5" />{tw ? '=你的身份進不去。點下方地點欄過去找人；沒人就「推進時段」等日程變化。' : '=你的身份进不去。点下方地点栏过去找人；没人就「推进时段」等日程变化。'}</p>
           </div>
         </div>
       )}
