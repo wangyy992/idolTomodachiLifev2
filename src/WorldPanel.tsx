@@ -25,7 +25,7 @@ export default function WorldPanel({
   const playerA = playerAppearance || getPlayerAppearance(playerName || 'you');
 
   return (
-    <div className="space-y-5">
+    <div className="flex flex-col gap-5">
       {/* 玩家卡片 */}
       <div className="rounded-2xl p-4 text-white shadow-lg relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #6C79C4, #454F87)' }}>
         <div className="absolute -right-6 -top-6 w-24 h-24 rounded-full bg-white/10" />
@@ -42,7 +42,7 @@ export default function WorldPanel({
       {/* 你的爱豆 */}
       <div>
         <h3 className="text-[10px] font-black text-[#454F87] uppercase tracking-widest mb-2.5 flex items-center gap-1.5"><Heart className="w-3 h-3" /> {tw ? '你的愛豆' : '你的爱豆'}</h3>
-        <div className="space-y-2">
+        <div className="flex flex-col gap-2">
           {members.map(m => {
             const romance = intents[m.id] === 'romance';
             const confessed = hasFlag(relations[pairKey(PLAYER, m.id)], 'confessed');

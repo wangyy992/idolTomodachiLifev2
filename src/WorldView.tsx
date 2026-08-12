@@ -408,7 +408,7 @@ export default function WorldView({
             {worldFeed.length === 0 ? (
               <div className="text-[11px] text-[#454F87] py-3">{tw ? '暫無動態。推進時段後，其它地點的愛豆也會各自相處，這裡會記錄下來。' : '暂无动态。推进时段后，其它地点的爱豆也会各自相处，这里会记录下来。'}</div>
             ) : (
-              <div className="space-y-2">
+              <div className="flex flex-col gap-2">
                 {worldFeed.map(f => (
                   <div key={f.id} className="flex items-center gap-2 bg-[#F3F2FA] rounded-xl p-2.5 border border-[#DAD8EE]">
                     <span className="text-base">{f.kind === 'romance' ? '💗' : f.kind === 'tension' ? '⚡' : '💬'}</span>

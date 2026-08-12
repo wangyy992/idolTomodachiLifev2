@@ -109,7 +109,7 @@ export default function SceneView({
       <div className="relative z-20 p-3 sm:p-4">
         <AnimatePresence>
           {atEnd && !isLoading && (showInput || options.length > 0) && (
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="max-w-2xl mx-auto mb-2 space-y-2">
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="max-w-2xl mx-auto mb-2 flex flex-col gap-2">
               {showInput ? (
                 <div className="flex gap-2">
                   <input autoFocus value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') send(); }} placeholder={tw ? '自由行動…' : '自由行动…'} className="flex-1 bg-white/95 rounded-2xl px-4 py-3 text-sm outline-none border border-white/40 text-[#2A2A3D] shadow-lg" />
