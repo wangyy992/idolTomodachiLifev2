@@ -34,7 +34,7 @@ const KKTMessageUI = ({ data }: { data: any }) => (
               <div className="flex flex-col gap-0.5 max-w-[75%]">
                 <div className="bg-white rounded-2xl rounded-tl-none px-3 py-2 shadow-sm">
                   <p className="text-[12px] text-gray-800 leading-relaxed font-medium">{msg.text}</p>
-                  {msg.translation && <p className="text-[11px] text-[#A0663A] mt-0.5 leading-relaxed">{msg.translation}</p>}
+                  {msg.translation && <p className="text-[11px] text-[#454F87] mt-0.5 leading-relaxed">{msg.translation}</p>}
                 </div>
                 <div className="flex items-center gap-1 pl-1">
                   <span className="text-[9px] text-gray-400">{msg.time}</span>
@@ -47,76 +47,76 @@ const KKTMessageUI = ({ data }: { data: any }) => (
         <div className="bg-white pb-2 flex justify-center"><div className="w-24 h-1 bg-gray-300 rounded-full"></div></div>
       </div>
     </div>
-    <div className="text-center mt-2"><span className="text-[10px] text-[#A0663A] font-bold uppercase tracking-widest">KakaoTalk</span></div>
+    <div className="text-center mt-2"><span className="text-[10px] text-[#454F87] font-bold uppercase tracking-widest">KakaoTalk</span></div>
   </div>
 );
 
 const WeversePostUI = ({ data }: { data: any }) => (
-  <div className="my-6 max-w-sm mx-auto font-sans bg-white rounded-3xl overflow-hidden shadow-sm border border-[#EAE0D5]">
-    <div className="px-4 py-3 flex items-center justify-between border-b border-[#EAE0D5]">
+  <div className="my-6 max-w-sm mx-auto font-sans bg-white rounded-3xl overflow-hidden shadow-sm border border-[#DAD8EE]">
+    <div className="px-4 py-3 flex items-center justify-between border-b border-[#DAD8EE]">
       <div className="flex items-center gap-3">
-        <span className="text-[#A0663A] text-lg">{'<'}</span>
-        <div><div className="text-[14px] font-bold text-[#3D2B1F]">帖子</div><div className="text-[10px] text-[#C4936A]">前往社区 {'>'}</div></div>
+        <span className="text-[#454F87] text-lg">{'<'}</span>
+        <div><div className="text-[14px] font-bold text-[#2A2A3D]">帖子</div><div className="text-[10px] text-[#5B6BB0]">前往社区 {'>'}</div></div>
       </div>
-      <div className="flex gap-4 text-[#A0663A] text-lg"><span>↗</span><span>✕</span></div>
+      <div className="flex gap-4 text-[#454F87] text-lg"><span>↗</span><span>✕</span></div>
     </div>
     <div className="px-4 pt-4 pb-2 flex items-start gap-3">
-      <div className="w-10 h-10 rounded-full bg-[#F5E6D0] flex items-center justify-center flex-shrink-0">
-        <span className="text-[#A0663A] font-black text-sm">{data.artist?.[0] || '★'}</span>
+      <div className="w-10 h-10 rounded-full bg-[#E7E6F6] flex items-center justify-center flex-shrink-0">
+        <span className="text-[#454F87] font-black text-sm">{data.artist?.[0] || '★'}</span>
       </div>
       <div className="flex-1">
         <div className="flex items-center gap-1">
-          <span className="text-[14px] font-bold text-[#3D2B1F]">{data.artist}</span>
-          <span className="text-[#C4936A] text-[14px]">✓</span>
+          <span className="text-[14px] font-bold text-[#2A2A3D]">{data.artist}</span>
+          <span className="text-[#5B6BB0] text-[14px]">✓</span>
         </div>
-        <div className="text-[11px] text-[#A0663A]">{data.time}</div>
-        <div className="text-[11px] text-[#C4936A] mt-0.5">查看原文 (한국어)</div>
+        <div className="text-[11px] text-[#454F87]">{data.time}</div>
+        <div className="text-[11px] text-[#5B6BB0] mt-0.5">查看原文 (한국어)</div>
       </div>
-      <span className="text-[#A0663A] text-lg">⋯</span>
+      <span className="text-[#454F87] text-lg">⋯</span>
     </div>
-    <div className="px-4 pb-3"><p className="text-[14px] text-[#3D2B1F] leading-relaxed">{data.content}</p></div>
+    <div className="px-4 pb-3"><p className="text-[14px] text-[#2A2A3D] leading-relaxed">{data.content}</p></div>
     {data.imageDesc && (
-      <div className="w-full bg-[#F5E6D0] aspect-[4/3] flex flex-col items-center justify-center gap-2 p-4">
-        <span className="text-[#A0663A] text-xl">🖼</span>
-        <p className="text-[11px] text-[#A0663A] text-center italic">{data.imageDesc}</p>
+      <div className="w-full bg-[#E7E6F6] aspect-[4/3] flex flex-col items-center justify-center gap-2 p-4">
+        <span className="text-[#454F87] text-xl">🖼</span>
+        <p className="text-[11px] text-[#454F87] text-center italic">{data.imageDesc}</p>
       </div>
     )}
-    <div className="px-4 py-3 flex items-center gap-6 border-t border-[#EAE0D5]">
-      <button className="flex items-center gap-1.5 text-[#A0663A]"><Heart className="w-5 h-5" /><span className="text-[12px]">{(data.likes || 0).toLocaleString()}</span></button>
-      <button className="text-[#A0663A] text-xl">🔖</button>
+    <div className="px-4 py-3 flex items-center gap-6 border-t border-[#DAD8EE]">
+      <button className="flex items-center gap-1.5 text-[#454F87]"><Heart className="w-5 h-5" /><span className="text-[12px]">{(data.likes || 0).toLocaleString()}</span></button>
+      <button className="text-[#454F87] text-xl">🔖</button>
     </div>
   </div>
 );
 
 const BubbleMessageUI = ({ data }: { data: any }) => (
   <div className="my-6 max-w-sm mx-auto font-sans bg-[#F0EBE3] rounded-3xl overflow-hidden shadow-sm">
-    <div className="px-4 py-3 flex items-center justify-between bg-[#F0EBE3] border-b border-[#EAE0D5]">
-      <span className="text-[#C4936A] text-[14px]">{'<'}</span>
-      <span className="text-[16px] font-bold text-[#3D2B1F]">{data.artist}</span>
-      <div className="flex gap-4"><span className="text-[#A0663A]">🔍</span><span className="text-[#A0663A]">⋯</span></div>
+    <div className="px-4 py-3 flex items-center justify-between bg-[#F0EBE3] border-b border-[#DAD8EE]">
+      <span className="text-[#5B6BB0] text-[14px]">{'<'}</span>
+      <span className="text-[16px] font-bold text-[#2A2A3D]">{data.artist}</span>
+      <div className="flex gap-4"><span className="text-[#454F87]">🔍</span><span className="text-[#454F87]">⋯</span></div>
     </div>
     <div className="px-4 py-4 space-y-2">
       {data.messages?.map((msg: any, idx: number) => (
         <div key={idx} className="flex items-start gap-3">
-          <div className="w-9 h-9 rounded-full bg-[#3D2B1F] flex items-center justify-center flex-shrink-0 mt-0.5">
+          <div className="w-9 h-9 rounded-full bg-[#2A2A3D] flex items-center justify-center flex-shrink-0 mt-0.5">
             <span className="text-white text-[16px]">🐱</span>
           </div>
           <div className="flex-1">
             <div className="flex items-center gap-1.5 mb-1">
-              <span className="text-[10px] font-bold text-white bg-[#C4936A] px-1.5 py-0.5 rounded">ARTIST</span>
-              <span className="text-[12px] font-bold text-[#3D2B1F]">{data.artist}</span>
+              <span className="text-[10px] font-bold text-white bg-[#5B6BB0] px-1.5 py-0.5 rounded">ARTIST</span>
+              <span className="text-[12px] font-bold text-[#2A2A3D]">{data.artist}</span>
             </div>
-            <div className="bg-white rounded-2xl rounded-tl-none px-3 py-2 inline-block max-w-[85%] border border-[#EAE0D5]">
-              <p className="text-[13px] text-[#3D2B1F] leading-relaxed">{msg.text}</p>
-              {msg.translation && <p className="text-[12px] text-[#C4936A] mt-0.5 leading-relaxed">{msg.translation}</p>}
+            <div className="bg-white rounded-2xl rounded-tl-none px-3 py-2 inline-block max-w-[85%] border border-[#DAD8EE]">
+              <p className="text-[13px] text-[#2A2A3D] leading-relaxed">{msg.text}</p>
+              {msg.translation && <p className="text-[12px] text-[#5B6BB0] mt-0.5 leading-relaxed">{msg.translation}</p>}
             </div>
-            <div className="text-[10px] text-[#A0663A] mt-1 pl-1">{msg.time}</div>
+            <div className="text-[10px] text-[#454F87] mt-1 pl-1">{msg.time}</div>
           </div>
         </div>
       ))}
     </div>
-    <div className="px-4 py-3 bg-[#F0EBE3] border-t border-[#EAE0D5] flex items-center justify-end gap-4">
-      <span className="text-[#A0663A] text-xl">☺</span><span className="text-[#C4936A] text-xl">➤</span>
+    <div className="px-4 py-3 bg-[#F0EBE3] border-t border-[#DAD8EE] flex items-center justify-end gap-4">
+      <span className="text-[#454F87] text-xl">☺</span><span className="text-[#5B6BB0] text-xl">➤</span>
     </div>
   </div>
 );
@@ -146,9 +146,9 @@ const TheqooPostUI = ({ post }: { post: TheqooPost }) => (
         {post.comments.slice(0, 6).map((comment, idx) => (
           <div key={idx} className="p-4 bg-white">
             <div className="flex gap-3">
-              <div className="w-8 h-8 rounded-xl bg-[#F5E6D0] flex-shrink-0 flex items-center justify-center text-[#A0663A] font-black text-xs">{idx + 1}</div>
+              <div className="w-8 h-8 rounded-xl bg-[#E7E6F6] flex-shrink-0 flex items-center justify-center text-[#454F87] font-black text-xs">{idx + 1}</div>
               <div className="flex-1">
-                <span className="text-[10px] font-black text-[#A0663A]">@{comment.authorId}</span>
+                <span className="text-[10px] font-black text-[#454F87]">@{comment.authorId}</span>
                 <p className="text-sm font-medium text-gray-800 mt-1 leading-relaxed">{comment.content}</p>
                 {comment.translation && <p className="text-[11px] text-gray-500 italic mt-1">{comment.translation}</p>}
               </div>
@@ -163,48 +163,48 @@ const TheqooPostUI = ({ post }: { post: TheqooPost }) => (
 const CharacterCardUI = ({ card }: any) => {
   if (!card || typeof card !== 'object') return null;
   return (
-    <div className="bg-white border border-[#EAE0D5] rounded-3xl overflow-hidden shadow-sm my-6 max-w-md mx-auto font-sans">
-      <div className="bg-[#C4936A] p-5 text-white text-center relative overflow-hidden">
+    <div className="bg-white border border-[#DAD8EE] rounded-3xl overflow-hidden shadow-sm my-6 max-w-md mx-auto font-sans">
+      <div className="bg-[#5B6BB0] p-5 text-white text-center relative overflow-hidden">
         <div className="absolute top-0 right-0 p-4 opacity-20"><Sparkles className="w-12 h-12" /></div>
         <div className="text-[10px] font-black uppercase tracking-widest mb-1 opacity-80">Artist Profile</div>
         <h3 className="text-xl font-bold">{card.name} {card.stageName ? `(${card.stageName})` : ''}</h3>
       </div>
       <div className="p-5 space-y-4 text-left">
         <div className="grid grid-cols-2 gap-3 text-xs">
-          <div className="bg-[#FAF7F2] p-3 rounded-2xl border border-[#EAE0D5]"><div className="text-[#A0663A] font-black mb-1 uppercase text-[9px]">Group</div><div className="font-bold text-[#3D2B1F]">{card.group || '未知团体'}</div></div>
-          <div className="bg-[#FAF7F2] p-3 rounded-2xl border border-[#EAE0D5]"><div className="text-[#A0663A] font-black mb-1 uppercase text-[9px]">Status</div><div className="font-bold text-[#3D2B1F]">{card.status || '活跃中'}</div></div>
+          <div className="bg-[#F3F2FA] p-3 rounded-2xl border border-[#DAD8EE]"><div className="text-[#454F87] font-black mb-1 uppercase text-[9px]">Group</div><div className="font-bold text-[#2A2A3D]">{card.group || '未知团体'}</div></div>
+          <div className="bg-[#F3F2FA] p-3 rounded-2xl border border-[#DAD8EE]"><div className="text-[#454F87] font-black mb-1 uppercase text-[9px]">Status</div><div className="font-bold text-[#2A2A3D]">{card.status || '活跃中'}</div></div>
         </div>
-        {card.publicPersona && <div className="bg-[#FAF7F2] p-4 rounded-2xl border border-[#EAE0D5] text-xs"><span className="font-black text-[#C4936A] block uppercase text-[9px] mb-1">Public Persona</span><p className="text-[#3D2B1F] italic">"{card.publicPersona}"</p></div>}
-        {card.realPersonality && <div className="bg-[#FAF7F2] p-4 rounded-2xl border border-[#EAE0D5] text-xs"><span className="font-black text-[#A0663A] block uppercase text-[9px] mb-1">Real Personality</span><p className="text-[#3D2B1F]">{card.realPersonality}</p></div>}
+        {card.publicPersona && <div className="bg-[#F3F2FA] p-4 rounded-2xl border border-[#DAD8EE] text-xs"><span className="font-black text-[#5B6BB0] block uppercase text-[9px] mb-1">Public Persona</span><p className="text-[#2A2A3D] italic">"{card.publicPersona}"</p></div>}
+        {card.realPersonality && <div className="bg-[#F3F2FA] p-4 rounded-2xl border border-[#DAD8EE] text-xs"><span className="font-black text-[#454F87] block uppercase text-[9px] mb-1">Real Personality</span><p className="text-[#2A2A3D]">{card.realPersonality}</p></div>}
         {Array.isArray(card.weaknesses) && card.weaknesses.length > 0 && (
-          <div className="flex flex-wrap gap-2">{card.weaknesses.map((item: string, i: number) => <span key={i} className="text-[10px] px-3 py-1 bg-[#F5E6D0] text-[#A0663A] rounded-full border border-[#EAE0D5] font-bold"># {item}</span>)}</div>
+          <div className="flex flex-wrap gap-2">{card.weaknesses.map((item: string, i: number) => <span key={i} className="text-[10px] px-3 py-1 bg-[#E7E6F6] text-[#454F87] rounded-full border border-[#DAD8EE] font-bold"># {item}</span>)}</div>
         )}
-        {card.hiddenStory && <div className="pt-2 border-t border-dashed border-[#EAE0D5]"><span className="font-black text-[#A0663A] block uppercase text-[9px] mb-1">Hidden Story</span><p className="text-[11px] text-[#A0663A] italic">{card.hiddenStory}</p></div>}
+        {card.hiddenStory && <div className="pt-2 border-t border-dashed border-[#DAD8EE]"><span className="font-black text-[#454F87] block uppercase text-[9px] mb-1">Hidden Story</span><p className="text-[11px] text-[#454F87] italic">{card.hiddenStory}</p></div>}
       </div>
     </div>
   );
 };
 
 const MusicShowUI = ({ result }: { result: any }) => (
-  <div className="bg-white border border-[#EAE0D5] rounded-[2rem] overflow-hidden shadow-sm my-6 max-w-lg mx-auto font-sans">
-    <div className="bg-[#C4936A] p-5 text-white text-center relative">
+  <div className="bg-white border border-[#DAD8EE] rounded-[2rem] overflow-hidden shadow-sm my-6 max-w-lg mx-auto font-sans">
+    <div className="bg-[#5B6BB0] p-5 text-white text-center relative">
       <div className="text-[10px] font-black uppercase tracking-widest mb-1 opacity-80">Music Bank / Inkigayo</div>
       <h3 className="text-xl font-black tracking-widest">WEEKLY CHAMPION</h3>
       <div className="absolute top-2 right-4 opacity-30"><Sparkles className="w-8 h-8" /></div>
     </div>
     <div className="p-5 space-y-4">
-      <div className="flex flex-col items-center py-4 bg-[#FAF7F2] rounded-3xl border border-[#EAE0D5]">
-        <div className="text-[10px] font-black text-[#A0663A] uppercase mb-1">本次优胜 / Winner</div>
-        <div className="text-2xl font-black text-[#3D2B1F]">{result.winner}</div>
-        <div className="mt-2 flex gap-1">{[1,2,3].map(i => <Sparkles key={i} className="w-4 h-4 text-[#C4936A] animate-pulse" />)}</div>
+      <div className="flex flex-col items-center py-4 bg-[#F3F2FA] rounded-3xl border border-[#DAD8EE]">
+        <div className="text-[10px] font-black text-[#454F87] uppercase mb-1">本次优胜 / Winner</div>
+        <div className="text-2xl font-black text-[#2A2A3D]">{result.winner}</div>
+        <div className="mt-2 flex gap-1">{[1,2,3].map(i => <Sparkles key={i} className="w-4 h-4 text-[#5B6BB0] animate-pulse" />)}</div>
       </div>
       <div className="space-y-3">
         {result.scores?.map((score: any, idx: number) => (
-          <div key={idx} className={`p-4 rounded-2xl border ${score.group === result.winner ? 'bg-[#F5E6D0] border-[#C4936A]' : 'bg-white border-[#EAE0D5]'}`}>
-            <div className="flex justify-between items-center mb-2"><span className="font-bold text-sm text-[#3D2B1F]">{score.group}</span><span className="font-black text-[#C4936A] text-sm">{score.total} pt</span></div>
+          <div key={idx} className={`p-4 rounded-2xl border ${score.group === result.winner ? 'bg-[#E7E6F6] border-[#5B6BB0]' : 'bg-white border-[#DAD8EE]'}`}>
+            <div className="flex justify-between items-center mb-2"><span className="font-bold text-sm text-[#2A2A3D]">{score.group}</span><span className="font-black text-[#5B6BB0] text-sm">{score.total} pt</span></div>
             <div className="grid grid-cols-5 gap-1">
               {['digital','physical','sns','preVote','broadcast'].map((key, i) => (
-                <div key={i} className="text-center"><div className="text-[8px] text-[#A0663A] font-bold uppercase truncate">{['音源','销量','SNS','投票','放送'][i]}</div><div className="text-[10px] font-bold text-[#3D2B1F]">{score[key]}</div></div>
+                <div key={i} className="text-center"><div className="text-[8px] text-[#454F87] font-bold uppercase truncate">{['音源','销量','SNS','投票','放送'][i]}</div><div className="text-[10px] font-bold text-[#2A2A3D]">{score[key]}</div></div>
               ))}
             </div>
           </div>
@@ -218,12 +218,12 @@ const OptionsUI = ({ options, isLatest, lang }: { options: any[], isLatest: bool
   if (!isLatest || !options?.length) return null;
   const l = lang || 'simplified';
   return (
-    <div className="mt-5 rounded-2xl bg-[#FAF7F2] border border-[#EAE0D5] p-4">
-      <div className="text-[9px] font-black text-[#A0663A] uppercase tracking-widest mb-3">{l === "traditional" ? "可選行動" : "可选行动"}</div>
+    <div className="mt-5 rounded-2xl bg-[#F3F2FA] border border-[#DAD8EE] p-4">
+      <div className="text-[9px] font-black text-[#454F87] uppercase tracking-widest mb-3">{l === "traditional" ? "可選行動" : "可选行动"}</div>
       <div className="space-y-2.5">
         {options.map((opt: any, i) => {
           const text = typeof opt === 'string' ? opt : opt.text;
-          return <div key={i} className="text-[13px] text-[#C4936A] font-bold leading-relaxed">{text}</div>;
+          return <div key={i} className="text-[13px] text-[#5B6BB0] font-bold leading-relaxed">{text}</div>;
         })}
       </div>
     </div>
@@ -242,74 +242,74 @@ const MobileDrawer = ({ gameState, onClose, onSave, onLoad, onDelete, saveSlots,
   return (
     <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
       transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-      className="fixed inset-x-0 bottom-0 z-50 bg-[#FAF7F2] rounded-t-[2rem] shadow-2xl border-t border-[#EAE0D5] max-h-[70vh] overflow-y-auto">
-      <div className="flex justify-center pt-3 pb-2"><div className="w-10 h-1 bg-[#EAE0D5] rounded-full"></div></div>
-      <div className="flex items-center justify-between px-6 pb-4 border-b border-[#EAE0D5]">
-        <h3 className="font-black text-[#C4936A] text-sm uppercase tracking-widest">
+      className="fixed inset-x-0 bottom-0 z-50 bg-[#F3F2FA] rounded-t-[2rem] shadow-2xl border-t border-[#DAD8EE] max-h-[70vh] overflow-y-auto">
+      <div className="flex justify-center pt-3 pb-2"><div className="w-10 h-1 bg-[#DAD8EE] rounded-full"></div></div>
+      <div className="flex items-center justify-between px-6 pb-4 border-b border-[#DAD8EE]">
+        <h3 className="font-black text-[#5B6BB0] text-sm uppercase tracking-widest">
           {isMomMode ? '母女信任度' : isCPMode ? (lang === 'traditional' ? 'CP 羈絆值' : 'CP 羁绊值') : (lang === 'traditional' ? '角色狀態' : '角色状态')}
         </h3>
-        <button onClick={onClose} className="p-2 hover:bg-[#F5E6D0] rounded-full transition-all"><X className="w-4 h-4 text-[#A0663A]" /></button>
+        <button onClick={onClose} className="p-2 hover:bg-[#E7E6F6] rounded-full transition-all"><X className="w-4 h-4 text-[#454F87]" /></button>
       </div>
       <div className="p-5 space-y-5">
         {isCPMode ? (
-          <div className="bg-white p-4 rounded-2xl border border-[#C4936A]">
+          <div className="bg-white p-4 rounded-2xl border border-[#5B6BB0]">
             <div className="flex justify-between items-center mb-2">
-              <span className="text-sm font-bold text-[#3D2B1F]">{targetMembers.map(m => m.name).join(' ♡ ')}</span>
-              <span className="text-[11px] text-[#C4936A] font-black">{cpAffection}/100</span>
+              <span className="text-sm font-bold text-[#2A2A3D]">{targetMembers.map(m => m.name).join(' ♡ ')}</span>
+              <span className="text-[11px] text-[#5B6BB0] font-black">{cpAffection}/100</span>
             </div>
-            <div className="h-2 bg-[#F5E6D0] rounded-full overflow-hidden">
-              <motion.div animate={{ width: `${cpAffection}%` }} className="h-full bg-gradient-to-r from-[#C4936A] to-[#A0663A] rounded-full" />
+            <div className="h-2 bg-[#E7E6F6] rounded-full overflow-hidden">
+              <motion.div animate={{ width: `${cpAffection}%` }} className="h-full bg-gradient-to-r from-[#5B6BB0] to-[#454F87] rounded-full" />
             </div>
           </div>
         ) : isMomMode ? (
-          <div className="bg-white p-4 rounded-2xl border border-[#EAE0D5]">
+          <div className="bg-white p-4 rounded-2xl border border-[#DAD8EE]">
             <div className="flex justify-between items-center mb-2">
-              <span className="text-sm font-bold text-[#3D2B1F]">{daughterProfile?.name || '女儿'}</span>
-              <span className="text-[11px] text-[#C4936A] font-mono font-bold">{(gameState as any).momTrustLevel || 50}/100</span>
+              <span className="text-sm font-bold text-[#2A2A3D]">{daughterProfile?.name || '女儿'}</span>
+              <span className="text-[11px] text-[#5B6BB0] font-mono font-bold">{(gameState as any).momTrustLevel || 50}/100</span>
             </div>
-            <div className="h-2 bg-[#F5E6D0] rounded-full overflow-hidden">
-              <motion.div animate={{ width: `${(gameState as any).momTrustLevel || 50}%` }} className="h-full bg-[#C4936A] rounded-full" />
+            <div className="h-2 bg-[#E7E6F6] rounded-full overflow-hidden">
+              <motion.div animate={{ width: `${(gameState as any).momTrustLevel || 50}%` }} className="h-full bg-[#5B6BB0] rounded-full" />
             </div>
-            {daughterProfile && <div className="text-[10px] text-[#A0663A] mt-2">{daughterProfile.nationality} · {daughterProfile.personality}</div>}
+            {daughterProfile && <div className="text-[10px] text-[#454F87] mt-2">{daughterProfile.nationality} · {daughterProfile.personality}</div>}
           </div>
         ) : (
           <div className="space-y-3">
             {targetMembers.map(member => (
-              <div key={member.id} className="bg-white p-4 rounded-2xl border border-[#EAE0D5]">
+              <div key={member.id} className="bg-white p-4 rounded-2xl border border-[#DAD8EE]">
                 <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm font-bold text-[#3D2B1F]">{member.name}</span>
-                  <span className="text-[11px] text-[#C4936A] font-mono font-bold">{member.affection}/100</span>
+                  <span className="text-sm font-bold text-[#2A2A3D]">{member.name}</span>
+                  <span className="text-[11px] text-[#5B6BB0] font-mono font-bold">{member.affection}/100</span>
                 </div>
-                <div className="h-2 bg-[#F5E6D0] rounded-full overflow-hidden mb-1">
-                  <motion.div animate={{ width: `${member.affection}%` }} className="h-full bg-[#C4936A] rounded-full" />
+                <div className="h-2 bg-[#E7E6F6] rounded-full overflow-hidden mb-1">
+                  <motion.div animate={{ width: `${member.affection}%` }} className="h-full bg-[#5B6BB0] rounded-full" />
                 </div>
-                <div className="text-[10px] text-[#A0663A]">{member.status}</div>
+                <div className="text-[10px] text-[#454F87]">{member.status}</div>
               </div>
             ))}
           </div>
         )}
-        <div className="bg-white p-4 rounded-2xl border border-[#EAE0D5] space-y-2">
-          <div className="flex justify-between text-xs"><span className="text-[#A0663A]">{lang === "traditional" ? "場景" : "场景"}</span><span className="font-bold text-[#3D2B1F]">{gameState.currentScene}</span></div>
-          <div className="flex justify-between text-xs"><span className="text-[#A0663A]">Round</span><span className="font-bold text-[#C4936A]">{roundCount}</span></div>
-          {gameState.isComebackSetting && <div className="text-[10px] font-black text-[#A0663A] bg-[#F5E6D0] px-2 py-1 rounded-lg">{lang === "traditional" ? "回歸期進行中" : "回归期进行中"}</div>}
+        <div className="bg-white p-4 rounded-2xl border border-[#DAD8EE] space-y-2">
+          <div className="flex justify-between text-xs"><span className="text-[#454F87]">{lang === "traditional" ? "場景" : "场景"}</span><span className="font-bold text-[#2A2A3D]">{gameState.currentScene}</span></div>
+          <div className="flex justify-between text-xs"><span className="text-[#454F87]">Round</span><span className="font-bold text-[#5B6BB0]">{roundCount}</span></div>
+          {gameState.isComebackSetting && <div className="text-[10px] font-black text-[#454F87] bg-[#E7E6F6] px-2 py-1 rounded-lg">{lang === "traditional" ? "回歸期進行中" : "回归期进行中"}</div>}
         </div>
         <div className="space-y-2">
-          <button onClick={() => { onSave(); onClose(); }} className="w-full py-3 bg-[#C4936A] text-white rounded-2xl text-[10px] font-black uppercase hover:bg-[#A0663A] transition-all">{lang === "traditional" ? "💾 存檔" : "💾 存档"}</button>
-          <label className="w-full py-3 bg-white border border-[#EAE0D5] text-[#A0663A] rounded-2xl text-[10px] font-black uppercase text-center cursor-pointer hover:bg-[#F5E6D0] transition-all block">
+          <button onClick={() => { onSave(); onClose(); }} className="w-full py-3 bg-[#5B6BB0] text-white rounded-2xl text-[10px] font-black uppercase hover:bg-[#454F87] transition-all">{lang === "traditional" ? "💾 存檔" : "💾 存档"}</button>
+          <label className="w-full py-3 bg-white border border-[#DAD8EE] text-[#454F87] rounded-2xl text-[10px] font-black uppercase text-center cursor-pointer hover:bg-[#E7E6F6] transition-all block">
             🖼 {lang === "traditional" ? "換壁紙" : "换壁纸"}
             <input type="file" accept="image/*" className="hidden" onChange={onWallpaperUpload} />
           </label>
-          {wallpaper && <button onClick={onClearWallpaper} className="w-full py-3 bg-white border border-[#EAE0D5] text-[#A0663A] rounded-2xl text-[10px] font-black uppercase hover:bg-[#F5E6D0] transition-all">{lang === "traditional" ? "🗑 移除壁紙" : "🗑 移除壁纸"}</button>}
+          {wallpaper && <button onClick={onClearWallpaper} className="w-full py-3 bg-white border border-[#DAD8EE] text-[#454F87] rounded-2xl text-[10px] font-black uppercase hover:bg-[#E7E6F6] transition-all">{lang === "traditional" ? "🗑 移除壁紙" : "🗑 移除壁纸"}</button>}
           {saveSlots.length > 0 && (
             <div className="space-y-2">
-              <div className="text-[9px] font-black text-[#A0663A] uppercase">读档</div>
+              <div className="text-[9px] font-black text-[#454F87] uppercase">读档</div>
               {saveSlots.map((slot: any) => (
-                <div key={slot.id} className="bg-white border border-[#EAE0D5] rounded-xl p-3 flex items-center justify-between gap-2">
+                <div key={slot.id} className="bg-white border border-[#DAD8EE] rounded-xl p-3 flex items-center justify-between gap-2">
                   <button onClick={() => { onLoad(slot.id); onClose(); }} className="flex-1 text-left">
-                    <div className="text-[10px] font-black text-[#3D2B1F]">{(slot as any).subject || slot.scene}</div>
-                    <div className="text-[9px] text-[#A0663A]">{slot.scene} · Round {slot.round} · {slot.time}</div>
+                    <div className="text-[10px] font-black text-[#2A2A3D]">{(slot as any).subject || slot.scene}</div>
+                    <div className="text-[9px] text-[#454F87]">{slot.scene} · Round {slot.round} · {slot.time}</div>
                   </button>
-                  <button onClick={() => onDelete(slot.id)} className="text-[#C4936A] text-[10px] hover:text-[#A0663A]">✕</button>
+                  <button onClick={() => onDelete(slot.id)} className="text-[#5B6BB0] text-[10px] hover:text-[#454F87]">✕</button>
                 </div>
               ))}
             </div>
@@ -383,11 +383,11 @@ const CharacterCreationWizard = ({ onComplete, members }: { onComplete: (data: a
 
   const MemberPicker = ({ max, label }: { max?: number, label: string }) => (
     <div className="space-y-3">
-      <label className="text-xs font-black text-[#A0663A] uppercase">{label}{max === 1 ? '（选1人）' : max ? `（选${max}人）` : '（可多选）'}</label>
+      <label className="text-xs font-black text-[#454F87] uppercase">{label}{max === 1 ? '（选1人）' : max ? `（选${max}人）` : '（可多选）'}</label>
       <div className="flex flex-wrap gap-2">
         {allGroups.map(g => (
           <button key={g} onClick={() => setSelectedGroup(selectedGroup === g ? null : g)}
-            className={`px-3 py-1.5 rounded-full text-[11px] font-bold border transition-all ${selectedGroup === g ? 'bg-[#C4936A] border-[#C4936A] text-white' : 'bg-white border-[#EAE0D5] text-[#3D2B1F]'}`}>
+            className={`px-3 py-1.5 rounded-full text-[11px] font-bold border transition-all ${selectedGroup === g ? 'bg-[#5B6BB0] border-[#5B6BB0] text-white' : 'bg-white border-[#DAD8EE] text-[#2A2A3D]'}`}>
             {g}
           </button>
         ))}
@@ -399,7 +399,7 @@ const CharacterCreationWizard = ({ onComplete, members }: { onComplete: (data: a
             const disabled = !selected && !!max && data.targets.length >= max;
             return (
               <button key={m.id} onClick={() => !disabled && toggleTarget(m.id, max)}
-                className={`p-3 rounded-2xl border text-[11px] transition-all flex flex-col items-center gap-1 ${selected ? 'bg-[#F5E6D0] border-[#C4936A] text-[#A0663A] font-bold' : disabled ? 'bg-white border-[#EAE0D5] text-gray-300 cursor-not-allowed' : 'bg-white border-[#EAE0D5] text-[#3D2B1F]'}`}>
+                className={`p-3 rounded-2xl border text-[11px] transition-all flex flex-col items-center gap-1 ${selected ? 'bg-[#E7E6F6] border-[#5B6BB0] text-[#454F87] font-bold' : disabled ? 'bg-white border-[#DAD8EE] text-gray-300 cursor-not-allowed' : 'bg-white border-[#DAD8EE] text-[#2A2A3D]'}`}>
                 <div className="font-black text-xs">{m.name}</div>
                 <div className="text-[9px] opacity-60">{m.stageName}</div>
               </button>
@@ -412,8 +412,8 @@ const CharacterCreationWizard = ({ onComplete, members }: { onComplete: (data: a
           {data.targets.map(id => {
             const m = members.find(x => x.id === id);
             return m ? (
-              <span key={id} className="text-[10px] bg-[#F5E6D0] text-[#A0663A] px-2 py-1 rounded-full border border-[#EAE0D5] font-bold flex items-center gap-1">
-                {m.name}<button onClick={() => toggleTarget(id)} className="text-[#C4936A] hover:text-[#A0663A]">×</button>
+              <span key={id} className="text-[10px] bg-[#E7E6F6] text-[#454F87] px-2 py-1 rounded-full border border-[#DAD8EE] font-bold flex items-center gap-1">
+                {m.name}<button onClick={() => toggleTarget(id)} className="text-[#5B6BB0] hover:text-[#454F87]">×</button>
               </span>
             ) : null;
           })}
@@ -431,41 +431,41 @@ const CharacterCreationWizard = ({ onComplete, members }: { onComplete: (data: a
   const totalSteps = data.gameMode === 'mom' ? 3 : 4;
 
   return (
-    <div className="min-h-screen bg-[#FAF7F2] flex items-center justify-center p-4 py-12">
-      <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-white border border-[#EAE0D5] rounded-[2.5rem] shadow-sm w-full max-w-xl overflow-hidden flex flex-col">
-        <div className="bg-[#C4936A] p-8 text-white text-center">
+    <div className="min-h-screen bg-[#F3F2FA] flex items-center justify-center p-4 py-12">
+      <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-white border border-[#DAD8EE] rounded-[2.5rem] shadow-sm w-full max-w-xl overflow-hidden flex flex-col">
+        <div className="bg-[#5B6BB0] p-8 text-white text-center">
           <h2 className="text-2xl font-bold tracking-widest mb-1">爱豆收集梦想生活</h2>
           <p className="text-xs opacity-80">Step {step} of {totalSteps}</p>
         </div>
-        <div className="p-8 flex-1 overflow-y-auto max-h-[65vh] custom-scrollbar bg-[#FAF7F2]">
+        <div className="p-8 flex-1 overflow-y-auto max-h-[65vh] custom-scrollbar bg-[#F3F2FA]">
           <AnimatePresence mode="wait">
             {step === 1 && (
               <motion.div key="s1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-5">
                 <div className="space-y-2">
-                  <label className="text-xs font-black text-[#A0663A] uppercase">语言 / 語言</label>
+                  <label className="text-xs font-black text-[#454F87] uppercase">语言 / 語言</label>
                   <div className="grid grid-cols-2 gap-2">
                     {[{id:'simplified',name:'简体中文'},{id:'traditional',name:'繁體中文'}].map(l => (
                       <button key={l.id} onClick={() => setData({...data, language: l.id})}
-                        className={`p-3 rounded-xl border text-[13px] font-bold transition-all ${data.language === l.id ? 'bg-[#F5E6D0] border-[#C4936A] text-[#A0663A]' : 'bg-white border-[#EAE0D5] text-[#3D2B1F]'}`}>
+                        className={`p-3 rounded-xl border text-[13px] font-bold transition-all ${data.language === l.id ? 'bg-[#E7E6F6] border-[#5B6BB0] text-[#454F87]' : 'bg-white border-[#DAD8EE] text-[#2A2A3D]'}`}>
                         {l.name}
                       </button>
                     ))}
                   </div>
                 </div>
-                <div className="space-y-2"><label className="text-xs font-black text-[#A0663A] uppercase">{lang === "traditional" ? "您的名字" : "你的名字"}</label><input type="text" value={data.playerName} onChange={e => setData({...data, playerName: e.target.value})} className="w-full bg-white border border-[#EAE0D5] rounded-2xl p-4 text-base focus:ring-2 focus:ring-[#C4936A] outline-none text-[#3D2B1F]" placeholder={lang === "traditional" ? "請輸入角色暱稱..." : "请输入角色昵称..."} /></div>
-                <div className="space-y-2"><label className="text-xs font-black text-[#A0663A] uppercase">{lang === "traditional" ? "年齡" : "年龄"}</label><input type="number" value={data.playerAge} onChange={e => setData({...data, playerAge: parseInt(e.target.value)})} className="w-full bg-white border border-[#EAE0D5] rounded-2xl p-4 text-base focus:ring-2 focus:ring-[#C4936A] outline-none text-[#3D2B1F]" /></div>
+                <div className="space-y-2"><label className="text-xs font-black text-[#454F87] uppercase">{lang === "traditional" ? "您的名字" : "你的名字"}</label><input type="text" value={data.playerName} onChange={e => setData({...data, playerName: e.target.value})} className="w-full bg-white border border-[#DAD8EE] rounded-2xl p-4 text-base focus:ring-2 focus:ring-[#5B6BB0] outline-none text-[#2A2A3D]" placeholder={lang === "traditional" ? "請輸入角色暱稱..." : "请输入角色昵称..."} /></div>
+                <div className="space-y-2"><label className="text-xs font-black text-[#454F87] uppercase">{lang === "traditional" ? "年齡" : "年龄"}</label><input type="number" value={data.playerAge} onChange={e => setData({...data, playerAge: parseInt(e.target.value)})} className="w-full bg-white border border-[#DAD8EE] rounded-2xl p-4 text-base focus:ring-2 focus:ring-[#5B6BB0] outline-none text-[#2A2A3D]" /></div>
                 <div className="space-y-2">
-                  <label className="text-xs font-black text-[#A0663A] uppercase">DeepSeek API Key（可选）</label>
-                  <input type="password" value={data.playerApiKey} onChange={e => setData({...data, playerApiKey: e.target.value})} className="w-full bg-white border border-[#EAE0D5] rounded-2xl p-4 text-base focus:ring-2 focus:ring-[#C4936A] outline-none text-[#3D2B1F]" placeholder="填入自己的key可免费无限玩～" />
-                  <p className="text-[10px] text-[#A0663A] opacity-70">不填则使用公共额度（可能较慢）。key仅存于本地，不会上传。</p>
+                  <label className="text-xs font-black text-[#454F87] uppercase">DeepSeek API Key（可选）</label>
+                  <input type="password" value={data.playerApiKey} onChange={e => setData({...data, playerApiKey: e.target.value})} className="w-full bg-white border border-[#DAD8EE] rounded-2xl p-4 text-base focus:ring-2 focus:ring-[#5B6BB0] outline-none text-[#2A2A3D]" placeholder="填入自己的key可免费无限玩～" />
+                  <p className="text-[10px] text-[#454F87] opacity-70">不填则使用公共额度（可能较慢）。key仅存于本地，不会上传。</p>
                 </div>
                 {data.playerApiKey && (
                   <div className="space-y-2">
-                    <label className="text-xs font-black text-[#A0663A] uppercase">选择模型</label>
+                    <label className="text-xs font-black text-[#454F87] uppercase">选择模型</label>
                     <div className="grid grid-cols-2 gap-2">
                       {[{id:'deepseek-v4-flash',name:'Flash',desc:'快速省钱'},{id:'deepseek-v3',name:'V3',desc:'质量更好'}].map(m => (
                         <button key={m.id} onClick={() => setData({...data, playerModel: m.id})}
-                          className={`p-3 rounded-xl border text-left transition-all ${data.playerModel === m.id ? 'bg-[#F5E6D0] border-[#C4936A] text-[#A0663A]' : 'bg-white border-[#EAE0D5] text-[#3D2B1F]'}`}>
+                          className={`p-3 rounded-xl border text-left transition-all ${data.playerModel === m.id ? 'bg-[#E7E6F6] border-[#5B6BB0] text-[#454F87]' : 'bg-white border-[#DAD8EE] text-[#2A2A3D]'}`}>
                           <div className="font-bold text-[11px]">{m.name}</div>
                           <div className="text-[10px] opacity-60">{m.desc}</div>
                         </button>
@@ -473,39 +473,39 @@ const CharacterCreationWizard = ({ onComplete, members }: { onComplete: (data: a
                     </div>
                   </div>
                 )}
-                <button onClick={() => setStep(2)} disabled={!data.playerName} className="w-full bg-[#C4936A] text-white py-4 rounded-2xl font-bold disabled:opacity-50 hover:bg-[#A0663A] transition-all">{lang === "traditional" ? "繼續" : "继续"}</button>
+                <button onClick={() => setStep(2)} disabled={!data.playerName} className="w-full bg-[#5B6BB0] text-white py-4 rounded-2xl font-bold disabled:opacity-50 hover:bg-[#454F87] transition-all">{lang === "traditional" ? "繼續" : "继续"}</button>
               </motion.div>
             )}
             {step === 2 && (
               <motion.div key="s2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-5">
-                <label className="text-xs font-black text-[#A0663A] uppercase">{lang === "traditional" ? "選擇模式" : "选择模式"}</label>
+                <label className="text-xs font-black text-[#454F87] uppercase">{lang === "traditional" ? "選擇模式" : "选择模式"}</label>
                 <div className="space-y-3">{modes.map(m => (
                   <button key={m.id} onClick={() => { setData({...data, gameMode: m.id, targets: [], identity: [], daughterNationality: '', daughterPersonality: '', daughterBackground: '', daughterName: '', playerApiKey: data.playerApiKey}); setSelectedGroup(null); }}
-                    className={`w-full p-4 rounded-2xl border text-left transition-all ${data.gameMode === m.id ? 'bg-[#F5E6D0] border-[#C4936A] text-[#A0663A]' : 'bg-white border-[#EAE0D5] text-[#3D2B1F]'}`}>
+                    className={`w-full p-4 rounded-2xl border text-left transition-all ${data.gameMode === m.id ? 'bg-[#E7E6F6] border-[#5B6BB0] text-[#454F87]' : 'bg-white border-[#DAD8EE] text-[#2A2A3D]'}`}>
                     <div className="font-bold text-sm">{m.name}</div>
                     <div className="text-[10px] opacity-60 mt-1">{m.desc}</div>
                   </button>
                 ))}</div>
-                <button onClick={() => setStep(1)} className="w-full py-3 bg-white text-[#A0663A] rounded-2xl text-sm font-bold border border-[#EAE0D5] hover:bg-[#F5E6D0] transition-all">{lang === "traditional" ? "← 上一步" : "← 上一步"}</button>
-                <button onClick={() => data.gameMode === 'mom' ? setStep(4) : setStep(3)} className="w-full bg-[#C4936A] text-white py-4 rounded-2xl font-bold hover:bg-[#A0663A] transition-all">{lang === "traditional" ? "下一步" : "下一步"}</button>
+                <button onClick={() => setStep(1)} className="w-full py-3 bg-white text-[#454F87] rounded-2xl text-sm font-bold border border-[#DAD8EE] hover:bg-[#E7E6F6] transition-all">{lang === "traditional" ? "← 上一步" : "← 上一步"}</button>
+                <button onClick={() => data.gameMode === 'mom' ? setStep(4) : setStep(3)} className="w-full bg-[#5B6BB0] text-white py-4 rounded-2xl font-bold hover:bg-[#454F87] transition-all">{lang === "traditional" ? "下一步" : "下一步"}</button>
               </motion.div>
             )}
             {step === 3 && (
               <motion.div key="s3" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-5">
-                <label className="text-xs font-black text-[#A0663A] uppercase">{lang === "traditional" ? "選擇您的身份（可複選）" : "选择你的身份 (可多选)"}</label>
+                <label className="text-xs font-black text-[#454F87] uppercase">{lang === "traditional" ? "選擇您的身份（可複選）" : "选择你的身份 (可多选)"}</label>
                 <div className="grid grid-cols-2 gap-2">{currentIds.map(i => (
                   <button key={i} onClick={() => setData({...data, identity: data.identity.includes(i) ? data.identity.filter(x => x !== i) : [...data.identity, i]})}
-                    className={`p-3 rounded-xl border text-[11px] transition-all ${data.identity.includes(i) ? 'bg-[#F5E6D0] border-[#C4936A] text-[#A0663A] font-bold' : 'bg-white border-[#EAE0D5] text-[#3D2B1F]'}`}>
+                    className={`p-3 rounded-xl border text-[11px] transition-all ${data.identity.includes(i) ? 'bg-[#E7E6F6] border-[#5B6BB0] text-[#454F87] font-bold' : 'bg-white border-[#DAD8EE] text-[#2A2A3D]'}`}>
                     {i}
                   </button>
                 ))}</div>
                 <input type="text" value={customIdentity} onChange={e => setCustomIdentity(e.target.value)}
                   placeholder={lang === "traditional" ? "或手動輸入自訂身份..." : "或手动输入自定义身份..."}
-                  className="w-full bg-white border border-[#EAE0D5] rounded-xl p-3 text-base focus:ring-1 focus:ring-[#C4936A] outline-none text-[#3D2B1F]"
+                  className="w-full bg-white border border-[#DAD8EE] rounded-xl p-3 text-base focus:ring-1 focus:ring-[#5B6BB0] outline-none text-[#2A2A3D]"
                   onKeyDown={(e) => { if (e.key === 'Enter') { const val = customIdentity.trim(); if (val && !data.identity.includes(val)) { setData({...data, identity: [...data.identity, val]}); setCustomIdentity(''); } e.preventDefault(); } }} />
-                <button onClick={() => setStep(2)} className="w-full py-3 bg-white text-[#A0663A] rounded-2xl text-sm font-bold border border-[#EAE0D5] hover:bg-[#F5E6D0] transition-all">{lang === "traditional" ? "← 上一步" : "← 上一步"}</button>
+                <button onClick={() => setStep(2)} className="w-full py-3 bg-white text-[#454F87] rounded-2xl text-sm font-bold border border-[#DAD8EE] hover:bg-[#E7E6F6] transition-all">{lang === "traditional" ? "← 上一步" : "← 上一步"}</button>
                 <button onClick={() => { const val = customIdentity.trim(); const newIdentity = val && !data.identity.includes(val) ? [...data.identity, val] : data.identity; setData({...data, identity: newIdentity}); if (newIdentity.length > 0) setStep(4); }}
-                  disabled={data.identity.length === 0 && !customIdentity.trim()} className="w-full bg-[#C4936A] text-white py-4 rounded-2xl font-bold disabled:opacity-50 hover:bg-[#A0663A] transition-all">{lang === "traditional" ? "繼續" : "继续"}</button>
+                  disabled={data.identity.length === 0 && !customIdentity.trim()} className="w-full bg-[#5B6BB0] text-white py-4 rounded-2xl font-bold disabled:opacity-50 hover:bg-[#454F87] transition-all">{lang === "traditional" ? "繼續" : "继续"}</button>
               </motion.div>
             )}
             {step === 4 && (
@@ -515,22 +515,22 @@ const CharacterCreationWizard = ({ onComplete, members }: { onComplete: (data: a
                 {data.gameMode === 'mom' && (
                   <div className="space-y-5">
                     <div className="space-y-2">
-                      <label className="text-xs font-black text-[#A0663A] uppercase">{lang === "traditional" ? "女兒國籍" : "女儿国籍"}</label>
+                      <label className="text-xs font-black text-[#454F87] uppercase">{lang === "traditional" ? "女兒國籍" : "女儿国籍"}</label>
                       <div className="grid grid-cols-2 gap-2">
                         {nationalities.map(n => (
                           <button key={n} onClick={() => setData({...data, daughterNationality: n})}
-                            className={`p-3 rounded-xl border text-[11px] transition-all ${data.daughterNationality === n ? 'bg-[#F5E6D0] border-[#C4936A] text-[#A0663A] font-bold' : 'bg-white border-[#EAE0D5] text-[#3D2B1F]'}`}>
+                            className={`p-3 rounded-xl border text-[11px] transition-all ${data.daughterNationality === n ? 'bg-[#E7E6F6] border-[#5B6BB0] text-[#454F87] font-bold' : 'bg-white border-[#DAD8EE] text-[#2A2A3D]'}`}>
                             {n}
                           </button>
                         ))}
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <label className="text-xs font-black text-[#A0663A] uppercase">{lang === "traditional" ? "女兒性格" : "女儿性格"}</label>
+                      <label className="text-xs font-black text-[#454F87] uppercase">{lang === "traditional" ? "女兒性格" : "女儿性格"}</label>
                       <div className="space-y-2">
                         {personalities.map(p => (
                           <button key={p.id} onClick={() => setData({...data, daughterPersonality: p.id})}
-                            className={`w-full p-3 rounded-xl border text-left transition-all ${data.daughterPersonality === p.id ? 'bg-[#F5E6D0] border-[#C4936A] text-[#A0663A]' : 'bg-white border-[#EAE0D5] text-[#3D2B1F]'}`}>
+                            className={`w-full p-3 rounded-xl border text-left transition-all ${data.daughterPersonality === p.id ? 'bg-[#E7E6F6] border-[#5B6BB0] text-[#454F87]' : 'bg-white border-[#DAD8EE] text-[#2A2A3D]'}`}>
                             <div className="font-bold text-[11px]">{p.id}</div>
                             <div className="text-[10px] opacity-60 mt-0.5">{p.desc}</div>
                           </button>
@@ -538,18 +538,18 @@ const CharacterCreationWizard = ({ onComplete, members }: { onComplete: (data: a
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <label className="text-xs font-black text-[#A0663A] uppercase">{lang === "traditional" ? "女兒的名字（選填，不填由AI生成）" : "女儿的名字（选填，不填由AI生成）"}</label>
+                      <label className="text-xs font-black text-[#454F87] uppercase">{lang === "traditional" ? "女兒的名字（選填，不填由AI生成）" : "女儿的名字（选填，不填由AI生成）"}</label>
                       <input type="text" value={data.daughterName}
                         onChange={e => setData({...data, daughterName: e.target.value})}
-                        className="w-full bg-white border border-[#EAE0D5] rounded-2xl p-4 text-base focus:ring-2 focus:ring-[#C4936A] outline-none text-[#3D2B1F]"
+                        className="w-full bg-white border border-[#DAD8EE] rounded-2xl p-4 text-base focus:ring-2 focus:ring-[#5B6BB0] outline-none text-[#2A2A3D]"
                         placeholder={lang === "traditional" ? "給女兒起個名字..." : "给女儿起个名字..."} />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-xs font-black text-[#A0663A] uppercase">{lang === "traditional" ? "家庭背景" : "家庭背景"}</label>
+                      <label className="text-xs font-black text-[#454F87] uppercase">{lang === "traditional" ? "家庭背景" : "家庭背景"}</label>
                       <div className="grid grid-cols-3 gap-2">
                         {backgrounds.map(b => (
                           <button key={b} onClick={() => setData({...data, daughterBackground: b})}
-                            className={`p-3 rounded-xl border text-[11px] transition-all ${data.daughterBackground === b ? 'bg-[#F5E6D0] border-[#C4936A] text-[#A0663A] font-bold' : 'bg-white border-[#EAE0D5] text-[#3D2B1F]'}`}>
+                            className={`p-3 rounded-xl border text-[11px] transition-all ${data.daughterBackground === b ? 'bg-[#E7E6F6] border-[#5B6BB0] text-[#454F87] font-bold' : 'bg-white border-[#DAD8EE] text-[#2A2A3D]'}`}>
                             {b}
                           </button>
                         ))}
@@ -557,8 +557,8 @@ const CharacterCreationWizard = ({ onComplete, members }: { onComplete: (data: a
                     </div>
                   </div>
                 )}
-                <button onClick={() => { setStep(data.gameMode === 'mom' ? 2 : 3); setSelectedGroup(null); setData({...data, targets: []}); }} className="w-full py-3 bg-white text-[#A0663A] rounded-2xl text-sm font-bold border border-[#EAE0D5] hover:bg-[#F5E6D0] transition-all">{lang === "traditional" ? "← 上一步" : "← 上一步"}</button>
-                <button onClick={() => onComplete(data)} disabled={!canProceedStep4()} className="w-full bg-[#C4936A] text-white py-4 rounded-2xl font-bold hover:bg-[#A0663A] transition-all disabled:opacity-50">{lang === "traditional" ? "開始！" : "Start!"}</button>
+                <button onClick={() => { setStep(data.gameMode === 'mom' ? 2 : 3); setSelectedGroup(null); setData({...data, targets: []}); }} className="w-full py-3 bg-white text-[#454F87] rounded-2xl text-sm font-bold border border-[#DAD8EE] hover:bg-[#E7E6F6] transition-all">{lang === "traditional" ? "← 上一步" : "← 上一步"}</button>
+                <button onClick={() => onComplete(data)} disabled={!canProceedStep4()} className="w-full bg-[#5B6BB0] text-white py-4 rounded-2xl font-bold hover:bg-[#454F87] transition-all disabled:opacity-50">{lang === "traditional" ? "開始！" : "Start!"}</button>
               </motion.div>
             )}
           </AnimatePresence>
@@ -665,7 +665,7 @@ const MarkdownBlock = ({ content }: { content: string }) => (
     p: ({children}) => {
       const text = String(children);
       const isOption = /^[A-C][\.、。]/.test(text);
-      return <p className={isOption ? 'text-[#C4936A] font-bold' : ''}>{children}</p>;
+      return <p className={isOption ? 'text-[#5B6BB0] font-bold' : ''}>{children}</p>;
     }
   }}>{content}</Markdown>
 );
@@ -1110,7 +1110,7 @@ export default function App() {
         <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[200] flex flex-col items-center gap-2 pointer-events-none">
           {toasts.map(t => (
             <motion.div key={t.id} initial={{ opacity: 0, y: -12, scale: 0.9 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0 }}
-              className={`px-4 py-2 rounded-full text-xs font-black text-white shadow-lg ${t.kind === 'romance' ? 'bg-[#e84393]' : t.kind === 'tension' ? 'bg-[#c0392b]' : 'bg-[#C4936A]'}`}>
+              className={`px-4 py-2 rounded-full text-xs font-black text-white shadow-lg ${t.kind === 'romance' ? 'bg-[#FF7A93]' : t.kind === 'tension' ? 'bg-[#c0392b]' : 'bg-[#5B6BB0]'}`}>
               {t.text}
             </motion.div>
           ))}
@@ -1130,12 +1130,12 @@ export default function App() {
       <div className="absolute inset-0 z-10 flex overflow-hidden">
       {showConfirmReset && (
         <div className="absolute inset-0 z-[100] bg-black/60 backdrop-blur-md flex items-center justify-center p-4">
-          <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-white rounded-[3rem] p-10 max-w-sm w-full shadow-2xl text-center space-y-6 border border-[#EAE0D5]">
-            <div className="w-20 h-20 bg-[#F5E6D0] rounded-full flex items-center justify-center mx-auto"><RefreshCw className="w-10 h-10 text-[#C4936A] animate-spin-slow" /></div>
-            <div><h3 className="text-xl font-black text-[#3D2B1F]">{lang === "traditional" ? "確定重置嗎？" : "确定重置吗？"}</h3><p className="text-sm text-[#A0663A] mt-2">{lang === "traditional" ? "所有進度將永久刪除。" : "所有进度将永久删除。"}</p></div>
+          <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-white rounded-[3rem] p-10 max-w-sm w-full shadow-2xl text-center space-y-6 border border-[#DAD8EE]">
+            <div className="w-20 h-20 bg-[#E7E6F6] rounded-full flex items-center justify-center mx-auto"><RefreshCw className="w-10 h-10 text-[#5B6BB0] animate-spin-slow" /></div>
+            <div><h3 className="text-xl font-black text-[#2A2A3D]">{lang === "traditional" ? "確定重置嗎？" : "确定重置吗？"}</h3><p className="text-sm text-[#454F87] mt-2">{lang === "traditional" ? "所有進度將永久刪除。" : "所有进度将永久删除。"}</p></div>
             <div className="flex flex-col gap-3">
-              <button onClick={executeReset} className="w-full py-4 bg-[#3D2B1F] text-white rounded-3xl font-black text-sm hover:bg-black transition-all">{lang === "traditional" ? "確認重置" : "确认重置"}</button>
-              <button onClick={() => setShowConfirmReset(false)} className="w-full py-4 bg-[#F5E6D0] text-[#A0663A] rounded-3xl font-black text-sm hover:bg-[#EAE0D5] transition-all">{lang === "traditional" ? "返回" : "返回"}</button>
+              <button onClick={executeReset} className="w-full py-4 bg-[#2A2A3D] text-white rounded-3xl font-black text-sm hover:bg-black transition-all">{lang === "traditional" ? "確認重置" : "确认重置"}</button>
+              <button onClick={() => setShowConfirmReset(false)} className="w-full py-4 bg-[#E7E6F6] text-[#454F87] rounded-3xl font-black text-sm hover:bg-[#DAD8EE] transition-all">{lang === "traditional" ? "返回" : "返回"}</button>
             </div>
           </motion.div>
         </div>
@@ -1150,99 +1150,99 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      <aside className="w-72 border-r border-[#EAE0D5] flex-shrink-0 flex-col hidden lg:flex" style={{background: 'rgba(250,247,242,0.88)'}}>
-        <div className="p-6 border-b border-[#EAE0D5]">
-          <h1 className="text-base font-black text-[#C4936A] tracking-tighter flex items-center gap-2"><Gamepad2 className="w-5 h-5" /> 爱豆收集梦想生活</h1>
+      <aside className="w-72 border-r border-[#DAD8EE] flex-shrink-0 flex-col hidden lg:flex" style={{background: 'rgba(250,247,242,0.88)'}}>
+        <div className="p-6 border-b border-[#DAD8EE]">
+          <h1 className="text-base font-black text-[#5B6BB0] tracking-tighter flex items-center gap-2"><Gamepad2 className="w-5 h-5" /> 爱豆收集梦想生活</h1>
           <div className="flex items-center gap-2 mt-2">
-            <span className="text-[9px] bg-[#C4936A] text-white px-2 py-0.5 rounded-full font-black uppercase">{modeLabel}</span>
-            <span className="text-[10px] text-[#A0663A] font-bold">Idol Tomodachi Life</span>
+            <span className="text-[9px] bg-[#5B6BB0] text-white px-2 py-0.5 rounded-full font-black uppercase">{modeLabel}</span>
+            <span className="text-[10px] text-[#454F87] font-bold">Idol Tomodachi Life</span>
           </div>
         </div>
         <div className="flex-1 overflow-y-auto p-5 space-y-6 custom-scrollbar">
           <section>
-            <h3 className="text-[10px] font-black text-[#A0663A] uppercase tracking-widest mb-3 flex items-center gap-2"><Users className="w-3 h-3" /> {sidebarLabel}</h3>
+            <h3 className="text-[10px] font-black text-[#454F87] uppercase tracking-widest mb-3 flex items-center gap-2"><Users className="w-3 h-3" /> {sidebarLabel}</h3>
             {isCPMode ? (
-              <div className="bg-white p-4 rounded-2xl border border-[#C4936A]">
+              <div className="bg-white p-4 rounded-2xl border border-[#5B6BB0]">
                 <div className="flex justify-between items-center mb-2">
-                  <span className="text-xs font-bold text-[#3D2B1F]">{targetMembers.map(m => m.name).join(' ♡ ')}</span>
-                  <span className="text-[10px] text-[#C4936A] font-black">{cpAffection}/100</span>
+                  <span className="text-xs font-bold text-[#2A2A3D]">{targetMembers.map(m => m.name).join(' ♡ ')}</span>
+                  <span className="text-[10px] text-[#5B6BB0] font-black">{cpAffection}/100</span>
                 </div>
-                <div className="h-1.5 bg-[#F5E6D0] rounded-full overflow-hidden">
-                  <motion.div animate={{ width: `${cpAffection}%` }} className="h-full bg-gradient-to-r from-[#C4936A] to-[#A0663A] rounded-full" />
+                <div className="h-1.5 bg-[#E7E6F6] rounded-full overflow-hidden">
+                  <motion.div animate={{ width: `${cpAffection}%` }} className="h-full bg-gradient-to-r from-[#5B6BB0] to-[#454F87] rounded-full" />
                 </div>
-                <div className="text-[9px] text-[#A0663A] mt-2 italic">
+                <div className="text-[9px] text-[#454F87] mt-2 italic">
                   {cpAffection < 15 ? '互相不熟，公事公办' : cpAffection < 30 ? '有些微妙的默契' : cpAffection < 50 ? '暧昧模糊，互相试探' : cpAffection < 70 ? '明显的特殊感' : cpAffection < 85 ? '没有说破，但都知道了' : '只差最后一步'}
                 </div>
               </div>
             ) : isMomMode ? (
-              <div className="bg-white p-4 rounded-2xl border border-[#EAE0D5]">
+              <div className="bg-white p-4 rounded-2xl border border-[#DAD8EE]">
                 <div className="flex justify-between items-center mb-2">
-                  <span className="text-xs font-bold text-[#3D2B1F]">{daughterProfile?.name || '女儿'}</span>
-                  <span className="text-[10px] text-[#C4936A] font-mono font-bold">{momTrustLevel}/100</span>
+                  <span className="text-xs font-bold text-[#2A2A3D]">{daughterProfile?.name || '女儿'}</span>
+                  <span className="text-[10px] text-[#5B6BB0] font-mono font-bold">{momTrustLevel}/100</span>
                 </div>
-                <div className="h-1.5 bg-[#F5E6D0] rounded-full overflow-hidden">
-                  <motion.div animate={{ width: `${momTrustLevel}%` }} className="h-full bg-[#C4936A] rounded-full" />
+                <div className="h-1.5 bg-[#E7E6F6] rounded-full overflow-hidden">
+                  <motion.div animate={{ width: `${momTrustLevel}%` }} className="h-full bg-[#5B6BB0] rounded-full" />
                 </div>
-                {daughterProfile && <div className="text-[9px] text-[#A0663A] mt-1">{daughterProfile.nationality} · {daughterProfile.personality}</div>}
+                {daughterProfile && <div className="text-[9px] text-[#454F87] mt-1">{daughterProfile.nationality} · {daughterProfile.personality}</div>}
               </div>
             ) : (
               <div className="space-y-2">{targetMembers.map(member => (
-                <div key={member.id} className="bg-white p-4 rounded-2xl border border-[#EAE0D5]">
-                  <div className="flex justify-between items-center mb-2"><span className="text-xs font-bold text-[#3D2B1F]">{member.name}</span><span className="text-[10px] text-[#C4936A] font-mono font-bold">{member.affection}/100</span></div>
-                  <div className="h-1.5 bg-[#F5E6D0] rounded-full overflow-hidden"><motion.div animate={{ width: `${member.affection}%` }} className="h-full bg-[#C4936A] rounded-full" /></div>
-                  <div className="text-[9px] text-[#A0663A] mt-1">{member.status}</div>
+                <div key={member.id} className="bg-white p-4 rounded-2xl border border-[#DAD8EE]">
+                  <div className="flex justify-between items-center mb-2"><span className="text-xs font-bold text-[#2A2A3D]">{member.name}</span><span className="text-[10px] text-[#5B6BB0] font-mono font-bold">{member.affection}/100</span></div>
+                  <div className="h-1.5 bg-[#E7E6F6] rounded-full overflow-hidden"><motion.div animate={{ width: `${member.affection}%` }} className="h-full bg-[#5B6BB0] rounded-full" /></div>
+                  <div className="text-[9px] text-[#454F87] mt-1">{member.status}</div>
                 </div>
               ))}</div>
             )}
           </section>
         </div>
-        <div className="p-5 border-t border-[#EAE0D5] space-y-3">
-          <button onClick={saveGame} className="w-full flex items-center justify-center gap-2 py-3 bg-[#C4936A] text-white rounded-2xl text-[10px] font-black uppercase hover:bg-[#A0663A] transition-all">{lang === "traditional" ? "💾 存檔" : "💾 存档"}</button>
-          <button onClick={() => setShowSaveSlots(!showSaveSlots)} className="w-full flex items-center justify-center gap-2 py-3 bg-white text-[#A0663A] rounded-2xl text-[10px] font-black uppercase border border-[#EAE0D5] hover:bg-[#F5E6D0] transition-all">{lang === "traditional" ? "📂 讀檔" : "📂 读档"} ({saveSlots.length})</button>
+        <div className="p-5 border-t border-[#DAD8EE] space-y-3">
+          <button onClick={saveGame} className="w-full flex items-center justify-center gap-2 py-3 bg-[#5B6BB0] text-white rounded-2xl text-[10px] font-black uppercase hover:bg-[#454F87] transition-all">{lang === "traditional" ? "💾 存檔" : "💾 存档"}</button>
+          <button onClick={() => setShowSaveSlots(!showSaveSlots)} className="w-full flex items-center justify-center gap-2 py-3 bg-white text-[#454F87] rounded-2xl text-[10px] font-black uppercase border border-[#DAD8EE] hover:bg-[#E7E6F6] transition-all">{lang === "traditional" ? "📂 讀檔" : "📂 读档"} ({saveSlots.length})</button>
           {showSaveSlots && saveSlots.length > 0 && (
             <div className="space-y-2 max-h-48 overflow-y-auto custom-scrollbar">
               {saveSlots.map(slot => (
-                <div key={slot.id} className="bg-white border border-[#EAE0D5] rounded-xl p-3 flex items-center justify-between gap-2">
+                <div key={slot.id} className="bg-white border border-[#DAD8EE] rounded-xl p-3 flex items-center justify-between gap-2">
                   <button onClick={() => loadGame(slot.id)} className="flex-1 text-left">
-                    <div className="text-[10px] font-black text-[#3D2B1F]">{(slot as any).subject || slot.scene}</div>
-                    <div className="text-[9px] text-[#A0663A]">{slot.scene} · Round {slot.round} · {slot.time}</div>
+                    <div className="text-[10px] font-black text-[#2A2A3D]">{(slot as any).subject || slot.scene}</div>
+                    <div className="text-[9px] text-[#454F87]">{slot.scene} · Round {slot.round} · {slot.time}</div>
                   </button>
-                  <button onClick={() => deleteSlot(slot.id)} className="text-[#C4936A] text-[10px] hover:text-[#A0663A] flex-shrink-0">✕</button>
+                  <button onClick={() => deleteSlot(slot.id)} className="text-[#5B6BB0] text-[10px] hover:text-[#454F87] flex-shrink-0">✕</button>
                 </div>
               ))}
             </div>
           )}
           {showSaveSlots && saveSlots.length === 0 && (
-            <div className="text-[10px] text-[#A0663A] text-center py-2">{lang === "traditional" ? "暫無存檔" : "暂无存档"}</div>
+            <div className="text-[10px] text-[#454F87] text-center py-2">{lang === "traditional" ? "暫無存檔" : "暂无存档"}</div>
           )}
-          <button onClick={handleReset} className="w-full flex items-center justify-center gap-2 py-3 bg-white text-[#A0663A] rounded-2xl text-[10px] font-black uppercase border border-[#EAE0D5] hover:bg-[#F5E6D0] transition-all"><RefreshCw className="w-4 h-4" /> Reset</button>
+          <button onClick={handleReset} className="w-full flex items-center justify-center gap-2 py-3 bg-white text-[#454F87] rounded-2xl text-[10px] font-black uppercase border border-[#DAD8EE] hover:bg-[#E7E6F6] transition-all"><RefreshCw className="w-4 h-4" /> Reset</button>
         </div>
       </aside>
 
       <main className="flex-1 flex flex-col h-full lg:rounded-l-[2rem] lg:shadow-sm overflow-hidden" style={{background: 'rgba(255,255,255,0.85)'}}>
-        <header className="h-16 bg-white border-b border-[#EAE0D5] px-4 flex items-center justify-between z-10 flex-shrink-0">
+        <header className="h-16 bg-white border-b border-[#DAD8EE] px-4 flex items-center justify-between z-10 flex-shrink-0">
           <div className="flex items-center gap-3">
-            <button onClick={handleReset} className="lg:hidden p-2 text-[#C4936A] hover:bg-[#F5E6D0] rounded-xl"><RefreshCw className="w-4 h-4" /></button>
+            <button onClick={handleReset} className="lg:hidden p-2 text-[#5B6BB0] hover:bg-[#E7E6F6] rounded-xl"><RefreshCw className="w-4 h-4" /></button>
             <div>
-              <div className="text-[10px] text-[#A0663A] font-black uppercase tracking-widest">Scene</div>
-              <h2 className="text-sm font-bold flex items-center gap-1 text-[#3D2B1F]"><MapPin className="w-3 h-3 text-[#C4936A]" /> {gameState.currentScene}</h2>
+              <div className="text-[10px] text-[#454F87] font-black uppercase tracking-widest">Scene</div>
+              <h2 className="text-sm font-bold flex items-center gap-1 text-[#2A2A3D]"><MapPin className="w-3 h-3 text-[#5B6BB0]" /> {gameState.currentScene}</h2>
             </div>
           </div>
           {(primaryTarget || isMomMode) && (
-            <button onClick={() => setShowDrawer(true)} className="lg:hidden flex items-center gap-2 bg-[#FAF7F2] px-3 py-2 rounded-2xl border border-[#EAE0D5] active:scale-95 transition-all">
-              <Heart className="w-3 h-3 text-[#C4936A]" />
-              <span className="text-[11px] font-bold text-[#3D2B1F]">
+            <button onClick={() => setShowDrawer(true)} className="lg:hidden flex items-center gap-2 bg-[#F3F2FA] px-3 py-2 rounded-2xl border border-[#DAD8EE] active:scale-95 transition-all">
+              <Heart className="w-3 h-3 text-[#5B6BB0]" />
+              <span className="text-[11px] font-bold text-[#2A2A3D]">
                 {isMomMode ? (daughterProfile?.name || '女儿') : isCPMode ? targetMembers.map(m => m.name).join(' ♡ ') : primaryTarget?.name}
               </span>
-              <span className="text-[11px] font-black text-[#C4936A]">{isMomMode ? momTrustLevel : cpAffection}</span>
-              <ChevronUp className="w-3 h-3 text-[#A0663A]" />
+              <span className="text-[11px] font-black text-[#5B6BB0]">{isMomMode ? momTrustLevel : cpAffection}</span>
+              <ChevronUp className="w-3 h-3 text-[#454F87]" />
             </button>
           )}
-          {apiKeyMissing && <div className="bg-[#F5E6D0] text-[#A0663A] text-[10px] font-black px-3 py-1 rounded-full border border-[#EAE0D5] animate-pulse">API KEY MISSING</div>}
+          {apiKeyMissing && <div className="bg-[#E7E6F6] text-[#454F87] text-[10px] font-black px-3 py-1 rounded-full border border-[#DAD8EE] animate-pulse">API KEY MISSING</div>}
           <div className="flex items-center gap-3">
             <button
               onClick={() => setWorldMode(v => !v)}
-              className={`flex items-center gap-1.5 text-[11px] font-black px-3 py-1.5 rounded-xl border transition-all ${worldMode ? 'bg-[#C4936A] text-white border-[#C4936A]' : 'bg-[#F5E6D0] text-[#A0663A] border-[#EAE0D5] hover:bg-[#EAE0D5]'}`}
+              className={`flex items-center gap-1.5 text-[11px] font-black px-3 py-1.5 rounded-xl border transition-all ${worldMode ? 'bg-[#5B6BB0] text-white border-[#5B6BB0]' : 'bg-[#E7E6F6] text-[#454F87] border-[#DAD8EE] hover:bg-[#DAD8EE]'}`}
               title={lang === 'traditional' ? '切換俯視世界 / 劇情' : '切换俯视世界 / 剧情'}
             >
               {worldMode ? <Zap className="w-3.5 h-3.5" /> : <Users className="w-3.5 h-3.5" />}
@@ -1266,13 +1266,13 @@ export default function App() {
                   });
                 }
               }}
-              className="text-[10px] font-black text-[#A0663A] bg-[#F5E6D0] px-2 py-1 rounded-lg border border-[#EAE0D5] hover:bg-[#EAE0D5] transition-all"
+              className="text-[10px] font-black text-[#454F87] bg-[#E7E6F6] px-2 py-1 rounded-lg border border-[#DAD8EE] hover:bg-[#DAD8EE] transition-all"
             >
               {isTraditional ? '简' : '繁'}
             </button>
             <div className="text-right">
-              <div className="text-[10px] text-[#A0663A] font-bold uppercase">Round</div>
-              <div className="text-sm font-bold text-[#C4936A]">{roundCount}</div>
+              <div className="text-[10px] text-[#454F87] font-bold uppercase">Round</div>
+              <div className="text-sm font-bold text-[#5B6BB0]">{roundCount}</div>
             </div>
           </div>
         </header>
@@ -1310,8 +1310,8 @@ export default function App() {
               return (
                 <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className={`flex ${msg.role === MessageRole.USER ? 'justify-end' : 'justify-start'}`}>
                   <div className={`max-w-[92%] md:max-w-2xl ${msg.role === MessageRole.USER ? 'ml-8' : 'mr-8'}`}>
-                    {msg.role === MessageRole.ASSISTANT && <div className="text-[9px] font-black text-[#A0663A] uppercase tracking-widest ml-3 mb-2 flex items-center gap-1"><Zap className="w-3 h-3" /> NARRATIVE</div>}
-                    <div className={`rounded-[1.5rem] overflow-hidden ${msg.role === MessageRole.USER ? 'bg-[#C4936A] text-white rounded-tr-none' : 'border border-[#EAE0D5] text-[#3D2B1F] rounded-tl-none'}`}>
+                    {msg.role === MessageRole.ASSISTANT && <div className="text-[9px] font-black text-[#454F87] uppercase tracking-widest ml-3 mb-2 flex items-center gap-1"><Zap className="w-3 h-3" /> NARRATIVE</div>}
+                    <div className={`rounded-[1.5rem] overflow-hidden ${msg.role === MessageRole.USER ? 'bg-[#5B6BB0] text-white rounded-tr-none' : 'border border-[#DAD8EE] text-[#2A2A3D] rounded-tl-none'}`}>
                       {msg.role === MessageRole.USER ? (
                         <div className="p-5 md:p-6 text-sm leading-relaxed">{msg.content}</div>
                       ) : blocks && blocks.length > 0 ? (
@@ -1337,7 +1337,7 @@ export default function App() {
                       {msg.content?.includes('错误信息') && (
                         <div className="px-5 pb-4">
                           <button onClick={() => { let j = -1; for (let k = i-1; k >= 0; k--) { if (gameState.history[k].role === MessageRole.USER) { j = k; break; } } if (j !== -1) { const c = gameState.history[j].content; setGameState(prev => ({ ...prev, history: prev.history.slice(0, i) })); handleSend(c); } }}
-                            className="flex items-center gap-2 text-xs font-black text-[#C4936A] uppercase bg-white/50 px-3 py-2 rounded-xl border border-[#EAE0D5]"><RefreshCw className="w-3 h-3" /> {lang === "traditional" ? "重試" : "重试"}</button>
+                            className="flex items-center gap-2 text-xs font-black text-[#5B6BB0] uppercase bg-white/50 px-3 py-2 rounded-xl border border-[#DAD8EE]"><RefreshCw className="w-3 h-3" /> {lang === "traditional" ? "重試" : "重试"}</button>
                         </div>
                       )}
                     </div>
@@ -1348,24 +1348,24 @@ export default function App() {
           </AnimatePresence>
           {isLoading && (
             <div className="flex justify-start ml-8">
-              <div className="bg-[#FAF7F2] border border-[#EAE0D5] p-4 rounded-[1.5rem] rounded-tl-none flex gap-2">
-                <div className="w-2 h-2 bg-[#C4936A] rounded-full animate-bounce" />
-                <div className="w-2 h-2 bg-[#C4936A] rounded-full animate-bounce [animation-delay:0.2s]" />
-                <div className="w-2 h-2 bg-[#C4936A] rounded-full animate-bounce [animation-delay:0.4s]" />
+              <div className="bg-[#F3F2FA] border border-[#DAD8EE] p-4 rounded-[1.5rem] rounded-tl-none flex gap-2">
+                <div className="w-2 h-2 bg-[#5B6BB0] rounded-full animate-bounce" />
+                <div className="w-2 h-2 bg-[#5B6BB0] rounded-full animate-bounce [animation-delay:0.2s]" />
+                <div className="w-2 h-2 bg-[#5B6BB0] rounded-full animate-bounce [animation-delay:0.4s]" />
               </div>
             </div>
           )}
           <div ref={chatEndRef} />
         </div>
 
-        <div className="p-4 md:p-6 bg-white border-t border-[#EAE0D5] flex-shrink-0">
+        <div className="p-4 md:p-6 bg-white border-t border-[#DAD8EE] flex-shrink-0">
           <div className="max-w-3xl mx-auto flex gap-3">
             <textarea value={input} onChange={e => setInput(e.target.value)}
               onKeyDown={e => { if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
               placeholder={lang === "traditional" ? "輸入您的行動..." : "输入你的行动..."}
-              className="flex-1 bg-[#FAF7F2] border border-[#EAE0D5] rounded-3xl px-6 py-4 text-base focus:ring-2 focus:ring-[#C4936A] resize-none h-14 custom-scrollbar outline-none text-[#3D2B1F]"
+              className="flex-1 bg-[#F3F2FA] border border-[#DAD8EE] rounded-3xl px-6 py-4 text-base focus:ring-2 focus:ring-[#5B6BB0] resize-none h-14 custom-scrollbar outline-none text-[#2A2A3D]"
               disabled={isLoading} />
-            <button onClick={() => handleSend()} disabled={isLoading || !input.trim()} className="bg-[#C4936A] text-white px-5 rounded-3xl active:scale-95 disabled:opacity-50 flex-shrink-0 hover:bg-[#A0663A] transition-all"><Send className="w-5 h-5" /></button>
+            <button onClick={() => handleSend()} disabled={isLoading || !input.trim()} className="bg-[#5B6BB0] text-white px-5 rounded-3xl active:scale-95 disabled:opacity-50 flex-shrink-0 hover:bg-[#454F87] transition-all"><Send className="w-5 h-5" /></button>
           </div>
         </div>
         </>
@@ -1380,14 +1380,14 @@ export default function App() {
         input, textarea, select { font-size: 16px !important; touch-action: manipulation; }
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #EAE0D5; border-radius: 10px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #C4936A; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #DAD8EE; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #5B6BB0; }
         .markdown-container p { margin-bottom: 0.6rem; } .markdown-container p:last-child { margin-bottom: 0; }
         .markdown-container ul,.markdown-container ol { margin-left: 1.5rem; margin-bottom: 0.6rem; }
         .markdown-container ul { list-style-type: disc; } .markdown-container ol { list-style-type: decimal; }
-        .markdown-container blockquote { border-left: 3px solid #EAE0D5; padding-left: 0.75rem; color: #A0663A; margin: 0.75rem 0; }
-        .markdown-container strong { font-weight: 900; color: #C4936A; }
-        .markdown-container hr { border: none; border-top: 1px solid #EAE0D5; margin: 1rem 0; }
+        .markdown-container blockquote { border-left: 3px solid #DAD8EE; padding-left: 0.75rem; color: #454F87; margin: 0.75rem 0; }
+        .markdown-container strong { font-weight: 900; color: #5B6BB0; }
+        .markdown-container hr { border: none; border-top: 1px solid #DAD8EE; margin: 1rem 0; }
         @keyframes spin-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         .animate-spin-slow { animation: spin-slow 8s linear infinite; }
       `}</style>

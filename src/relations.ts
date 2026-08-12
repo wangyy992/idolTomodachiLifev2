@@ -37,11 +37,11 @@ export function deriveType(
 
 // 关系名对应的色调（面板用）
 export function typeColor(type: string): string {
-  if (type === '恋人' || type === '深度暧昧' || type === '暧昧') return '#e84393';
+  if (type === '恋人' || type === '深度暧昧' || type === '暧昧') return '#FF7A93';
   if (type === '挚友' || type === '好友') return '#16a085';
   if (type === '朋友') return '#2980b9';
   if (type === '疏远' || type === '交恶') return '#c0392b';
-  return '#A0663A';
+  return '#454F87';
 }
 
 // 从成员的 initialRelationships 生成爱豆↔爱豆关系表

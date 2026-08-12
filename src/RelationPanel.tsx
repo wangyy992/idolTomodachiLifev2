@@ -36,12 +36,12 @@ export default function RelationPanel({
     <div className="absolute inset-0 z-40 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4" onClick={onClose}>
       <div className="bg-white rounded-2xl p-5 max-w-2xl w-full max-h-[88%] overflow-auto shadow-2xl" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-base font-black text-[#3D2B1F] flex items-center gap-2"><Users className="w-4 h-4 text-[#C4936A]" /> {tw ? '關係網' : '关系网'}</h3>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-[#F5E6D0] text-[#A0663A]"><X className="w-4 h-4" /></button>
+          <h3 className="text-base font-black text-[#2A2A3D] flex items-center gap-2"><Users className="w-4 h-4 text-[#5B6BB0]" /> {tw ? '關係網' : '关系网'}</h3>
+          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-[#E7E6F6] text-[#454F87]"><X className="w-4 h-4" /></button>
         </div>
 
         {/* 你 与 爱豆 */}
-        <div className="text-[11px] font-black text-[#A0663A] uppercase tracking-widest mb-2">{tw ? '你 與 愛豆' : '你 与 爱豆'}</div>
+        <div className="text-[11px] font-black text-[#454F87] uppercase tracking-widest mb-2">{tw ? '你 與 愛豆' : '你 与 爱豆'}</div>
         <div className="space-y-2 mb-5">
           {members.map(m => {
             const romance = intents[m.id] === 'romance';
@@ -49,15 +49,15 @@ export default function RelationPanel({
             const type = deriveType(m.affection, 0, { romance, confessed });
             const canConfess = romance && m.affection >= 75 && !confessed;
             return (
-              <div key={m.id} className="bg-[#FAF7F2] rounded-xl p-3 border border-[#EAE0D5]">
+              <div key={m.id} className="bg-[#F3F2FA] rounded-xl p-3 border border-[#DAD8EE]">
                 <div className="flex items-center justify-between mb-1.5">
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-black text-[#3D2B1F]">{m.name}</span>
+                    <span className="text-xs font-black text-[#2A2A3D]">{m.name}</span>
                     <span className="px-1.5 py-0.5 rounded text-[9px] font-black text-white" style={{ background: typeColor(type) }}>{type}</span>
                   </div>
-                  <span className="text-[10px] font-mono font-bold text-[#C4936A]">{m.affection}/100</span>
+                  <span className="text-[10px] font-mono font-bold text-[#5B6BB0]">{m.affection}/100</span>
                 </div>
-                <div className="h-1.5 bg-[#F5E6D0] rounded-full overflow-hidden mb-2">
+                <div className="h-1.5 bg-[#E7E6F6] rounded-full overflow-hidden mb-2">
                   <div className="h-full rounded-full" style={{ width: `${m.affection}%`, background: typeColor(type) }} />
                 </div>
                 <div className="flex items-center gap-1.5 flex-wrap">
@@ -65,17 +65,17 @@ export default function RelationPanel({
                     <button
                       key={it}
                       onClick={() => onSetIntent(m.id, it)}
-                      className={`px-2 py-1 rounded-lg text-[10px] font-black transition-all ${intents[m.id] === it || (!intents[m.id] && it === 'none') ? 'bg-[#C4936A] text-white' : 'bg-white text-[#A0663A] border border-[#EAE0D5] hover:bg-[#F5E6D0]'}`}
+                      className={`px-2 py-1 rounded-lg text-[10px] font-black transition-all ${intents[m.id] === it || (!intents[m.id] && it === 'none') ? 'bg-[#5B6BB0] text-white' : 'bg-white text-[#454F87] border border-[#DAD8EE] hover:bg-[#E7E6F6]'}`}
                     >
                       {INTENT_LABEL[it]}
                     </button>
                   ))}
                   {canConfess && (
-                    <button onClick={() => onConfess(m.id)} className="ml-auto px-2.5 py-1 rounded-lg text-[10px] font-black bg-[#e84393] text-white hover:bg-[#d63384] transition-all animate-pulse">
+                    <button onClick={() => onConfess(m.id)} className="ml-auto px-2.5 py-1 rounded-lg text-[10px] font-black bg-[#FF7A93] text-white hover:bg-[#F0607E] transition-all animate-pulse">
                       {tw ? '表白 ♥' : '表白 ♥'}
                     </button>
                   )}
-                  {confessed && <span className="ml-auto px-2 py-1 rounded-lg text-[10px] font-black bg-[#e84393] text-white">{tw ? '戀人 ♥' : '恋人 ♥'}</span>}
+                  {confessed && <span className="ml-auto px-2 py-1 rounded-lg text-[10px] font-black bg-[#FF7A93] text-white">{tw ? '戀人 ♥' : '恋人 ♥'}</span>}
                 </div>
               </div>
             );
@@ -83,9 +83,9 @@ export default function RelationPanel({
         </div>
 
         {/* 爱豆之间 */}
-        <div className="text-[11px] font-black text-[#A0663A] uppercase tracking-widest mb-2">{tw ? '愛豆之間' : '爱豆之间'}</div>
+        <div className="text-[11px] font-black text-[#454F87] uppercase tracking-widest mb-2">{tw ? '愛豆之間' : '爱豆之间'}</div>
         {pairs.length === 0 ? (
-          <div className="text-[10px] text-[#A0663A] py-2">{tw ? '所選愛豆之間暫無既有關係。' : '所选爱豆之间暂无既有关系。'}</div>
+          <div className="text-[10px] text-[#454F87] py-2">{tw ? '所選愛豆之間暫無既有關係。' : '所选爱豆之间暂无既有关系。'}</div>
         ) : (
           <div className="space-y-2">
             {pairs.map(({ a, b, rel }) => {
@@ -93,13 +93,13 @@ export default function RelationPanel({
               const wantMatch = matchmakes.includes(key);
               const type = deriveType(rel.affinity, rel.tension, { romance: wantMatch, confessed: hasFlag(rel, 'confessed') });
               return (
-                <div key={key} className="bg-[#FAF7F2] rounded-xl p-3 border border-[#EAE0D5] flex items-center gap-3">
+                <div key={key} className="bg-[#F3F2FA] rounded-xl p-3 border border-[#DAD8EE] flex items-center gap-3">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="text-xs font-black text-[#3D2B1F]">{a.name} <span className="text-[#A0663A]">×</span> {b.name}</span>
+                      <span className="text-xs font-black text-[#2A2A3D]">{a.name} <span className="text-[#454F87]">×</span> {b.name}</span>
                       <span className="px-1.5 py-0.5 rounded text-[9px] font-black text-white" style={{ background: typeColor(type) }}>{type}</span>
                     </div>
-                    <div className="flex items-center gap-3 text-[9px] text-[#A0663A]">
+                    <div className="flex items-center gap-3 text-[9px] text-[#454F87]">
                       <span>{tw ? '親密' : '亲密'} {rel.affinity}</span>
                       <span>{tw ? '張力' : '张力'} {rel.tension}</span>
                       {rel.note && <span className="truncate italic">{rel.note}</span>}
@@ -108,7 +108,7 @@ export default function RelationPanel({
                   <button
                     onClick={() => onToggleMatchmake(key)}
                     title={tw ? '撮合這一對' : '撮合这一对'}
-                    className={`flex-shrink-0 px-2.5 py-1.5 rounded-lg text-[10px] font-black flex items-center gap-1 transition-all ${wantMatch ? 'bg-[#e84393] text-white' : 'bg-white text-[#A0663A] border border-[#EAE0D5] hover:bg-[#F5E6D0]'}`}
+                    className={`flex-shrink-0 px-2.5 py-1.5 rounded-lg text-[10px] font-black flex items-center gap-1 transition-all ${wantMatch ? 'bg-[#FF7A93] text-white' : 'bg-white text-[#454F87] border border-[#DAD8EE] hover:bg-[#E7E6F6]'}`}
                   >
                     <Heart className={`w-3 h-3 ${wantMatch ? 'fill-current' : ''}`} /> {tw ? '撮合' : '撮合'}
                   </button>
@@ -117,7 +117,7 @@ export default function RelationPanel({
             })}
           </div>
         )}
-        <p className="text-[10px] text-[#A0663A] mt-4">{tw ? '設「攻略/朋友/隨緣」定你對每個愛豆的方向；「撮合」把兩個愛豆往一起推。這些意圖會影響劇情走向。' : '设「攻略/朋友/随缘」定你对每个爱豆的方向；「撮合」把两个爱豆往一起推。这些意图会影响剧情走向。'}</p>
+        <p className="text-[10px] text-[#454F87] mt-4">{tw ? '設「攻略/朋友/隨緣」定你對每個愛豆的方向；「撮合」把兩個愛豆往一起推。這些意圖會影響劇情走向。' : '设「攻略/朋友/随缘」定你对每个爱豆的方向；「撮合」把两个爱豆往一起推。这些意图会影响剧情走向。'}</p>
       </div>
     </div>
   );
