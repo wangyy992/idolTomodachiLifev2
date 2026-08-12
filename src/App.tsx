@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, RefreshCw, Users, Eye, MapPin, Gamepad2, Heart, Zap, Sparkles, X, ChevronUp, Globe, User, Cake, KeyRound, ArrowRight, Check, Wand2 } from 'lucide-react';
+import { Send, RefreshCw, Users, Eye, MapPin, Gamepad2, Heart, Zap, Sparkles, X, ChevronUp, Globe, User, Cake, KeyRound, ArrowRight, Check, Wand2, Save, FolderOpen, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import Markdown from 'react-markdown';
 import { GameState, INITIAL_MEMBERS, ChatMessage, MessageRole, Member, TheqooPost, SetupStep } from './types';
@@ -222,12 +222,17 @@ const OptionsUI = ({ options, isLatest, lang }: { options: any[], isLatest: bool
   if (!isLatest || !options?.length) return null;
   const l = lang || 'simplified';
   return (
-    <div className="mt-5 rounded-2xl bg-[#F3F2FA] border border-[#DAD8EE] p-4">
-      <div className="text-[9px] font-black text-[#454F87] uppercase tracking-widest mb-3">{l === "traditional" ? "可選行動" : "可选行动"}</div>
-      <div className="flex flex-col gap-2.5">
+    <div className="mt-4 rounded-2xl bg-gradient-to-br from-[#F3F2FA] to-[#E7E6F6] border border-[#DAD8EE] p-4">
+      <div className="text-[9px] font-black text-[#454F87] uppercase tracking-widest mb-3 flex items-center gap-1.5"><span className="w-1 h-1 rounded-full bg-[#FF7A93]" />{l === "traditional" ? "當時的選擇" : "当时的选择"}</div>
+      <div className="flex flex-col gap-2">
         {options.map((opt: any, i) => {
-          const text = typeof opt === 'string' ? opt : opt.text;
-          return <div key={i} className="text-[13px] text-[#5B6BB0] font-bold leading-relaxed">{text}</div>;
+          const text = (typeof opt === 'string' ? opt : opt.text).replace(/^[A-Da-d][\.、。\)]\s*/, '');
+          return (
+            <div key={i} className="flex items-start gap-2.5 bg-white/70 rounded-xl px-3 py-2.5 border border-white">
+              <span className="mt-0.5 w-5 h-5 rounded-lg bg-[#E7E6F6] text-[#5B6BB0] text-[10px] font-black flex items-center justify-center flex-shrink-0">{'ABCD'[i] || '·'}</span>
+              <span className="text-[13px] text-[#3c3752] font-semibold leading-relaxed">{text}</span>
+            </div>
+          );
         })}
       </div>
     </div>
@@ -297,23 +302,26 @@ const MobileDrawer = ({ gameState, onClose, onSave, onLoad, onDelete, saveSlots,
           <div className="flex justify-between text-xs"><span className="text-[#454F87]">Round</span><span className="font-bold text-[#5B6BB0]">{roundCount}</span></div>
           {gameState.isComebackSetting && <div className="text-[10px] font-black text-[#454F87] bg-[#E7E6F6] px-2 py-1 rounded-lg">{lang === "traditional" ? "回歸期進行中" : "回归期进行中"}</div>}
         </div>
-        <div className="flex flex-col gap-2">
-          <button onClick={() => { onSave(); onClose(); }} className="w-full py-3 bg-[#5B6BB0] text-white rounded-2xl text-[10px] font-black uppercase hover:bg-[#454F87] transition-all">{lang === "traditional" ? "💾 存檔" : "💾 存档"}</button>
-          <label className="w-full py-3 bg-white border border-[#DAD8EE] text-[#454F87] rounded-2xl text-[10px] font-black uppercase text-center cursor-pointer hover:bg-[#E7E6F6] transition-all block">
-            🖼 {lang === "traditional" ? "換壁紙" : "换壁纸"}
-            <input type="file" accept="image/*" className="hidden" onChange={onWallpaperUpload} />
-          </label>
-          {wallpaper && <button onClick={onClearWallpaper} className="w-full py-3 bg-white border border-[#DAD8EE] text-[#454F87] rounded-2xl text-[10px] font-black uppercase hover:bg-[#E7E6F6] transition-all">{lang === "traditional" ? "🗑 移除壁紙" : "🗑 移除壁纸"}</button>}
+        <div className="flex flex-col gap-2.5">
+          <div className="flex gap-2.5">
+            <button onClick={() => { onSave(); onClose(); }} className="flex-1 flex items-center justify-center gap-1.5 py-3 bg-[#5B6BB0] text-white rounded-2xl text-[11px] font-black shadow-[0_6px_16px_-6px_rgba(91,107,176,0.7)] active:scale-95 transition-all"><Save className="w-3.5 h-3.5" />{lang === "traditional" ? "存檔" : "存档"}</button>
+            <label className="flex-1 flex items-center justify-center gap-1.5 py-3 bg-white border border-[#DAD8EE] text-[#454F87] rounded-2xl text-[11px] font-black text-center cursor-pointer hover:bg-[#E7E6F6] active:scale-95 transition-all">
+              <Sparkles className="w-3.5 h-3.5" />{lang === "traditional" ? "換壁紙" : "换壁纸"}
+              <input type="file" accept="image/*" className="hidden" onChange={onWallpaperUpload} />
+            </label>
+          </div>
+          {wallpaper && <button onClick={onClearWallpaper} className="w-full py-2.5 text-[#8b90b8] rounded-2xl text-[10px] font-black hover:text-[#FF7A93] transition-all">{lang === "traditional" ? "移除壁紙" : "移除壁纸"}</button>}
           {saveSlots.length > 0 && (
-            <div className="flex flex-col gap-2">
-              <div className="text-[9px] font-black text-[#454F87] uppercase">读档</div>
-              {saveSlots.map((slot: any) => (
-                <div key={slot.id} className="bg-white border border-[#DAD8EE] rounded-xl p-3 flex items-center justify-between gap-2">
-                  <button onClick={() => { onLoad(slot.id); onClose(); }} className="flex-1 text-left">
-                    <div className="text-[10px] font-black text-[#2A2A3D]">{(slot as any).subject || slot.scene}</div>
-                    <div className="text-[9px] text-[#454F87]">{slot.scene} · Round {slot.round} · {slot.time}</div>
+            <div className="rounded-2xl bg-white border border-[#DAD8EE] p-2.5 flex flex-col gap-2 mt-1">
+              <div className="text-[9px] font-black text-[#454F87] uppercase tracking-widest px-1 flex items-center gap-1.5"><FolderOpen className="w-3 h-3" />{lang === "traditional" ? "讀檔" : "读档"}</div>
+              {saveSlots.map((slot: any, si: number) => (
+                <div key={slot.id} className="bg-[#F3F2FA] border border-[#DAD8EE] rounded-xl p-2.5 flex items-center gap-2.5 active:scale-[0.98] transition-all">
+                  <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#6C79C4] to-[#454F87] text-white flex items-center justify-center text-[11px] font-black flex-shrink-0">{saveSlots.length - si}</div>
+                  <button onClick={() => { onLoad(slot.id); onClose(); }} className="flex-1 min-w-0 text-left">
+                    <div className="text-[11px] font-black text-[#2A2A3D] truncate">{(slot as any).subject || slot.scene}</div>
+                    <div className="text-[9px] text-[#454F87]/80 truncate mt-0.5">{slot.scene} · R{slot.round} · {slot.time}</div>
                   </button>
-                  <button onClick={() => onDelete(slot.id)} className="text-[#5B6BB0] text-[10px] hover:text-[#454F87]">✕</button>
+                  <button onClick={() => onDelete(slot.id)} className="w-7 h-7 rounded-lg text-[#8b90b8] hover:bg-[#FF7A93]/10 hover:text-[#FF7A93] flex items-center justify-center flex-shrink-0"><Trash2 className="w-3.5 h-3.5" /></button>
                 </div>
               ))}
             </div>
@@ -700,6 +708,19 @@ const MarkdownBlock = ({ content }: { content: string }) => (
     }
   }}>{content}</Markdown>
 );
+
+// 剧情回顾里的正文：旁白 + 台词分行呈现（与 VN 同一套解析）
+const StoryText = ({ content }: { content: string }) => {
+  const script = parseScript(content);
+  return (
+    <div className="flex flex-col gap-2.5 text-[15px] leading-[1.85] text-[#2A2A3D]">
+      {script.map((s, i) => s.kind === 'narration'
+        ? <p key={i} className="text-[#3c3752]">{s.text}</p>
+        : <p key={i} className="pl-3 border-l-2 border-[#DAD8EE]"><span className="font-black text-[#5B6BB0]">{s.speaker}</span><span className="text-[#8b90b8]">：</span>「{s.text}」</p>
+      )}
+    </div>
+  );
+};
 
 export default function App() {
   const getInitialGameState = (): GameState => ({
@@ -1298,25 +1319,27 @@ export default function App() {
           )}
         </div>
         <div className="p-5 border-t border-[#DAD8EE] flex flex-col gap-3">
-          <button onClick={saveGame} className="w-full flex items-center justify-center gap-2 py-3 bg-[#5B6BB0] text-white rounded-2xl text-[10px] font-black uppercase hover:bg-[#454F87] transition-all">{lang === "traditional" ? "💾 存檔" : "💾 存档"}</button>
-          <button onClick={() => setShowSaveSlots(!showSaveSlots)} className="w-full flex items-center justify-center gap-2 py-3 bg-white text-[#454F87] rounded-2xl text-[10px] font-black uppercase border border-[#DAD8EE] hover:bg-[#E7E6F6] transition-all">{lang === "traditional" ? "📂 讀檔" : "📂 读档"} ({saveSlots.length})</button>
-          {showSaveSlots && saveSlots.length > 0 && (
-            <div className="flex flex-col gap-2 max-h-48 overflow-y-auto custom-scrollbar">
-              {saveSlots.map(slot => (
-                <div key={slot.id} className="bg-white border border-[#DAD8EE] rounded-xl p-3 flex items-center justify-between gap-2">
-                  <button onClick={() => loadGame(slot.id)} className="flex-1 text-left">
-                    <div className="text-[10px] font-black text-[#2A2A3D]">{(slot as any).subject || slot.scene}</div>
-                    <div className="text-[9px] text-[#454F87]">{slot.scene} · Round {slot.round} · {slot.time}</div>
+          <div className="flex gap-2.5">
+            <button onClick={saveGame} className="flex-1 flex items-center justify-center gap-1.5 py-3 bg-[#5B6BB0] text-white rounded-2xl text-[11px] font-black shadow-[0_6px_16px_-6px_rgba(91,107,176,0.7)] hover:bg-[#454F87] hover:-translate-y-0.5 transition-all"><Save className="w-3.5 h-3.5" />{lang === "traditional" ? "存檔" : "存档"}</button>
+            <button onClick={() => setShowSaveSlots(!showSaveSlots)} className={`flex-1 flex items-center justify-center gap-1.5 py-3 rounded-2xl text-[11px] font-black border transition-all ${showSaveSlots ? 'bg-[#E7E6F6] text-[#454F87] border-[#5B6BB0]' : 'bg-white text-[#454F87] border-[#DAD8EE] hover:bg-[#E7E6F6]'}`}><FolderOpen className="w-3.5 h-3.5" />{lang === "traditional" ? "讀檔" : "读档"} <span className="px-1.5 rounded-full bg-[#5B6BB0]/10 text-[9px]">{saveSlots.length}</span></button>
+          </div>
+          {showSaveSlots && (
+            <div className="rounded-2xl bg-[#F3F2FA] border border-[#DAD8EE] p-2.5 flex flex-col gap-2 max-h-56 overflow-y-auto custom-scrollbar">
+              {saveSlots.length > 0 ? saveSlots.map((slot, si) => (
+                <div key={slot.id} className="group bg-white border border-[#DAD8EE] rounded-xl p-2.5 flex items-center gap-2.5 hover:border-[#5B6BB0] hover:shadow-md transition-all">
+                  <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#6C79C4] to-[#454F87] text-white flex items-center justify-center text-[11px] font-black flex-shrink-0">{saveSlots.length - si}</div>
+                  <button onClick={() => loadGame(slot.id)} className="flex-1 min-w-0 text-left">
+                    <div className="text-[11px] font-black text-[#2A2A3D] truncate">{(slot as any).subject || slot.scene}</div>
+                    <div className="text-[9px] text-[#454F87]/80 truncate mt-0.5">{slot.scene} · R{slot.round} · {slot.time}</div>
                   </button>
-                  <button onClick={() => deleteSlot(slot.id)} className="text-[#5B6BB0] text-[10px] hover:text-[#454F87] flex-shrink-0">✕</button>
+                  <button onClick={() => deleteSlot(slot.id)} title={lang === "traditional" ? "刪除" : "删除"} className="w-6 h-6 rounded-lg text-[#8b90b8] hover:bg-[#FF7A93]/10 hover:text-[#FF7A93] flex items-center justify-center flex-shrink-0 transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
                 </div>
-              ))}
+              )) : (
+                <div className="text-[10px] text-[#454F87]/60 text-center py-4 font-bold">{lang === "traditional" ? "暫無存檔" : "暂无存档"}</div>
+              )}
             </div>
           )}
-          {showSaveSlots && saveSlots.length === 0 && (
-            <div className="text-[10px] text-[#454F87] text-center py-2">{lang === "traditional" ? "暫無存檔" : "暂无存档"}</div>
-          )}
-          <button onClick={handleReset} className="w-full flex items-center justify-center gap-2 py-3 bg-white text-[#454F87] rounded-2xl text-[10px] font-black uppercase border border-[#DAD8EE] hover:bg-[#E7E6F6] transition-all"><RefreshCw className="w-4 h-4" /> Reset</button>
+          <button onClick={handleReset} className="w-full flex items-center justify-center gap-2 py-2.5 text-[#8b90b8] rounded-2xl text-[10px] font-black hover:bg-[#F3F2FA] hover:text-[#5B6BB0] transition-all"><RefreshCw className="w-3.5 h-3.5" /> {lang === "traditional" ? "重新開始" : "重新开始"}</button>
         </div>
       </aside>
 
@@ -1406,60 +1429,56 @@ export default function App() {
         </div>
         ) : (
         <>
-        <div className="flex-1 overflow-y-auto p-4 md:p-8 flex flex-col gap-6 custom-scrollbar" style={{background: "transparent"}}>
-          <AnimatePresence initial={false}>
+        <div className="flex-1 overflow-y-auto px-4 py-6 md:px-8 md:py-8 custom-scrollbar" style={{background: "transparent"}}>
+          <div className="max-w-2xl w-full mx-auto flex flex-col gap-6">
+            <div className="flex items-center justify-center gap-2 text-[10px] font-black text-[#454F87]/60 uppercase tracking-[0.2em]">
+              <span className="h-px w-8 bg-[#DAD8EE]" /><Zap className="w-3 h-3" /> {lang === 'traditional' ? '劇情回顧' : '剧情回顾'}<span className="h-px w-8 bg-[#DAD8EE]" />
+            </div>
+            <AnimatePresence initial={false}>
             {gameState.history.map((msg, i) => {
               const isLatest = i === gameState.history.length - 1;
               const blocks = (msg as any).contentBlocks as ContentBlock[] | undefined;
+              if (msg.role === MessageRole.USER) {
+                return (
+                  <motion.div key={i} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-3 my-0.5">
+                    <div className="flex-1 h-px bg-[#DAD8EE]/70" />
+                    <div className="px-3.5 py-1.5 rounded-full bg-[#E7E6F6] text-[#454F87] text-[12px] font-bold max-w-[80%] truncate">{msg.content}</div>
+                    <div className="flex-1 h-px bg-[#DAD8EE]/70" />
+                  </motion.div>
+                );
+              }
               return (
-                <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className={`flex ${msg.role === MessageRole.USER ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`max-w-[92%] md:max-w-2xl ${msg.role === MessageRole.USER ? 'ml-8' : 'mr-8'}`}>
-                    {msg.role === MessageRole.ASSISTANT && <div className="text-[9px] font-black text-[#454F87] uppercase tracking-widest ml-3 mb-2 flex items-center gap-1"><Zap className="w-3 h-3" /> NARRATIVE</div>}
-                    <div className={`rounded-[1.5rem] overflow-hidden ${msg.role === MessageRole.USER ? 'bg-[#5B6BB0] text-white rounded-tr-none' : 'border border-[#DAD8EE] text-[#2A2A3D] rounded-tl-none'}`}>
-                      {msg.role === MessageRole.USER ? (
-                        <div className="p-5 md:p-6 text-sm leading-relaxed">{msg.content}</div>
-                      ) : blocks && blocks.length > 0 ? (
-                        <div className="p-5 md:p-6 text-sm leading-relaxed markdown-container flex flex-col gap-2">
-                          {blocks.map((block, bi) => {
-                            if (block.type === 'text') return <MarkdownBlock key={bi} content={block.content} />;
-                            if (block.type === 'kkt') return <KKTMessageUI key={bi} data={block.data} />;
-                            if (block.type === 'weverse') return <WeversePostUI key={bi} data={block.data} />;
-                            if (block.type === 'bubble') return <BubbleMessageUI key={bi} data={block.data} />;
-                            if (block.type === 'theqoo') return <TheqooPostUI key={bi} post={block.data} />;
-                            if (block.type === 'card') return <CharacterCardUI key={bi} card={block.data} />;
-                            if (block.type === 'musicshow') return isLatest ? <MusicShowUI key={bi} result={block.data} /> : null;
-                            return null;
-                          })}
-                          {msg.options && <OptionsUI options={msg.options} isLatest={isLatest} lang={(gameState as any).language} />}
-                        </div>
-                      ) : (
-                        <div className="p-5 md:p-6 text-sm leading-relaxed markdown-container">
-                          <MarkdownBlock content={msg.content || '（剧情推进中...）'} />
-                          {msg.options && <OptionsUI options={msg.options} isLatest={isLatest} lang={(gameState as any).language} />}
-                        </div>
-                      )}
-                      {msg.content?.includes('错误信息') && (
-                        <div className="px-5 pb-4">
-                          <button onClick={() => { let j = -1; for (let k = i-1; k >= 0; k--) { if (gameState.history[k].role === MessageRole.USER) { j = k; break; } } if (j !== -1) { const c = gameState.history[j].content; setGameState(prev => ({ ...prev, history: prev.history.slice(0, i) })); handleSend(c); } }}
-                            className="flex items-center gap-2 text-xs font-black text-[#5B6BB0] uppercase bg-white/50 px-3 py-2 rounded-xl border border-[#DAD8EE]"><RefreshCw className="w-3 h-3" /> {lang === "traditional" ? "重試" : "重试"}</button>
-                        </div>
-                      )}
-                    </div>
+                <motion.div key={i} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="rounded-3xl bg-white/95 border border-[#DAD8EE] shadow-[0_6px_24px_-12px_rgba(60,50,110,0.3)] overflow-hidden">
+                  <div className="flex flex-col gap-4 p-5 md:p-6">
+                    {blocks && blocks.length > 0 ? blocks.map((block, bi) => {
+                      if (block.type === 'text') return <StoryText key={bi} content={block.content} />;
+                      if (block.type === 'kkt') return <KKTMessageUI key={bi} data={block.data} />;
+                      if (block.type === 'weverse') return <WeversePostUI key={bi} data={block.data} />;
+                      if (block.type === 'bubble') return <BubbleMessageUI key={bi} data={block.data} />;
+                      if (block.type === 'theqoo') return <TheqooPostUI key={bi} post={block.data} />;
+                      if (block.type === 'card') return <CharacterCardUI key={bi} card={block.data} />;
+                      if (block.type === 'musicshow') return isLatest ? <MusicShowUI key={bi} result={block.data} /> : null;
+                      return null;
+                    }) : <StoryText content={msg.content || '（剧情推进中...）'} />}
+                    {msg.options && <OptionsUI options={msg.options} isLatest={isLatest} lang={(gameState as any).language} />}
+                    {msg.content?.includes('错误信息') && (
+                      <button onClick={() => { let j = -1; for (let k = i-1; k >= 0; k--) { if (gameState.history[k].role === MessageRole.USER) { j = k; break; } } if (j !== -1) { const c = gameState.history[j].content; setGameState(prev => ({ ...prev, history: prev.history.slice(0, i) })); handleSend(c); } }}
+                        className="self-start flex items-center gap-2 text-xs font-black text-[#5B6BB0] bg-[#F3F2FA] px-3 py-2 rounded-xl border border-[#DAD8EE] hover:bg-[#E7E6F6]"><RefreshCw className="w-3 h-3" /> {lang === "traditional" ? "重試" : "重试"}</button>
+                    )}
                   </div>
                 </motion.div>
               );
             })}
-          </AnimatePresence>
-          {isLoading && (
-            <div className="flex justify-start ml-8">
-              <div className="bg-[#F3F2FA] border border-[#DAD8EE] p-4 rounded-[1.5rem] rounded-tl-none flex gap-2">
+            </AnimatePresence>
+            {isLoading && (
+              <div className="rounded-3xl bg-white/95 border border-[#DAD8EE] p-5 flex gap-2 w-fit">
                 <div className="w-2 h-2 bg-[#5B6BB0] rounded-full animate-bounce" />
                 <div className="w-2 h-2 bg-[#5B6BB0] rounded-full animate-bounce [animation-delay:0.2s]" />
                 <div className="w-2 h-2 bg-[#5B6BB0] rounded-full animate-bounce [animation-delay:0.4s]" />
               </div>
-            </div>
-          )}
-          <div ref={chatEndRef} />
+            )}
+            <div ref={chatEndRef} />
+          </div>
         </div>
 
         <div className="p-4 md:p-6 bg-white border-t border-[#DAD8EE] flex-shrink-0">
