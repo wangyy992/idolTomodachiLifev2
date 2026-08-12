@@ -1,11 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { MessageCircle, Clock, CalendarDays, ChevronRight, X, Users, Rss, Palette } from 'lucide-react';
+import { MessageCircle, Clock, CalendarDays, ChevronRight, X, Users, Rss, Palette, Lock } from 'lucide-react';
 import { Member } from './types';
 import { getSceneConfig } from './sceneConfig';
 import RelationPanel from './RelationPanel';
 import { pairKey, type WorldRelation, type Intent } from './relations';
 import {
   WORLD_LOCATIONS, TIME_SLOTS, AWAY, getActivity, idolsAt, getLocation,
+  getAccessibleLocations, lockReason,
   type Activity, type WorldLocation,
 } from './worldConfig';
 import {
@@ -70,13 +71,14 @@ function moveToward(e: Entity, speed: number, dt: number): boolean {
 }
 
 export default function WorldView({
-  members, playerName, day, slot, locationId, onTravel, onAdvanceTime, onTalk, lang,
+  members, playerName, day, slot, locationId, identity, onTravel, onAdvanceTime, onTalk, lang,
   relations, intents, matchmakes, onSetIntent, onToggleMatchmake, onConfess, onIdolEncounter, worldFeed, onWatchEncounter,
   appearances, playerAppearance, onCustomize,
 }: {
   members: Member[];
   playerName: string;
   day: number; slot: number; locationId: string;
+  identity: string[];
   onTravel: (locId: string) => void;
   onAdvanceTime: () => void;
   onTalk: (m: Member, ctx: { location: WorldLocation; activity: Activity }) => void;
@@ -110,6 +112,19 @@ export default function WorldView({
   const [showSchedule, setShowSchedule] = useState(false);
   const [showRelations, setShowRelations] = useState(false);
   const [showFeed, setShowFeed] = useState(false);
+  const [lockToast, setLockToast] = useState<string | null>(null);
+
+  // 身份 → 可进入地点；进不去的地点上锁
+  const accessible = React.useMemo(() => getAccessibleLocations(identity), [identity.join('|')]);
+  const tryTravel = (locId: string) => {
+    if (accessible.has(locId)) { onTravel(locId); return; }
+    setLockToast(lockReason(locId, tw));
+  };
+  useEffect(() => {
+    if (!lockToast) return;
+    const t = setTimeout(() => setLockToast(null), 2600);
+    return () => clearTimeout(t);
+  }, [lockToast]);
   const bubblesRef = useRef<{ key: string; x: number; y: number; emoji: string; born: number }[]>([]);
   const cooldownRef = useRef<Map<string, number>>(new Map());
   // 让主循环拿到最新的 props（循环用空依赖挂载）
@@ -379,19 +394,30 @@ export default function WorldView({
         );
       })()}
 
+      {/* 身份门禁提示 */}
+      {lockToast && (
+        <div className="absolute bottom-16 left-1/2 -translate-x-1/2 z-40 px-4 py-2.5 rounded-2xl bg-[#2A2A3D]/95 text-white text-[11px] font-bold flex items-center gap-2 shadow-xl border border-white/10 max-w-[86%] animate-[fadeIn_0.2s_ease]">
+          <Lock className="w-3.5 h-3.5 text-[#FF7A93] flex-shrink-0" /> {lockToast}
+        </div>
+      )}
+
       {/* 底部：地点切换栏 */}
       <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-30 flex gap-1.5 px-2 py-1.5 rounded-2xl bg-black/40 backdrop-blur max-w-[95%] overflow-x-auto">
         {WORLD_LOCATIONS.map(loc => {
           const n = countAt(loc.id);
           const active = loc.id === locationId;
+          const locked = !accessible.has(loc.id);
           return (
             <button
               key={loc.id}
-              onClick={() => onTravel(loc.id)}
-              className={`relative flex-shrink-0 px-2.5 py-1.5 rounded-xl text-[10px] font-black flex items-center gap-1 transition-all ${active ? 'bg-white text-[#2A2A3D]' : 'bg-white/15 text-white hover:bg-white/25'}`}
+              onClick={() => tryTravel(loc.id)}
+              title={locked ? lockReason(loc.id, tw) : undefined}
+              className={`relative flex-shrink-0 px-2.5 py-1.5 rounded-xl text-[10px] font-black flex items-center gap-1 transition-all ${active ? 'bg-white text-[#2A2A3D]' : locked ? 'bg-white/5 text-white/40' : 'bg-white/15 text-white hover:bg-white/25'}`}
             >
-              <span>{loc.icon}</span> {loc.label}
-              {n > 0 && <span className={`ml-0.5 min-w-[15px] h-[15px] px-1 rounded-full text-[8px] flex items-center justify-center ${active ? 'bg-[#5B6BB0] text-white' : 'bg-[#5B6BB0] text-white'}`}>{n}</span>}
+              <span className={locked ? 'grayscale opacity-70' : ''}>{loc.icon}</span> {loc.label}
+              {locked
+                ? <Lock className="w-2.5 h-2.5 ml-0.5" />
+                : n > 0 && <span className="ml-0.5 min-w-[15px] h-[15px] px-1 rounded-full text-[8px] flex items-center justify-center bg-[#5B6BB0] text-white">{n}</span>}
             </button>
           );
         })}

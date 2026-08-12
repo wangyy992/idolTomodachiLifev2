@@ -1413,6 +1413,7 @@ export default function App() {
             day={worldDay}
             slot={worldSlot}
             locationId={worldLocation}
+            identity={gameState.identity || []}
             onTravel={setWorldLocation}
             onAdvanceTime={handleAdvanceTime}
             onTalk={handleTalkTo}

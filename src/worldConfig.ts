@@ -119,6 +119,39 @@ export function getStartLocation(identity?: string[]): string {
   return 'practice_room';
 }
 
+// 人人可去的公共场所
+export const PUBLIC_LOCS = ['concert', 'cafe', 'convenience', 'hangang'];
+
+// 身份类别 → 公共场所之外，额外解锁的地点
+const IDENTITY_ACCESS: { test: RegExp; extra: string[] }[] = [
+  { test: /实习|工作人员|妆造|发型|助理|翻译|商务|经纪|staff/i, extra: ['practice_room', 'backstage', 'music_stage', 'variety_studio', 'dorm'] },
+  { test: /记者|博主|媒体|采访/, extra: ['music_stage', 'variety_studio'] },
+  { test: /女友|男友|恋人|同栋|住户|邻居/, extra: ['dorm'] },
+  { test: /青梅|发小|暗恋|前任/, extra: ['dorm'] },
+];
+
+// 当前身份能进入的地点集合（多身份取并集）
+export function getAccessibleLocations(identity?: string[]): Set<string> {
+  const allowed = new Set(PUBLIC_LOCS);
+  for (const id of identity || []) {
+    const m = IDENTITY_ACCESS.find(r => r.test.test(id));
+    if (m) m.extra.forEach(l => allowed.add(l));
+  }
+  return allowed;
+}
+
+// 进不去的地点，给一句符合身份的解释
+export function lockReason(locationId: string, tw: boolean): string {
+  switch (locationId) {
+    case 'practice_room': return tw ? '練習室閒人免進，你的身份刷不開門禁。' : '练习室闲人免进，你的身份刷不开门禁。';
+    case 'backstage': return tw ? '後台只認工作證，你被保安攔在門口。' : '后台只认工作证，你被保安拦在门口。';
+    case 'music_stage': return tw ? '打歌舞台是圈內人的地盤，你進不去。' : '打歌舞台是圈内人的地盘，你进不去。';
+    case 'variety_studio': return tw ? '綜藝棚錄製中，無關人員止步。' : '综艺棚录制中，无关人员止步。';
+    case 'dorm': return tw ? '宿舍是她們的私人領域，你這身份沒法登門。' : '宿舍是她们的私人领域，你这身份没法登门。';
+    default: return tw ? '你的身份到不了這裡。' : '你的身份到不了这里。';
+  }
+}
+
 // 时间推进：晚上→次日上午
 export function nextTime(day: number, slot: number): { day: number; slot: number } {
   if (slot >= TIME_SLOTS.length - 1) return { day: day + 1, slot: 0 };
