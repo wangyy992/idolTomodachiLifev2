@@ -446,7 +446,10 @@ const CharacterCreationWizard = ({ onComplete, members }: { onComplete: (data: a
   };
 
   return (
-    <div className="min-h-screen bg-[#F3F2FA] flex items-center justify-center p-4 py-8 relative">
+    <div className="min-h-screen flex items-center justify-center p-4 py-8 relative overflow-hidden" style={{ background: 'linear-gradient(160deg, #EDEFFB 0%, #F3F2FA 45%, #F7EEF3 100%)' }}>
+      <div className="absolute -top-24 -left-20 w-80 h-80 rounded-full blur-3xl opacity-40 pointer-events-none" style={{ background: 'radial-gradient(circle, #7C83C3, transparent 70%)' }} />
+      <div className="absolute -bottom-28 -right-16 w-96 h-96 rounded-full blur-3xl opacity-30 pointer-events-none" style={{ background: 'radial-gradient(circle, #FF7A93, transparent 70%)' }} />
+      <div className="absolute top-1/3 right-1/4 w-56 h-56 rounded-full blur-3xl opacity-20 pointer-events-none" style={{ background: 'radial-gradient(circle, #5B6BB0, transparent 70%)' }} />
       {showFace && (
         <FaceCustomizer appearance={data.playerAppearance} onChange={a => setData({ ...data, playerAppearance: a })} title={T('捏你的脸', '捏你的臉')} lang={lang} onClose={() => setShowFace(false)} />
       )}
