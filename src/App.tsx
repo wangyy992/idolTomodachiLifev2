@@ -6,6 +6,8 @@ import { GameState, INITIAL_MEMBERS, ChatMessage, MessageRole, Member, TheqooPos
 import { callGeminiAPI } from './geminiService';
 import { getSceneConfig } from './sceneConfig';
 import WorldView from './WorldView';
+import FaceCustomizer from './FaceCustomizer';
+import { getPlayerAppearance, getDefaultAppearance, type Appearance } from './spriteUtils';
 import { nextTime, idolsAt, WORLD_LOCATIONS, type WorldLocation, type Activity } from './worldConfig';
 import { seedIdolRelations, pairKey, deriveType, hasFlag, PLAYER, type Intent } from './relations';
 
@@ -693,6 +695,7 @@ export default function App() {
   const [showSaveSlots, setShowSaveSlots] = useState(false);
   const [worldMode, setWorldMode] = useState(true); // 俯视世界视图 ⟷ 剧情对话（临时UI，不持久化）
   const [toasts, setToasts] = useState<{ id: string; text: string; kind: string }[]>([]);
+  const [customizing, setCustomizing] = useState<{ kind: 'player' } | { kind: 'idol'; id: string } | null>(null);
   const worldDay = gameState.worldDay ?? 1;
   const worldSlot = gameState.worldSlot ?? 0;
   const worldLocation = gameState.worldLocation ?? 'practice_room';
@@ -1016,6 +1019,17 @@ export default function App() {
       : `（我在${ctx.location.label}，看到 ${a.name} 和 ${b.name} 凑在一起，我在旁边静静观察她们的互动）${hint}`);
   };
 
+  // 捏脸：取当前外观（覆盖或默认）+ 应用
+  const appearanceFor = (t: { kind: 'player' } | { kind: 'idol'; id: string }): Appearance =>
+    t.kind === 'player'
+      ? (gameState.playerAppearance || getPlayerAppearance(gameState.playerName || 'you'))
+      : (gameState.appearances?.[t.id] || getDefaultAppearance(t.id));
+  const applyAppearance = (a: Appearance) => {
+    if (!customizing) return;
+    if (customizing.kind === 'player') setGameState(prev => ({ ...prev, playerAppearance: a }));
+    else { const id = customizing.id; setGameState(prev => ({ ...prev, appearances: { ...(prev.appearances || {}), [id]: a } })); }
+  };
+
   const handleAdvanceTime = () => {
     setGameState(prev => {
       const day = prev.worldDay ?? 1, slot = prev.worldSlot ?? 0;
@@ -1105,6 +1119,18 @@ export default function App() {
 
   return (
     <div className="flex h-screen overflow-hidden relative">
+      {/* 捏脸器 */}
+      {customizing && (
+        <FaceCustomizer
+          appearance={appearanceFor(customizing)}
+          onChange={applyAppearance}
+          title={customizing.kind === 'player'
+            ? (lang === 'traditional' ? '捏你的臉' : '捏你的脸')
+            : `${lang === 'traditional' ? '捏' : '捏'}${gameState.members.find(m => m.id === (customizing as any).id)?.name || ''}`}
+          lang={lang}
+          onClose={() => setCustomizing(null)}
+        />
+      )}
       {/* 关系里程碑 toast */}
       {toasts.length > 0 && (
         <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[200] flex flex-col items-center gap-2 pointer-events-none">
@@ -1300,6 +1326,7 @@ export default function App() {
             onWatchEncounter={handleWatchEncounter}
             appearances={gameState.appearances || {}}
             playerAppearance={gameState.playerAppearance}
+            onCustomize={setCustomizing}
           />
         </div>
         ) : (

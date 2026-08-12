@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { MessageCircle, Clock, CalendarDays, ChevronRight, X, Users, Rss } from 'lucide-react';
+import { MessageCircle, Clock, CalendarDays, ChevronRight, X, Users, Rss, Palette } from 'lucide-react';
 import { Member } from './types';
 import { getSceneConfig } from './sceneConfig';
 import RelationPanel from './RelationPanel';
@@ -66,7 +66,7 @@ function moveToward(e: Entity, speed: number, dt: number): boolean {
 export default function WorldView({
   members, playerName, day, slot, locationId, onTravel, onAdvanceTime, onTalk, lang,
   relations, intents, matchmakes, onSetIntent, onToggleMatchmake, onConfess, onIdolEncounter, worldFeed, onWatchEncounter,
-  appearances, playerAppearance,
+  appearances, playerAppearance, onCustomize,
 }: {
   members: Member[];
   playerName: string;
@@ -86,6 +86,7 @@ export default function WorldView({
   onWatchEncounter: (a: Member, b: Member, ctx: { location: WorldLocation }) => void;
   appearances: Record<string, Appearance>;
   playerAppearance?: Appearance;
+  onCustomize: (t: { kind: 'player' } | { kind: 'idol'; id: string }) => void;
 }) {
   const tw = lang === 'traditional';
   const location = getLocation(locationId) || WORLD_LOCATIONS[0];
@@ -291,7 +292,10 @@ export default function WorldView({
       </div>
 
       {/* 右上：日程 + 推进时间 */}
-      <div className="absolute top-3 right-3 z-30 flex gap-2">
+      <div className="absolute top-3 right-3 z-30 flex gap-2 flex-wrap justify-end">
+        <button onClick={() => onCustomize({ kind: 'player' })} className="px-3 py-1.5 rounded-xl bg-white/90 text-[#2A2A3D] text-[11px] font-black flex items-center gap-1.5 hover:bg-white transition-all shadow">
+          <Palette className="w-3.5 h-3.5" /> {tw ? '捏臉' : '捏脸'}
+        </button>
         <button onClick={() => setShowFeed(true)} className="relative px-3 py-1.5 rounded-xl bg-white/90 text-[#2A2A3D] text-[11px] font-black flex items-center gap-1.5 hover:bg-white transition-all shadow">
           <Rss className="w-3.5 h-3.5" /> {tw ? '動態' : '动态'}
           {worldFeed.length > 0 && <span className="absolute -top-1 -right-1 min-w-[15px] h-[15px] px-1 rounded-full bg-[#FF7A93] text-white text-[8px] flex items-center justify-center">{worldFeed.length}</span>}
@@ -414,7 +418,7 @@ export default function WorldView({
         <RelationPanel
           members={members} relations={relations} intents={intents} matchmakes={matchmakes}
           onSetIntent={onSetIntent} onToggleMatchmake={onToggleMatchmake} onConfess={onConfess}
-          onClose={() => setShowRelations(false)} lang={lang}
+          onClose={() => setShowRelations(false)} lang={lang} onCustomize={onCustomize}
         />
       )}
 

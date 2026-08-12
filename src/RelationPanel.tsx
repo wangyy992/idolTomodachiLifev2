@@ -1,5 +1,5 @@
 import React from 'react';
-import { Heart, X, Users } from 'lucide-react';
+import { Heart, X, Users, Palette } from 'lucide-react';
 import { Member } from './types';
 import {
   PLAYER, pairKey, deriveType, typeColor, hasFlag, type WorldRelation, type Intent,
@@ -9,7 +9,7 @@ const INTENT_LABEL: Record<Intent, string> = { romance: '♥ 攻略', friend: '�
 const INTENT_ORDER: Intent[] = ['none', 'friend', 'romance'];
 
 export default function RelationPanel({
-  members, relations, intents, matchmakes, onSetIntent, onToggleMatchmake, onConfess, onClose, lang,
+  members, relations, intents, matchmakes, onSetIntent, onToggleMatchmake, onConfess, onClose, lang, onCustomize,
 }: {
   members: Member[];
   relations: Record<string, WorldRelation>;
@@ -20,6 +20,7 @@ export default function RelationPanel({
   onConfess: (id: string) => void;
   onClose: () => void;
   lang: string;
+  onCustomize: (t: { kind: 'player' } | { kind: 'idol'; id: string }) => void;
 }) {
   const tw = lang === 'traditional';
 
@@ -41,7 +42,10 @@ export default function RelationPanel({
         </div>
 
         {/* 你 与 爱豆 */}
-        <div className="text-[11px] font-black text-[#454F87] uppercase tracking-widest mb-2">{tw ? '你 與 愛豆' : '你 与 爱豆'}</div>
+        <div className="flex items-center justify-between mb-2">
+          <div className="text-[11px] font-black text-[#454F87] uppercase tracking-widest">{tw ? '你 與 愛豆' : '你 与 爱豆'}</div>
+          <button onClick={() => onCustomize({ kind: 'player' })} className="px-2 py-0.5 rounded-lg bg-white text-[#454F87] border border-[#DAD8EE] text-[10px] font-black flex items-center gap-1 hover:bg-[#E7E6F6]"><Palette className="w-3 h-3" /> {tw ? '捏我的臉' : '捏我的脸'}</button>
+        </div>
         <div className="space-y-2 mb-5">
           {members.map(m => {
             const romance = intents[m.id] === 'romance';
@@ -55,7 +59,10 @@ export default function RelationPanel({
                     <span className="text-xs font-black text-[#2A2A3D]">{m.name}</span>
                     <span className="px-1.5 py-0.5 rounded text-[9px] font-black text-white" style={{ background: typeColor(type) }}>{type}</span>
                   </div>
-                  <span className="text-[10px] font-mono font-bold text-[#5B6BB0]">{m.affection}/100</span>
+                  <div className="flex items-center gap-2">
+                    <button onClick={() => onCustomize({ kind: 'idol', id: m.id })} title={tw ? '捏臉' : '捏脸'} className="p-1 rounded-lg bg-white text-[#454F87] border border-[#DAD8EE] hover:bg-[#E7E6F6]"><Palette className="w-3 h-3" /></button>
+                    <span className="text-[10px] font-mono font-bold text-[#5B6BB0]">{m.affection}/100</span>
+                  </div>
                 </div>
                 <div className="h-1.5 bg-[#E7E6F6] rounded-full overflow-hidden mb-2">
                   <div className="h-full rounded-full" style={{ width: `${m.affection}%`, background: typeColor(type) }} />
