@@ -6,7 +6,7 @@ import { SKIN_TONES, HAIR_COLORS, CLOTH_COLORS } from './appearanceDefaults';
 const HAT_COLORS = ['#e74c3c', '#3498db', '#f1c40f', '#9b59b6', '#1abc9c', '#2A2A3D', '#ecf0f1'];
 
 // 实时预览：走路动画
-function SpritePreview({ appearance, size = 128 }: { appearance: Appearance; size?: number }) {
+export function SpritePreview({ appearance, size = 128 }: { appearance: Appearance; size?: number }) {
   const [strip, setStrip] = useState<string | null>(null);
   const [frame, setFrame] = useState(0);
   const key = JSON.stringify(appearance);
