@@ -100,6 +100,25 @@ export function getLocation(id: string): WorldLocation | undefined {
   return WORLD_LOCATIONS.find(l => l.id === id);
 }
 
+// 身份 → 初始切入点：让"你是谁"决定你从世界的哪个角落出场
+const IDENTITY_START: { test: RegExp; loc: string }[] = [
+  { test: /实习|工作人员|妆造|发型|助理|翻译|商务|经纪|staff/i, loc: 'backstage' },   // 圈内人：后台
+  { test: /记者|博主|媒体|采访/, loc: 'music_stage' },                                  // 媒体：打歌舞台边
+  { test: /粉丝|饭|站姐|fan/i, loc: 'concert' },                                         // 粉丝：演唱会现场
+  { test: /女友|男友|恋人|同栋|住户|邻居/, loc: 'dorm' },                                 // 私密关系：宿舍区
+  { test: /青梅|发小|暗恋|前任/, loc: 'cafe' },                                           // 旧relationship：咖啡厅
+  { test: /留学|打工|便利店|咖啡/, loc: 'cafe' },                                         // 普通生活：咖啡厅
+];
+
+// 依身份挑一个合理的起始地点；无匹配则回落练习室
+export function getStartLocation(identity?: string[]): string {
+  for (const id of identity || []) {
+    const m = IDENTITY_START.find(r => r.test.test(id));
+    if (m) return m.loc;
+  }
+  return 'practice_room';
+}
+
 // 时间推进：晚上→次日上午
 export function nextTime(day: number, slot: number): { day: number; slot: number } {
   if (slot >= TIME_SLOTS.length - 1) return { day: day + 1, slot: 0 };

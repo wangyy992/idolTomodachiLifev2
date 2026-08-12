@@ -10,7 +10,7 @@ import FaceCustomizer, { SpritePreview } from './FaceCustomizer';
 import SceneView from './SceneView';
 import WorldPanel from './WorldPanel';
 import { getPlayerAppearance, getDefaultAppearance, type Appearance } from './spriteUtils';
-import { nextTime, idolsAt, getLocation, WORLD_LOCATIONS, type WorldLocation, type Activity } from './worldConfig';
+import { nextTime, idolsAt, getLocation, getStartLocation, WORLD_LOCATIONS, type WorldLocation, type Activity } from './worldConfig';
 import { seedIdolRelations, pairKey, deriveType, hasFlag, PLAYER, type Intent } from './relations';
 
 const LOCAL_STORAGE_KEY = 'star_reality_kpop_game_state';
@@ -874,7 +874,8 @@ export default function App() {
     if (isMomMode) {
       summary += `我是一位妈妈。女儿设定：国籍${data.daughterNationality}，性格${data.daughterPersonality}，家庭背景${data.daughterBackground}${data.daughterName ? `，名字${data.daughterName}` : ''}。请根据这些设定生成女儿的虚构角色，然后从她8岁那年开始故事。`;
     } else {
-      summary += `身份是 ${(data.identity || []).join(', ') || '普通人'}。${isCPMode ? `我想撮合 ${targetNames.join(' 和 ')}。` : `我想关注 ${targetNames.join(', ')}。`}游戏模式：${data.gameMode}。故事开始。`;
+      const startLabel = getLocation(getStartLocation(data.identity))?.label;
+      summary += `身份是 ${(data.identity || []).join(', ') || '普通人'}。${isCPMode ? `我想撮合 ${targetNames.join(' 和 ')}。` : `我想关注 ${targetNames.join(', ')}。`}游戏模式：${data.gameMode}。${startLabel ? `故事从我以这个身份自然会出现的地方——${startLabel}——开始，开场地点要符合我的身份。` : ''}故事开始。`;
     }
 
     const initializedMembers = INITIAL_MEMBERS.map(m => {
@@ -894,9 +895,12 @@ export default function App() {
       trustLevel: 50,
     } : null;
 
+    const startLoc = isMomMode ? undefined : getStartLocation(data.identity);
+    const startScene = startLoc ? getLocation(startLoc)?.label : undefined;
     const newState: GameState = {
       ...gameState, ...data, members: initializedMembers,
       setupStep: SetupStep.CARDS, history: [], turnCount: 0,
+      ...(startLoc ? { worldLocation: startLoc, worldDay: 1, worldSlot: 0, currentScene: startScene } : {}),
       ...(daughterProfile ? { daughterProfile, momTrustLevel: 50 } : {}),
       ...(data.playerApiKey ? { playerApiKey: data.playerApiKey, playerModel: data.playerModel } : {}),
       language: data.language
