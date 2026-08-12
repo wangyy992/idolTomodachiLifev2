@@ -9,8 +9,8 @@ import {
   type Activity, type WorldLocation,
 } from './worldConfig';
 import {
-  loadSpriteSheet, buildSpriteStrip, getAppearance, getPlayerAppearance,
-  FRAMES, STRIP_W, STRIP_H,
+  loadSpriteSheet, buildSpriteStrip, getDefaultAppearance, getPlayerAppearance,
+  FRAMES, STRIP_W, STRIP_H, type Appearance,
 } from './spriteUtils';
 
 // ---------- 单个像素小人 ----------
@@ -66,6 +66,7 @@ function moveToward(e: Entity, speed: number, dt: number): boolean {
 export default function WorldView({
   members, playerName, day, slot, locationId, onTravel, onAdvanceTime, onTalk, lang,
   relations, intents, matchmakes, onSetIntent, onToggleMatchmake, onConfess, onIdolEncounter, worldFeed, onWatchEncounter,
+  appearances, playerAppearance,
 }: {
   members: Member[];
   playerName: string;
@@ -83,6 +84,8 @@ export default function WorldView({
   onIdolEncounter: (aId: string, bId: string, kind: 'romance' | 'tension' | 'friendly') => void;
   worldFeed: { id: string; text: string; kind: string; day: number; slot: number }[];
   onWatchEncounter: (a: Member, b: Member, ctx: { location: WorldLocation }) => void;
+  appearances: Record<string, Appearance>;
+  playerAppearance?: Appearance;
 }) {
   const tw = lang === 'traditional';
   const location = getLocation(locationId) || WORLD_LOCATIONS[0];
@@ -131,21 +134,22 @@ export default function WorldView({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [presentKey, playerName]);
 
-  // 合成所有已选成员的走路 strip（换地点不重建）
+  // 合成所有已选成员的走路 strip（外观来自捏脸覆盖，否则用默认/还原真人）
   const membersKey = members.map(m => m.id).join(',');
+  const appearanceKey = JSON.stringify(appearances) + '|' + JSON.stringify(playerAppearance || '');
   useEffect(() => {
     let alive = true;
     loadSpriteSheet().then(sheet => {
       if (!alive) return;
-      const map: Record<string, string> = { ...stripsRef.current };
-      for (const m of members) if (!map[m.id]) map[m.id] = buildSpriteStrip(sheet, getAppearance(m.id));
-      map['__player__'] = buildSpriteStrip(sheet, getPlayerAppearance(playerName || 'you'));
+      const map: Record<string, string> = {};
+      for (const m of members) map[m.id] = buildSpriteStrip(sheet, appearances[m.id] || getDefaultAppearance(m.id));
+      map['__player__'] = buildSpriteStrip(sheet, playerAppearance || getPlayerAppearance(playerName || 'you'));
       stripsRef.current = map;
       setTick(t => t + 1);
     }).catch(() => {});
     return () => { alive = false; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [membersKey, playerName]);
+  }, [membersKey, playerName, appearanceKey]);
 
   // 键盘
   useEffect(() => {

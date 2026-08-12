@@ -1298,6 +1298,8 @@ export default function App() {
             onIdolEncounter={handleIdolEncounter}
             worldFeed={gameState.worldFeed || []}
             onWatchEncounter={handleWatchEncounter}
+            appearances={gameState.appearances || {}}
+            playerAppearance={gameState.playerAppearance}
           />
         </div>
         ) : (

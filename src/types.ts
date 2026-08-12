@@ -149,6 +149,9 @@ export interface GameState {
   worldSlot?: number;
   worldLocation?: string;
   worldFeed?: { id: string; text: string; kind: string; day: number; slot: number }[]; // 世界动态流
+  // 捏脸：外观覆盖（不填则用默认/还原真人）
+  playerAppearance?: import('./spriteUtils').Appearance;
+  appearances?: Record<string, import('./spriteUtils').Appearance>;
 }
 
 export const INITIAL_MEMBERS: Member[] = [

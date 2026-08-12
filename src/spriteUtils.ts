@@ -3,6 +3,7 @@
 // 每个部件占 2 行（两个方向，互为镜像），我们只用每对的第一行 + CSS 水平翻转做另一方向。
 // 层序（行号）：身体0 / 头发2 / 上衣4 / 裤子6 / 鞋8 / 帽10。每行 8 帧走路循环。
 import spriteSheetUrl from './global.png';
+import { IDOL_HAIR } from './appearanceDefaults';
 
 export const CELL = 32;
 export const FRAMES = 8;
@@ -20,6 +21,7 @@ const LAYER_ROW = {
 } as const;
 
 export interface Appearance {
+  skin?: string;      // 肤色 (hex，可选；不填用素材原色)
   hair: string;       // 发色 (hex)
   hair2?: string;     // 半半发色：右半边的颜色（可选）
   top: string;        // 上衣
@@ -91,6 +93,18 @@ function recolorInPlace(data: Uint8ClampedArray, target: string, target2?: strin
   }
 }
 
+// 肤色重着色：只改较亮的皮肤像素，保留深色五官/描边
+function recolorSkinInPlace(data: Uint8ClampedArray, target: string) {
+  const [th, ts] = rgbToHsl(...hexToRgb(target));
+  for (let i = 0; i < data.length; i += 4) {
+    if (data[i + 3] < 10) continue;
+    const [, , l] = rgbToHsl(data[i], data[i + 1], data[i + 2]);
+    if (l < 0.34) continue; // 眼睛/描边保持
+    const [r, g, b] = hslToRgb(th, ts, l);
+    data[i] = r; data[i + 1] = g; data[i + 2] = b;
+  }
+}
+
 // ---------- 加载 & 合成 ----------
 let sheetPromise: Promise<HTMLImageElement> | null = null;
 export function loadSpriteSheet(): Promise<HTMLImageElement> {
@@ -105,7 +119,7 @@ export function loadSpriteSheet(): Promise<HTMLImageElement> {
   return sheetPromise;
 }
 
-function layerStrip(sheet: HTMLImageElement, row: number, recolor?: { c: string; c2?: string }): HTMLCanvasElement {
+function layerStrip(sheet: HTMLImageElement, row: number, recolor?: { c: string; c2?: string; skin?: string }): HTMLCanvasElement {
   const cv = document.createElement('canvas');
   cv.width = STRIP_W; cv.height = STRIP_H;
   const ctx = cv.getContext('2d')!;
@@ -113,7 +127,8 @@ function layerStrip(sheet: HTMLImageElement, row: number, recolor?: { c: string;
   ctx.drawImage(sheet, 0, row * CELL, STRIP_W, STRIP_H, 0, 0, STRIP_W, STRIP_H);
   if (recolor) {
     const id = ctx.getImageData(0, 0, STRIP_W, STRIP_H);
-    recolorInPlace(id.data, recolor.c, recolor.c2);
+    if (recolor.skin) recolorSkinInPlace(id.data, recolor.skin);
+    else recolorInPlace(id.data, recolor.c, recolor.c2);
     ctx.putImageData(id, 0, 0);
   }
   return cv;
@@ -133,7 +148,7 @@ export function buildSpriteStrip(sheet: HTMLImageElement, a: Appearance): string
   ctx.imageSmoothingEnabled = false;
 
   // 顺序：身体 → 头发 → 上衣 → 裤子 → 鞋 → 帽
-  ctx.drawImage(layerStrip(sheet, LAYER_ROW.body), 0, 0);
+  ctx.drawImage(layerStrip(sheet, LAYER_ROW.body, a.skin ? { c: a.skin, skin: a.skin } : undefined), 0, 0);
   ctx.drawImage(layerStrip(sheet, LAYER_ROW.hair, { c: a.hair, c2: a.hair2 }), 0, 0);
   ctx.drawImage(layerStrip(sheet, LAYER_ROW.top, { c: a.top }), 0, 0);
   ctx.drawImage(layerStrip(sheet, LAYER_ROW.pants, { c: a.pants }), 0, 0);
@@ -178,4 +193,11 @@ export function getAppearance(seed: string): Appearance {
 export function getPlayerAppearance(seed: string): Appearance {
   const base = getAppearance('player::' + seed);
   return { ...base, top: '#f5f0e8', pants: '#3a3f4a', shoes: '#1c1c1c', hat: undefined, hair2: undefined };
+}
+
+// 爱豆默认外观：hash 生成的衣着 + "还原真人"的默认发色（若表里有）
+export function getDefaultAppearance(id: string): Appearance {
+  const base = getAppearance(id);
+  const hair = IDOL_HAIR[id];
+  return hair ? { ...base, hair, hair2: undefined } : base;
 }
