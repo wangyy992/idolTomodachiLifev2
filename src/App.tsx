@@ -7,8 +7,9 @@ import { callGeminiAPI } from './geminiService';
 import { getSceneConfig } from './sceneConfig';
 import WorldView from './WorldView';
 import FaceCustomizer, { SpritePreview } from './FaceCustomizer';
+import SceneView from './SceneView';
 import { getPlayerAppearance, getDefaultAppearance, type Appearance } from './spriteUtils';
-import { nextTime, idolsAt, WORLD_LOCATIONS, type WorldLocation, type Activity } from './worldConfig';
+import { nextTime, idolsAt, getLocation, WORLD_LOCATIONS, type WorldLocation, type Activity } from './worldConfig';
 import { seedIdolRelations, pairKey, deriveType, hasFlag, PLAYER, type Intent } from './relations';
 
 const LOCAL_STORAGE_KEY = 'star_reality_kpop_game_state';
@@ -642,6 +643,30 @@ function parseOptions(text: string): { text: string; action: string }[] {
   return [];
 }
 
+export type ScriptEntry = { kind: 'narration'; text: string } | { kind: 'line'; speaker: string; text: string };
+
+// 把叙事正文解析成"旁白/台词"序列，做 VN 演出用；AI 不守格式时优雅降级为整段旁白
+export function parseScript(text: string): ScriptEntry[] {
+  const out: ScriptEntry[] = [];
+  const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+  for (let line of lines) {
+    if (/^\*{0,2}[A-C][\.、。]/.test(line)) continue;       // 选项行
+    if (/^【.*】/.test(line)) continue;                     // 【本轮可选行动】等标题
+    if (/^-{3,}$/.test(line)) continue;
+    line = line.replace(/^\*+/, '').replace(/\*+$/, '').trim();
+    let m = line.match(/^(旁白|旁白君|N|narration)[：:]\s*(.+)$/i);
+    if (m) { out.push({ kind: 'narration', text: m[2].trim() }); continue; }
+    // 角色名：「台词」
+    m = line.match(/^([^\s：:，。！？、]{1,8})[：:]\s*[「"“](.+?)[」"”]?$/);
+    if (m) { out.push({ kind: 'line', speaker: m[1].trim(), text: m[2].replace(/[」"”]\s*$/, '').trim() }); continue; }
+    // 角色名：台词（无引号，名字较短）
+    m = line.match(/^([^\s：:，。！？、]{2,6})[：:]\s*(.+)$/);
+    if (m) { out.push({ kind: 'line', speaker: m[1].trim(), text: m[2].trim() }); continue; }
+    out.push({ kind: 'narration', text: line });
+  }
+  return out.length ? out : [{ kind: 'narration', text: text.trim() }];
+}
+
 const MarkdownBlock = ({ content }: { content: string }) => (
   <Markdown components={{
     p: ({children}) => {
@@ -676,6 +701,7 @@ export default function App() {
   const [worldMode, setWorldMode] = useState(true); // 俯视世界视图 ⟷ 剧情对话（临时UI，不持久化）
   const [toasts, setToasts] = useState<{ id: string; text: string; kind: string }[]>([]);
   const [customizing, setCustomizing] = useState<{ kind: 'player' } | { kind: 'idol'; id: string } | null>(null);
+  const [scene, setScene] = useState<{ ids: string[]; anchor: number } | null>(null);
   const worldDay = gameState.worldDay ?? 1;
   const worldSlot = gameState.worldSlot ?? 0;
   const worldLocation = gameState.worldLocation ?? 'practice_room';
@@ -972,31 +998,28 @@ export default function App() {
 
   // 从俯视世界点击爱豆 → 切回剧情，预填带场景/心情语境的“走近”动作交给 DeepSeek
   const handleTalkTo = (m: Member, ctx?: { location: WorldLocation; activity: Activity }) => {
-    setWorldMode(false);
-    // 相遇即让好感微涨（占位：M3b 会改由 DeepSeek 结算 deltas）
-    setGameState(prev => ({
-      ...prev,
-      members: prev.members.map(x => x.id === m.id ? { ...x, affection: Math.min(100, (x.affection || 0) + 1) } : x),
-    }));
     const isTw = (gameState as any).language === 'traditional';
     const where = ctx ? `在${ctx.location.label}` : '';
     const doing = ctx ? `（她正${ctx.activity.label}，${ctx.activity.mood}）` : '';
-    setInput(isTw
+    const line = isTw
       ? `（我${where}走近${m.name}，和ta打個招呼）${doing}`
-      : `（我${where}走近${m.name}，和ta打个招呼）${doing}`);
+      : `（我${where}走近${m.name}，和ta打个招呼）${doing}`;
+    setScene({ ids: [m.id], anchor: gameState.history.length });
+    handleSend(line);
   };
 
   // 推进时段：先结算"你不在场"的其它地点里同处一地的爱豆对（后台世界推进），再跳时间
   // 围观两个爱豆相遇 → 切到剧情，让 DeepSeek 演这场戏（关系模块已在 prompt 里，结算走 RELDELTA）
   const handleWatchEncounter = (a: Member, b: Member, ctx: { location: WorldLocation }) => {
-    setWorldMode(false);
     const k = pairKey(a.id, b.id);
     const isMatch = (gameState.matchmakes || []).includes(k);
     const isTw = (gameState as any).language === 'traditional';
     const hint = isMatch ? '（我想撮合她们，留意有没有暧昧的火花）' : '';
-    setInput(isTw
+    const line = isTw
       ? `（我在${ctx.location.label}，看到 ${a.name} 和 ${b.name} 湊在一起，我在旁邊靜靜觀察她們的互動）${hint}`
-      : `（我在${ctx.location.label}，看到 ${a.name} 和 ${b.name} 凑在一起，我在旁边静静观察她们的互动）${hint}`);
+      : `（我在${ctx.location.label}，看到 ${a.name} 和 ${b.name} 凑在一起，我在旁边静静观察她们的互动）${hint}`;
+    setScene({ ids: [a.id, b.id], anchor: gameState.history.length });
+    handleSend(line);
   };
 
   // 捏脸：取当前外观（覆盖或默认）+ 应用
@@ -1091,6 +1114,22 @@ export default function App() {
   // 俯视世界里出现的爱豆：优先玩家关注的对象，否则取前若干位
   const worldMembers = targetMembers.length > 0 ? targetMembers : gameState.members.slice(0, 6);
 
+  // VN 场景数据：取本次相遇（anchor 之后）的最新一条 AI 回复
+  let sceneScript: ScriptEntry[] = [];
+  let sceneOptions: { text: string; action: string }[] = [];
+  if (scene) {
+    const hist = gameState.history;
+    let msg: any = null;
+    for (let i = hist.length - 1; i >= scene.anchor; i--) { if (hist[i].role === MessageRole.ASSISTANT) { msg = hist[i]; break; } }
+    if (msg) {
+      const txt = (msg.contentBlocks || []).filter((b: any) => b.type === 'text').map((b: any) => b.content).join('\n') || msg.content || '';
+      sceneScript = parseScript(txt);
+      sceneOptions = msg.options || [];
+    }
+  }
+  const sceneMembers = scene ? gameState.members.filter(m => scene.ids.includes(m.id)) : [];
+  const sceneLoc = getLocation(worldLocation);
+
   const lang = (gameState as any).language || 'simplified';
   const sidebarLabel = isMomMode ? '母女信任度' : isCPMode ? (lang === 'traditional' ? 'CP 羈絆值' : 'CP 羁绊值') : (lang === 'traditional' ? '角色狀態' : '角色状态');
   const modeLabel = isMomMode ? '宝妈' : isCPMode ? '助攻' : '攻略';
@@ -1099,6 +1138,24 @@ export default function App() {
 
   return (
     <div className="flex h-screen overflow-hidden relative">
+      {/* VN 相遇场景 */}
+      {scene && (
+        <SceneView
+          members={sceneMembers}
+          playerName={gameState.playerName}
+          appearances={gameState.appearances || {}}
+          playerAppearance={gameState.playerAppearance}
+          sceneBg={getSceneConfig(sceneLoc?.sceneKey || 'practice_room').bg}
+          sceneLabel={sceneLoc?.label || ''}
+          script={sceneScript}
+          options={sceneOptions}
+          isLoading={isLoading}
+          lang={lang}
+          onChoose={(a) => handleSend(a)}
+          onSend={(t) => handleSend(t)}
+          onLeave={() => setScene(null)}
+        />
+      )}
       {/* 捏脸器 */}
       {customizing && (
         <FaceCustomizer
