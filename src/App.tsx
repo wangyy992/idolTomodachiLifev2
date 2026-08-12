@@ -10,7 +10,7 @@ import FaceCustomizer, { SpritePreview } from './FaceCustomizer';
 import SceneView from './SceneView';
 import WorldPanel from './WorldPanel';
 import { getPlayerAppearance, getDefaultAppearance, type Appearance } from './spriteUtils';
-import { nextTime, idolsAt, getLocation, getStartLocation, WORLD_LOCATIONS, type WorldLocation, type Activity } from './worldConfig';
+import { nextTime, idolsAt, getLocation, getStartLocation, startingAffection, WORLD_LOCATIONS, type WorldLocation, type Activity } from './worldConfig';
 import { seedIdolRelations, pairKey, deriveType, hasFlag, PLAYER, type Intent } from './relations';
 
 const LOCAL_STORAGE_KEY = 'star_reality_kpop_game_state';
@@ -878,11 +878,16 @@ export default function App() {
       summary += `身份是 ${(data.identity || []).join(', ') || '普通人'}。${isCPMode ? `我想撮合 ${targetNames.join(' 和 ')}。` : `我想关注 ${targetNames.join(', ')}。`}游戏模式：${data.gameMode}。${startLabel ? `故事从我以这个身份自然会出现的地方——${startLabel}——开始，开场地点要符合我的身份。` : ''}故事开始。`;
     }
 
+    const affFloor = isCPMode || isMomMode ? 0 : startingAffection(data.identity);
     const initializedMembers = INITIAL_MEMBERS.map(m => {
       if (isCPMode && data.targets.includes(m.id)) {
         const otherTargetId = data.targets.find((id: string) => id !== m.id);
         const relation = (m as any).initialRelationships?.find((r: any) => r.targetId === otherTargetId);
         return { ...m, affection: relation ? relation.affinity : 0 };
+      }
+      // 关系型身份（现任女友/青梅…）→ 攻略对象起始好感度带一个下限
+      if (affFloor > 0 && data.targets.includes(m.id)) {
+        return { ...m, affection: Math.max(m.affection || 0, affFloor) };
       }
       return m;
     });

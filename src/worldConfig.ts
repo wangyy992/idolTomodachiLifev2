@@ -119,6 +119,23 @@ export function getStartLocation(identity?: string[]): string {
   return 'practice_room';
 }
 
+// 关系型身份 → 起始好感度下限：让"你们本来就认识"变成真实数值，而非从陌生人开始
+const IDENTITY_AFFECTION: { test: RegExp; floor: number }[] = [
+  { test: /现任女友|现任男友|恋人/, floor: 62 },  // 已在恋爱
+  { test: /青梅|发小/, floor: 40 },               // 从小认识
+  { test: /前任/, floor: 34 },                    // 旧情复杂
+  { test: /暗恋/, floor: 18 },                    // 单向，略有接触
+];
+
+export function startingAffection(identity?: string[]): number {
+  let floor = 0;
+  for (const id of identity || []) {
+    const m = IDENTITY_AFFECTION.find(r => r.test.test(id));
+    if (m) floor = Math.max(floor, m.floor);
+  }
+  return floor;
+}
+
 // 人人可去的公共场所
 export const PUBLIC_LOCS = ['concert', 'cafe', 'convenience', 'hangang'];
 
