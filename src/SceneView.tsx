@@ -89,10 +89,10 @@ export default function SceneView({
                 {active && entry?.kind === 'line' && (
                   <motion.div
                     initial={{ opacity: 0, y: 8, scale: 0.92 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }}
-                    className="absolute bottom-full mb-3 max-w-[62vw] sm:max-w-xs px-3.5 py-2.5 rounded-3xl rounded-bl-md bg-white text-[#2A2A3D] text-sm font-medium shadow-[0_8px_24px_rgba(30,20,60,0.35)]"
+                    className="absolute bottom-full mb-4 max-w-[64vw] sm:max-w-[17rem] px-5 py-3.5 rounded-[1.6rem] rounded-bl-lg bg-white text-[#2A2A3D] text-[14px] leading-[1.7] font-medium shadow-[0_10px_30px_rgba(30,20,60,0.32)]"
                   >
                     {typed}<span className={isTyping ? 'opacity-100' : 'opacity-0'}>▍</span>
-                    <div className="absolute top-full left-6 -mt-1 w-3 h-3 bg-white rotate-45 rounded-sm" />
+                    <div className="absolute top-full left-7 -mt-1.5 w-3.5 h-3.5 bg-white rotate-45 rounded-sm" />
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -106,22 +106,22 @@ export default function SceneView({
       </div>
 
       {/* 底部：选项 + 剧情框 */}
-      <div className="relative z-20 p-3 sm:p-4">
+      <div className="relative z-20 px-4 sm:px-6 pt-3 pb-5 sm:pb-7">
         <AnimatePresence>
           {atEnd && !isLoading && (showInput || options.length > 0) && (
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="max-w-2xl mx-auto mb-2 flex flex-col gap-2">
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="max-w-3xl mx-auto mb-4 flex flex-col gap-2.5">
               {showInput ? (
-                <div className="flex gap-2">
-                  <input autoFocus value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') send(); }} placeholder={tw ? '自由行動…' : '自由行动…'} className="flex-1 bg-white/95 rounded-2xl px-4 py-3 text-sm outline-none border border-white/40 text-[#2A2A3D] shadow-lg" />
-                  <button onClick={send} className="px-4 rounded-2xl bg-[#5B6BB0] text-white shadow-lg active:scale-95"><Send className="w-4 h-4" /></button>
+                <div className="flex gap-2.5">
+                  <input autoFocus value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') send(); }} placeholder={tw ? '自由行動…' : '自由行动…'} className="flex-1 bg-white/95 rounded-2xl px-5 py-3.5 text-[15px] outline-none border border-white/40 text-[#2A2A3D] shadow-lg" />
+                  <button onClick={send} className="px-5 rounded-2xl bg-[#5B6BB0] text-white shadow-lg active:scale-95"><Send className="w-4 h-4" /></button>
                 </div>
               ) : options.map((o, i) => (
                 <motion.button
                   key={i} initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.06 }}
                   onClick={() => onChoose(o.action)}
-                  className="group w-full text-left pl-4 pr-4 py-3 rounded-2xl bg-white/95 text-[#2A2A3D] text-sm font-bold border border-white/50 shadow-[0_6px_18px_rgba(30,20,60,0.25)] hover:bg-white hover:border-[#FF7A93] hover:-translate-y-0.5 transition-all flex items-center gap-2"
+                  className="group w-full text-left pl-4 pr-5 py-3.5 rounded-2xl bg-white/95 text-[#2A2A3D] text-[14.5px] leading-relaxed font-bold border border-white/50 shadow-[0_6px_18px_rgba(30,20,60,0.25)] hover:bg-white hover:border-[#FF7A93] hover:-translate-y-0.5 transition-all flex items-center gap-3"
                 >
-                  <span className="w-6 h-6 rounded-lg bg-[#E7E6F6] text-[#5B6BB0] text-[11px] font-black flex items-center justify-center group-hover:bg-[#FF7A93] group-hover:text-white transition-colors flex-shrink-0">{'ABC'[i] || '·'}</span>
+                  <span className="w-7 h-7 rounded-xl bg-[#E7E6F6] text-[#5B6BB0] text-[12px] font-black flex items-center justify-center group-hover:bg-[#FF7A93] group-hover:text-white transition-colors flex-shrink-0">{'ABC'[i] || '·'}</span>
                   <span className="flex-1">{o.text.replace(/^[A-C][\.、。]\s*/, '')}</span>
                 </motion.button>
               ))}
@@ -130,23 +130,23 @@ export default function SceneView({
         </AnimatePresence>
 
         {/* 剧情框 */}
-        <div onClick={onBox} className="relative max-w-2xl mx-auto rounded-[1.75rem] p-[1.5px] cursor-pointer shadow-[0_10px_40px_rgba(10,6,25,0.5)]" style={{ background: 'linear-gradient(135deg, rgba(123,133,201,0.9), rgba(255,122,147,0.5))' }}>
-          <div className="rounded-[1.65rem] bg-[#141127]/85 backdrop-blur-md px-5 pt-4 pb-3 min-h-[92px]">
+        <div onClick={onBox} className="relative max-w-3xl mx-auto rounded-[1.9rem] p-[1.5px] cursor-pointer shadow-[0_14px_48px_rgba(10,6,25,0.55)]" style={{ background: 'linear-gradient(135deg, rgba(123,133,201,0.9), rgba(255,122,147,0.5))' }}>
+          <div className="relative rounded-[1.8rem] bg-[#141127]/88 backdrop-blur-md px-7 sm:px-10 pt-5 pb-5 min-h-[120px] sm:min-h-[132px]">
             {/* 名牌 */}
             {entry?.kind === 'line' && (
-              <div className="inline-block -mt-7 mb-1 px-3 py-1 rounded-full bg-[#5B6BB0] text-white text-[11px] font-black shadow-lg">{entry.speaker}</div>
+              <div className="inline-flex items-center mb-2.5 px-3.5 py-1 rounded-xl bg-gradient-to-r from-[#5B6BB0] to-[#6C79C4] text-white text-[12.5px] font-black shadow-[0_4px_12px_-3px_rgba(91,107,176,0.8)] border border-white/15">{entry.speaker}</div>
             )}
             {isLoading && atEnd ? (
-              <div className="flex gap-1.5 items-center py-2 text-white/70"><span className="w-2 h-2 bg-white/70 rounded-full animate-bounce" /><span className="w-2 h-2 bg-white/70 rounded-full animate-bounce [animation-delay:0.15s]" /><span className="w-2 h-2 bg-white/70 rounded-full animate-bounce [animation-delay:0.3s]" /></div>
+              <div className="flex gap-1.5 items-center py-3 text-white/70"><span className="w-2 h-2 bg-white/70 rounded-full animate-bounce" /><span className="w-2 h-2 bg-white/70 rounded-full animate-bounce [animation-delay:0.15s]" /><span className="w-2 h-2 bg-white/70 rounded-full animate-bounce [animation-delay:0.3s]" /></div>
             ) : entry ? (
-              <div className={`text-[15px] leading-relaxed text-white ${entry.kind === 'narration' ? 'italic text-white/85' : ''}`}>{typed}<span className={isTyping ? 'opacity-90' : 'opacity-0'}>▍</span></div>
-            ) : <div className="text-white/50 text-sm py-2">…</div>}
+              <div className={`text-[16px] sm:text-[17px] leading-[2] tracking-[0.015em] pr-2 ${entry.kind === 'narration' ? 'italic text-white/80' : 'text-white/95'}`}>{typed}<span className={isTyping ? 'opacity-90' : 'opacity-0'}>▍</span></div>
+            ) : <div className="text-white/50 text-[15px] py-3">…</div>}
 
-            <div className="flex items-center justify-between mt-2 pt-1 border-t border-white/10">
-              <div className="text-[10px] text-white/35 font-mono">{script.length > 1 ? `${Math.min(idx + 1, script.length)} / ${script.length}` : ''}</div>
-              {!atEnd && <div className="flex items-center gap-1 text-white/50 text-[10px]"><span>{tw ? '點擊繼續' : '点击继续'}</span><ChevronDown className="w-3.5 h-3.5 animate-bounce" /></div>}
+            <div className="flex items-center justify-between mt-5 pt-3 border-t border-white/10">
+              <div className="text-[10px] text-white/35 font-mono tracking-widest">{script.length > 1 ? `${Math.min(idx + 1, script.length)} / ${script.length}` : ''}</div>
+              {!atEnd && <div className="flex items-center gap-1.5 text-white/55 text-[11px]"><span>{tw ? '點擊繼續' : '点击继续'}</span><ChevronDown className="w-3.5 h-3.5 animate-bounce" /></div>}
               {atEnd && !isLoading && (
-                <button onClick={e => { e.stopPropagation(); setShowInput(v => !v); }} className="flex items-center gap-1 text-white/70 text-[10px] font-bold hover:text-white transition-colors"><MessageSquareText className="w-3.5 h-3.5" /> {tw ? '自由行動' : '自由行动'}</button>
+                <button onClick={e => { e.stopPropagation(); setShowInput(v => !v); }} className="flex items-center gap-1.5 text-white/75 text-[11px] font-bold hover:text-white transition-colors"><MessageSquareText className="w-3.5 h-3.5" /> {tw ? '自由行動' : '自由行动'}</button>
               )}
             </div>
           </div>
