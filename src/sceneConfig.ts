@@ -71,13 +71,13 @@ export const SCENE_CONFIG: Record<string, {
   },
   'stage_wing': {
     label: '舞台侧幕',
-    bg: 'linear-gradient(180deg, #0d0d0d 0%, #1a0a1a 30%, #2d1040 60%, #1a0828 100%)',
-    overlay: 'rgba(0,0,0,0.2)',
+    bg: "#141022 url('/scenes/stage.png') center/cover no-repeat",
+    overlay: 'rgba(0,0,0,0.06)',
   },
   'concert': {
     label: '演唱会现场',
-    bg: 'radial-gradient(120% 90% at 50% 0%, #3a1a5a 0%, #24123f 35%, #140a26 70%, #0a0514 100%)',
-    overlay: 'rgba(20,0,40,0.25)',
+    bg: "#100c1c url('/scenes/concert.png') center/cover no-repeat",
+    overlay: 'rgba(0,0,0,0.06)',
   },
 };
 
