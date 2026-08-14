@@ -39,18 +39,48 @@ export const EYE_SWATCHES = ['#2a2a2a', '#3a7ac0', '#6ab0e0', '#6b4a2f', '#3a2a1
 // CLOTHES/SHOES: Black, Blue, Blue L, Brown, Green, Green L, Pink, Purple, Red, White/Grey
 export const CLOTH_SWATCHES = ['#2c2c34', '#2980b9', '#6ab0e0', '#6d4c41', '#27ae60', '#7ac98a', '#e88ab0', '#8e44ad', '#c0392b', '#e2e2e8'];
 
-// ---- 爱豆"还原真人"默认外观（近似：长发系为主 + 各自发色，肤色偏浅） ----
-// 只给出与默认随机不同的字段；未列出的成员回退到按 id 稳定随机。
-type Look = Partial<{ skin: number; hairStyle: string; hairColor: number; clothes: string; clothesColor: number }>;
-const raw: Record<string, [string, number, number]> = {
-  // id: [hairStyle, hairColor, skin]
-  yeji: ['long_straight', 4, 1], ryujin: ['ponytail', 0, 1], lia: ['wavy', 2, 0], chaeryeong: ['long_straight', 0, 0], yuna_itzy: ['wavy', 3, 0],
-  karina: ['long_straight', 0, 0], winter: ['bob', 0, 0], giselle: ['wavy', 2, 1], ningning: ['long_straight', 12, 0],
-  wonyoung: ['long_straight', 2, 0], yujin_ive: ['wavy', 0, 0], gaeul: ['long_straight', 0, 1], rei: ['midiwave', 2, 0], liz: ['wavy', 3, 0], leeseo: ['long_straight', 0, 0],
-  sakura: ['long_straight', 1, 0], chaewon: ['long_straight', 3, 0], yunjin: ['wavy', 0, 0], kazuha: ['long_straight', 0, 0], eunchae: ['ponytail', 0, 0],
-  yunah: ['wavy', 3, 0], minju: ['long_straight', 2, 0], moka: ['bob', 0, 0], wonhee: ['long_straight', 2, 0], iroha: ['long_straight', 0, 0],
-  lily_nmixx: ['wavy', 2, 0], haewon_nmixx: ['long_straight', 0, 0],
+// ---- 爱豆招牌造型：一人一个色彩识别 + 招牌发型 + 成套搭配，追求"一眼认出是谁" ----
+// 颜色索引：发色见 HAIR_SWATCHES（0黑 1金 2棕 3浅棕 4铜 5翡翠 6绿 7灰 8丁香 9藏青 10粉 11紫 12红 13青）
+//           衣服见 CLOTH_SWATCHES（0黑 1蓝 2浅蓝 3棕 4绿 5浅绿 6粉 7紫 8红 9白灰）
+type Look = Partial<{ skin: number; hairStyle: string; hairColor: number; top: string; topColor: number; bottom: string; bottomColor: number; hat: string; glasses: string }>;
+// [skin, hairStyle, hairColor, top, topColor, bottom, bottomColor, hat]
+const raw: Record<string, [number, string, number, string, number, string, number, string?]> = {
+  // ITZY
+  yeji:       [1, 'long_straight', 7, 'suit', 0, 'pants', 0],             // 银发 + 全黑 —— 冷冽
+  ryujin:     [1, 'ponytail', 1, 'sporty', 8, 'pants', 0],                 // 金马尾 + 红运动 —— 帅气
+  lia:        [0, 'wavy', 10, 'dress', 6, '', 0],                          // 粉大波浪 + 粉裙 —— 甜
+  chaeryeong: [0, 'spacebuns', 11, 'basic', 7, 'skirt', 7],               // 紫双丸子 + 紫 —— 灵动
+  yuna_itzy:  [0, 'long_straight', 13, 'spaghetti', 2, 'skirt', 2],       // 青长直 + 浅蓝
+  // aespa
+  karina:     [0, 'long_straight', 0, 'dress', 0, '', 0],                 // 黑长直 + 黑裙 —— 高冷
+  winter:     [0, 'bob', 2, 'sailor', 1, 'skirt', 1],                     // 棕波波 + 蓝水手
+  giselle:    [1, 'wavy', 4, 'basic', 3, 'pants', 3],                     // 铜色波浪 + 棕
+  ningning:   [0, 'spacebuns', 12, 'dress', 8, '', 0],                    // 红双丸子 + 红裙
+  // IVE
+  wonyoung:   [0, 'extra_long', 3, 'dress', 9, '', 0],                    // 浅棕超长 + 白裙 —— 公主
+  yujin_ive:  [0, 'ponytail', 0, 'sporty', 4, 'pants', 0],                // 黑马尾 + 绿运动
+  gaeul:      [1, 'bob', 2, 'stripe', 0, 'pants', 0],                     // 棕波波 + 条纹黑
+  rei:        [0, 'midiwave', 0, 'basic', 6, 'skirt', 6],                 // 黑中长 + 粉
+  liz:        [0, 'wavy', 1, 'floral', 5, 'skirt', 5],                    // 金波浪 + 碎花绿
+  leeseo:     [0, 'long_straight', 3, 'spaghetti', 2, 'skirt', 2],        // 浅棕长直 + 浅蓝
+  // LE SSERAFIM
+  sakura:     [0, 'long_straight', 1, 'dress', 9, '', 0],                 // 金长直 + 白裙
+  chaewon:    [0, 'bob', 3, 'basic', 9, 'skirt', 9],                      // 浅棕波波 + 白
+  yunjin:     [1, 'wavy', 0, 'suit', 8, 'pants', 0],                      // 黑波浪 + 红西装
+  kazuha:     [0, 'long_straight', 0, 'dress', 2, '', 0],                 // 黑长直 + 浅蓝裙 —— 芭蕾
+  eunchae:    [0, 'ponytail', 2, 'sporty', 5, 'pants', 4],                // 棕马尾 + 浅绿
+  // ILLIT
+  yunah:      [0, 'wavy', 3, 'floral', 6, 'skirt', 6],
+  minju:      [0, 'long_straight', 2, 'dress', 2, '', 0],
+  moka:       [0, 'bob', 0, 'basic', 0, 'pants', 0],
+  wonhee:     [0, 'long_straight', 3, 'sailor', 6, 'skirt', 6],
+  iroha:      [0, 'ponytail', 0, 'sporty', 1, 'pants', 0],
+  // NMIXX
+  lily_nmixx:  [1, 'wavy', 2, 'basic', 4, 'skirt', 4],
+  haewon_nmixx:[0, 'long_straight', 0, 'dress', 7, '', 0],
 };
 export const IDOL_LOOK: Record<string, Look> = Object.fromEntries(
-  Object.entries(raw).map(([id, [hairStyle, hairColor, skin]]) => [id, { hairStyle, hairColor, skin }])
+  Object.entries(raw).map(([id, v]) => [id, {
+    skin: v[0], hairStyle: v[1], hairColor: v[2], top: v[3], topColor: v[4], bottom: v[5], bottomColor: v[6], hat: v[7] || '',
+  }])
 );
