@@ -31,8 +31,8 @@ export const SCENE_CONFIG: Record<string, {
   },
   'cafe': {
     label: '咖啡厅',
-    bg: 'linear-gradient(180deg, #3d2b1f 0%, #2a1a10 50%, #1a0f08 100%)',
-    overlay: 'rgba(0,0,0,0.2)',
+    bg: "#2a1a10 url('/scenes/cafe.png') center/cover no-repeat",
+    overlay: 'rgba(0,0,0,0.08)',
   },
   'convenience_store': {
     label: '便利店',
@@ -46,8 +46,8 @@ export const SCENE_CONFIG: Record<string, {
   },
   'hangang_night': {
     label: '汉江（夜晚）',
-    bg: 'linear-gradient(180deg, #0a1628 0%, #1a2d4a 40%, #0d1f35 70%, #071525 100%)',
-    overlay: 'rgba(0,0,0,0.2)',
+    bg: "#0a1628 url('/scenes/hangang.png') center/cover no-repeat",
+    overlay: 'rgba(0,0,0,0.12)',
   },
   'seoul_street': {
     label: '首尔街头',
