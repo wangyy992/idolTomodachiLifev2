@@ -9,7 +9,7 @@ import WorldView from './WorldView';
 import FaceCustomizer, { SpritePreview } from './FaceCustomizer';
 import SceneView from './SceneView';
 import WorldPanel from './WorldPanel';
-import { getPlayerAppearance, getDefaultAppearance, type Appearance } from './spriteUtils';
+import { getPlayerAppearance, getDefaultAppearance, normalizeAppearance, type Appearance } from './spriteUtils';
 import { nextTime, idolsAt, getLocation, getStartLocation, startingAffection, identitySummary, WORLD_LOCATIONS, type WorldLocation, type Activity } from './worldConfig';
 import { seedIdolRelations, pairKey, deriveType, hasFlag, PLAYER, type Intent } from './relations';
 
@@ -1107,8 +1107,8 @@ export default function App() {
   // 捏脸：取当前外观（覆盖或默认）+ 应用
   const appearanceFor = (t: { kind: 'player' } | { kind: 'idol'; id: string }): Appearance =>
     t.kind === 'player'
-      ? (gameState.playerAppearance || getPlayerAppearance(gameState.playerName || 'you'))
-      : (gameState.appearances?.[t.id] || getDefaultAppearance(t.id));
+      ? normalizeAppearance(gameState.playerAppearance, getPlayerAppearance(gameState.playerName || 'you'))
+      : normalizeAppearance(gameState.appearances?.[t.id], getDefaultAppearance(t.id));
   const applyAppearance = (a: Appearance) => {
     if (!customizing) return;
     if (customizing.kind === 'player') setGameState(prev => ({ ...prev, playerAppearance: a }));

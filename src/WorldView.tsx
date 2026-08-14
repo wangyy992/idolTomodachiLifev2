@@ -10,26 +10,33 @@ import {
   type Activity, type WorldLocation,
 } from './worldConfig';
 import {
-  loadSpriteSheet, buildSpriteStrip, getDefaultAppearance, getPlayerAppearance,
-  FRAMES, STRIP_W, STRIP_H, type Appearance,
+  buildSpriteSheet, getDefaultAppearance, getPlayerAppearance, normalizeAppearance,
+  FRAMES, CELL, SHEET_W, SHEET_H, DIR, type Appearance, type Facing,
 } from './spriteUtils';
 
+function faceFrom(dx: number, dy: number): Facing | null {
+  if (Math.abs(dx) < 0.1 && Math.abs(dy) < 0.1) return null;
+  if (Math.abs(dy) >= Math.abs(dx)) return dy < 0 ? 'up' : 'down';
+  return dx < 0 ? 'left' : 'right';
+}
+
 // ---------- 单个像素小人 ----------
-function PixelSprite({ strip, facing, frame, size }: {
-  strip: string | null; facing: 'left' | 'right'; frame: number; size: number;
+function PixelSprite({ sheet, facing, frame, size }: {
+  sheet: string | null; facing: Facing; frame: number; size: number;
 }) {
-  if (!strip) {
+  if (!sheet) {
     return <div style={{ width: size, height: size, borderRadius: '50%', background: 'rgba(255,255,255,0.25)' }} />;
   }
-  const scale = size / STRIP_H;
+  const scale = size / CELL;
+  const row = DIR[facing];
   return (
-    <div style={{ width: size, height: size, overflow: 'hidden', transform: facing === 'left' ? 'scaleX(-1)' : undefined }}>
+    <div style={{ width: size, height: size, overflow: 'hidden', imageRendering: 'pixelated' }}>
       <div
         style={{
-          width: STRIP_W * scale, height: STRIP_H * scale,
-          backgroundImage: `url(${strip})`, backgroundRepeat: 'no-repeat',
-          backgroundSize: `${STRIP_W * scale}px ${STRIP_H * scale}px`,
-          backgroundPosition: `-${frame * size}px 0`, imageRendering: 'pixelated',
+          width: SHEET_W * scale, height: SHEET_H * scale,
+          backgroundImage: `url(${sheet})`, backgroundRepeat: 'no-repeat',
+          backgroundSize: `${SHEET_W * scale}px ${SHEET_H * scale}px`,
+          backgroundPosition: `-${frame * size}px -${row * size}px`, imageRendering: 'pixelated',
         }}
       />
     </div>
@@ -39,7 +46,7 @@ function PixelSprite({ strip, facing, frame, size }: {
 interface Entity {
   id: string; isPlayer: boolean; name: string; member?: Member;
   x: number; y: number; tx: number; ty: number;
-  facing: 'left' | 'right'; moving: boolean; frame: number; frameAcc: number; waitAcc: number;
+  facing: Facing; moving: boolean; frame: number; frameAcc: number; waitAcc: number;
 }
 
 const BOUND = { minX: 8, maxX: 92, minY: 44, maxY: 88 };
@@ -66,7 +73,7 @@ function moveToward(e: Entity, speed: number, dt: number): boolean {
   const step = speed * dt;
   if (dist <= step || dist < 0.4) { e.x = e.tx; e.y = e.ty; e.moving = false; return true; }
   e.x += (dx / dist) * step; e.y += (dy / dist) * step;
-  if (Math.abs(dx) > 0.1) e.facing = dx < 0 ? 'left' : 'right';
+  const f = faceFrom(dx, dy); if (f) e.facing = f;
   e.moving = true; return false;
 }
 
@@ -141,13 +148,13 @@ export default function WorldView({
         id: m.id, isPlayer: false, name: m.name, member: m,
         x: rand(BOUND.minX, BOUND.maxX), y: rand(BOUND.minY, BOUND.maxY),
         tx: rand(BOUND.minX, BOUND.maxX), ty: rand(BOUND.minY, BOUND.maxY),
-        facing: 'right', moving: true, frame: 0, frameAcc: 0, waitAcc: 0,
+        facing: 'down', moving: true, frame: 0, frameAcc: 0, waitAcc: 0,
       };
     });
     const oldPlayer = prev.get('__player__');
     const player: Entity = oldPlayer || {
       id: '__player__', isPlayer: true, name: playerName || '你',
-      x: 50, y: 82, tx: 50, ty: 82, facing: 'right', moving: false, frame: 0, frameAcc: 0, waitAcc: 0,
+      x: 50, y: 82, tx: 50, ty: 82, facing: 'down', moving: false, frame: 0, frameAcc: 0, waitAcc: 0,
     };
     player.name = playerName || '你';
     entitiesRef.current = [...idols, player];
@@ -161,14 +168,14 @@ export default function WorldView({
   const appearanceKey = JSON.stringify(appearances) + '|' + JSON.stringify(playerAppearance || '');
   useEffect(() => {
     let alive = true;
-    loadSpriteSheet().then(sheet => {
-      if (!alive) return;
+    (async () => {
       const map: Record<string, string> = {};
-      for (const m of members) map[m.id] = buildSpriteStrip(sheet, appearances[m.id] || getDefaultAppearance(m.id));
-      map['__player__'] = buildSpriteStrip(sheet, playerAppearance || getPlayerAppearance(playerName || 'you'));
+      for (const m of members) map[m.id] = await buildSpriteSheet(normalizeAppearance(appearances[m.id], getDefaultAppearance(m.id)));
+      map['__player__'] = await buildSpriteSheet(normalizeAppearance(playerAppearance, getPlayerAppearance(playerName || 'you')));
+      if (!alive) return;
       stripsRef.current = map;
       setTick(t => t + 1);
-    }).catch(() => {});
+    })();
     return () => { alive = false; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [membersKey, playerName, appearanceKey]);
@@ -201,7 +208,7 @@ export default function WorldView({
             const len = Math.hypot(dx, dy) || 1;
             e.x = clamp(e.x + (dx / len) * PLAYER_SPEED * dt, BOUND.minX, BOUND.maxX);
             e.y = clamp(e.y + (dy / len) * PLAYER_SPEED * dt, BOUND.minY, BOUND.maxY);
-            e.tx = e.x; e.ty = e.y; if (dx) e.facing = dx < 0 ? 'left' : 'right'; e.moving = true;
+            e.tx = e.x; e.ty = e.y; { const f = faceFrom(dx, dy); if (f) e.facing = f; } e.moving = true;
           } else moveToward(e, PLAYER_SPEED, dt);
         } else {
           if (e.moving) { const arrived = moveToward(e, IDOL_SPEED, dt); if (arrived) { e.moving = false; e.waitAcc = rand(0.5, 2.0); } }
@@ -360,7 +367,7 @@ export default function WorldView({
                 {!e.isPlayer && activity && <div className="px-1 rounded text-[8px] text-white/80 bg-black/30">{activity.mood.split('、')[0]}</div>}
               </div>
               <div className={`${!e.isPlayer ? 'cursor-pointer' : ''} ${isNear ? 'drop-shadow-[0_0_8px_rgba(196,147,106,0.9)]' : ''}`}>
-                <PixelSprite strip={stripsRef.current[e.id] ?? null} facing={e.facing} frame={e.frame} size={SPRITE} />
+                <PixelSprite sheet={stripsRef.current[e.id] ?? null} facing={e.facing} frame={e.frame} size={SPRITE} />
               </div>
             </div>
           );

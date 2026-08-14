@@ -1,7 +1,7 @@
 import React from 'react';
 import { Palette, Heart } from 'lucide-react';
 import { Member } from './types';
-import { getDefaultAppearance, getPlayerAppearance, type Appearance } from './spriteUtils';
+import { getDefaultAppearance, getPlayerAppearance, normalizeAppearance, type Appearance } from './spriteUtils';
 import { SpritePreview } from './FaceCustomizer';
 import { PLAYER, pairKey, deriveType, typeColor, hasFlag, type Intent, type WorldRelation } from './relations';
 import { TIME_SLOTS } from './worldConfig';
@@ -22,7 +22,7 @@ export default function WorldPanel({
   lang: string;
 }) {
   const tw = lang === 'traditional';
-  const playerA = playerAppearance || getPlayerAppearance(playerName || 'you');
+  const playerA = normalizeAppearance(playerAppearance, getPlayerAppearance(playerName || 'you'));
 
   return (
     <div className="flex flex-col gap-5">
@@ -51,7 +51,7 @@ export default function WorldPanel({
             const intent = intents[m.id] || 'none';
             return (
               <button key={m.id} onClick={() => onCustomize({ kind: 'idol', id: m.id })} className="group w-full flex items-center gap-2.5 p-2 rounded-2xl bg-white border border-[#DAD8EE] hover:border-[#5B6BB0] hover:shadow-md transition-all">
-                <div className="rounded-xl bg-[#F3F2FA] p-0.5 flex-shrink-0"><SpritePreview appearance={appearances[m.id] || getDefaultAppearance(m.id)} size={36} /></div>
+                <div className="rounded-xl bg-[#F3F2FA] p-0.5 flex-shrink-0"><SpritePreview appearance={normalizeAppearance(appearances[m.id], getDefaultAppearance(m.id))} size={36} /></div>
                 <div className="flex-1 min-w-0 text-left">
                   <div className="flex items-center gap-1.5">
                     <span className="text-[11px] font-black text-[#2A2A3D] truncate">{m.name}</span>

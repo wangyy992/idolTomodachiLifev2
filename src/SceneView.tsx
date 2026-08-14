@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Send, ChevronDown, MessageSquareText } from 'lucide-react';
 import { Member } from './types';
-import { getPlayerAppearance, getDefaultAppearance, type Appearance } from './spriteUtils';
+import { getPlayerAppearance, getDefaultAppearance, normalizeAppearance, type Appearance } from './spriteUtils';
 import { SpritePreview } from './FaceCustomizer';
 import type { ScriptEntry } from './App';
 
@@ -49,8 +49,8 @@ export default function SceneView({
   const onBox = () => { if (isTyping && entry) setTyped(entry.text); else if (idx < script.length - 1) setIdx(i => i + 1); };
 
   // 说话人 → 外观
-  const you = { key: '__you__', name: playerName || '你', appearance: playerAppearance || getPlayerAppearance(playerName || 'you'), isPlayer: true };
-  const cast = [...members.map(m => ({ key: m.id, name: m.name, appearance: appearances[m.id] || getDefaultAppearance(m.id), isPlayer: false })), you];
+  const you = { key: '__you__', name: playerName || '你', appearance: normalizeAppearance(playerAppearance, getPlayerAppearance(playerName || 'you')), isPlayer: true };
+  const cast = [...members.map(m => ({ key: m.id, name: m.name, appearance: normalizeAppearance(appearances[m.id], getDefaultAppearance(m.id)), isPlayer: false })), you];
   const activeSpeaker = entry?.kind === 'line' ? entry.speaker : null;
   const isActive = (c: typeof cast[number]) => !!activeSpeaker && (c.name === activeSpeaker || activeSpeaker.includes(c.name) || c.name.includes(activeSpeaker));
   const activeIdx = cast.findIndex(isActive);
