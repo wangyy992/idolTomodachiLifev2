@@ -59,3 +59,7 @@ input, textarea, select {
 .scene-fade {
   animation: sceneFadeIn 0.3s ease-in-out;
 }
+
+/* 场景水面流动：双帧背景交替 */
+@keyframes waterflip { 0%, 49.9% { opacity: 0; } 50%, 100% { opacity: 1; } }
+.water-flip { animation: waterflip 1.6s step-end infinite; }

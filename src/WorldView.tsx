@@ -300,6 +300,7 @@ export default function WorldView({
 
   return (
     <div className="relative w-full h-full overflow-hidden select-none" style={{ background: sceneConfig.bg }}>
+      {(sceneConfig as any).bg2 && <div className="absolute inset-0 water-flip" style={{ background: (sceneConfig as any).bg2 }} />}
       <div className="absolute inset-0" style={{ background: 'radial-gradient(120% 80% at 50% 0%, rgba(255,240,210,0.18), transparent 55%)' }} />
       <div className="absolute left-0 right-0" style={{ top: `${BOUND.minY - 6}%`, bottom: 0, background: 'linear-gradient(180deg, rgba(0,0,0,0.05), rgba(0,0,0,0.35))' }} />
       <div className="absolute inset-0" style={{ background: sceneConfig.overlay }} />

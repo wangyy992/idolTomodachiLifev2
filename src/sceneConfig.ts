@@ -2,6 +2,7 @@
 export const SCENE_CONFIG: Record<string, {
   label: string;
   bg: string; // 暂时用渐变色，之后换成 `url(/scenes/xxx.jpg)`
+  bg2?: string;   // 第二帧（水面等动画），有则在 WorldView 交替显示
   overlay: string; // 叠加层透明度
 }> = {
   'practice_room': {
@@ -47,6 +48,7 @@ export const SCENE_CONFIG: Record<string, {
   'hangang_night': {
     label: '汉江（夜晚）',
     bg: "#0a1628 url('/scenes/hangang.png') center/cover no-repeat",
+    bg2: "url('/scenes/hangang_b.png') center/cover no-repeat",
     overlay: 'rgba(0,0,0,0.12)',
   },
   'seoul_street': {
