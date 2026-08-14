@@ -3,8 +3,8 @@
 // 方向行：0=下(正面) 1=上(背面) 2=左 3=右。颜色块沿 x 平铺，每块 256 宽。
 // 合成结果是一张 256×128 的整表，消费方按 (帧=x, 方向=y) 取格。
 import {
-  HAIR_STYLES, CLOTHES_STYLES, HAIR_COLOR_COUNT, EYE_COLOR_COUNT, CLOTHES_COLOR_COUNT,
-  SHOE_COLOR_COUNT, SKIN_COUNT, IDOL_LOOK,
+  HAIR_STYLES, TOP_STYLES, BOTTOM_STYLES, HAIR_COLOR_COUNT, EYE_COLOR_COUNT, TOP_COLOR_COUNT,
+  BOTTOM_COLOR_COUNT, SHOE_COLOR_COUNT, SKIN_COUNT, IDOL_LOOK,
 } from './appearanceDefaults';
 
 export const CELL = 32;
@@ -27,8 +27,10 @@ export interface Appearance {
   eyes: number;          // 眼睛颜色
   hairStyle: string;     // '' = 光头，否则款式名
   hairColor: number;
-  clothes: string;       // 衣服款式
-  clothesColor: number;
+  top: string;           // 上衣款式（'' = 无；dress/overalls 为连体，盖住腿）
+  topColor: number;
+  bottom: string;        // 下装款式（'' = 无）
+  bottomColor: number;
   shoes: number;         // 鞋颜色（总是穿）
   glasses?: string;      // '', 'glasses', 'glasses_sun'
   hat?: string;          // '', 'hat_lucky', 'hat_cowboy'
@@ -66,7 +68,8 @@ function layerSpecs(a: Appearance): { u: string; color: number }[] {
   if (a.blush != null && a.blush >= 0) specs.push({ u: url('eyes/blush_walk.png'), color: a.blush });
   if (a.lipstick != null && a.lipstick >= 0) specs.push({ u: url('eyes/lipstick_walk.png'), color: a.lipstick });
   if (a.beard != null && a.beard >= 0) specs.push({ u: url('acc/beard_walk.png'), color: a.beard });
-  if (a.clothes) specs.push({ u: url(`clothes/${a.clothes}_walk.png`), color: a.clothesColor });
+  if (a.bottom) specs.push({ u: url(`clothes/${a.bottom}_walk.png`), color: a.bottomColor });
+  if (a.top) specs.push({ u: url(`clothes/${a.top}_walk.png`), color: a.topColor });
   specs.push({ u: url('clothes/shoes_walk.png'), color: a.shoes });
   if (a.hairStyle) specs.push({ u: url(`hair/${a.hairStyle}_walk.png`), color: a.hairColor });
   if (a.earring) specs.push({ u: url(`acc/${a.earring}_walk.png`), color: 0 });
@@ -124,12 +127,14 @@ export function getAppearance(seed: string): Appearance {
     eyes: at(3, EYE_COLOR_COUNT),
     hairStyle: HAIR_STYLES[at(6, HAIR_STYLES.length)],
     hairColor: at(9, HAIR_COLOR_COUNT),
-    clothes: CLOTHES_STYLES[at(12, CLOTHES_STYLES.length)],
-    clothesColor: at(15, CLOTHES_COLOR_COUNT),
-    shoes: at(18, SHOE_COLOR_COUNT),
-    blush: at(21, 5) === 0 ? at(22, 5) : -1,
+    top: TOP_STYLES[at(12, TOP_STYLES.length)],
+    topColor: at(15, TOP_COLOR_COUNT),
+    bottom: BOTTOM_STYLES[at(17, BOTTOM_STYLES.length)],
+    bottomColor: at(19, BOTTOM_COLOR_COUNT),
+    shoes: at(21, SHOE_COLOR_COUNT),
+    blush: at(23, 5) === 0 ? at(24, 5) : -1,
     lipstick: -1,
-    glasses: at(24, 6) === 0 ? 'glasses' : '',
+    glasses: at(26, 6) === 0 ? 'glasses' : '',
     hat: '',
     earring: '',
     beard: -1,
@@ -139,7 +144,7 @@ export function getAppearance(seed: string): Appearance {
 // 玩家默认外观：中性稳定
 export function getPlayerAppearance(seed: string): Appearance {
   const base = getAppearance('player::' + seed);
-  return { ...base, clothes: 'basic', glasses: '', blush: -1, hat: '', earring: '', beard: -1 };
+  return { ...base, top: 'basic', bottom: 'pants', glasses: '', blush: -1, hat: '', earring: '', beard: -1 };
 }
 
 // 爱豆默认外观：优先用还原真人的预设，否则按 id 稳定随机
@@ -151,7 +156,7 @@ export function getDefaultAppearance(id: string): Appearance {
 
 // 把可能是旧格式/残缺的外观规整成合法 v2；不合法则回退 fallback
 export function normalizeAppearance(a: any, fallback: Appearance): Appearance {
-  if (a && typeof a.skin === 'number' && typeof a.hairStyle === 'string' && typeof a.clothes === 'string') {
+  if (a && typeof a.skin === 'number' && typeof a.hairStyle === 'string' && typeof a.top === 'string' && typeof a.bottom === 'string') {
     return { ...fallback, ...a };
   }
   return fallback;

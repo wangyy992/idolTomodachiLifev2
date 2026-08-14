@@ -2,7 +2,10 @@
 
 // ---- 款式（对应 public/sprites 下的文件名） ----
 export const HAIR_STYLES = ['long_straight', 'wavy', 'ponytail', 'midiwave', 'bob', 'french_curl', 'curly', 'braids', 'spacebuns', 'extra_long', 'emo', 'gentleman', 'buzzcut'];
-export const CLOTHES_STYLES = ['basic', 'dress', 'skirt', 'spaghetti', 'floral', 'stripe', 'sporty', 'overalls', 'pants', 'pants_suit', 'suit', 'sailor'];
+// 上衣：短款露腿 + 连衣裙/背带（连体，盖住腿）
+export const TOP_STYLES = ['basic', 'spaghetti', 'sporty', 'stripe', 'floral', 'sailor', 'suit', 'dress', 'overalls'];
+// 下装：长裤 / 半裙 / 西裤
+export const BOTTOM_STYLES = ['pants', 'skirt', 'pants_suit'];
 export const GLASSES_STYLES = ['', 'glasses', 'glasses_sun'];
 export const HAT_STYLES = ['', 'hat_lucky', 'hat_cowboy'];
 export const EARRING_STYLES = ['', 'earring_red', 'earring_emerald', 'earring_red_silver', 'earring_emerald_silver'];
@@ -13,7 +16,8 @@ export const STYLE_LABEL: Record<string, string> = {
   french_curl: '法式卷', curly: '卷发', braids: '编发', spacebuns: '丸子头', extra_long: '超长',
   emo: 'emo刘海', gentleman: '背头', buzzcut: '寸头',
   basic: '基础', dress: '连衣裙', skirt: '半裙', spaghetti: '吊带', floral: '碎花', stripe: '条纹',
-  sporty: '运动', overalls: '背带裤', pants: '长裤', pants_suit: '西裤', suit: '西装', sailor: '水手服',
+  sporty: '运动', overalls: '背带裤', pants: '长裤', pants_suit: '西裤', suit: '西装外套', sailor: '水手服',
+  none: '无',
   glasses: '眼镜', glasses_sun: '墨镜', hat_lucky: '帽子', hat_cowboy: '牛仔帽',
   earring_red: '红宝石', earring_emerald: '绿宝石', earring_red_silver: '红·银', earring_emerald_silver: '绿·银',
 };
@@ -22,7 +26,8 @@ export const STYLE_LABEL: Record<string, string> = {
 export const SKIN_COUNT = 8;
 export const HAIR_COLOR_COUNT = 14;
 export const EYE_COLOR_COUNT = 14;
-export const CLOTHES_COLOR_COUNT = 10;
+export const TOP_COLOR_COUNT = 10;
+export const BOTTOM_COLOR_COUNT = 10;
 export const SHOE_COLOR_COUNT = 10;
 
 // ---- 色板（近似，仅 UI 显示用；顺序对应图层里的色块顺序） ----
