@@ -133,6 +133,8 @@ export interface GameState {
   hasContributedThisWeek?: boolean;
   hiddenSummary?: string;
   collectedCards?: any[];
+  // 手机：theqoo/KKT/Weverse/bubble 内容不进对话流，收进手机应用
+  phoneFeed?: { id: string; type: 'kkt' | 'weverse' | 'bubble' | 'theqoo'; data: any; ts: number; read: boolean }[];
   daughterProfile?: {
     name: string;
     nationality: string;

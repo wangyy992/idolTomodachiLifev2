@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, RefreshCw, Users, Eye, MapPin, Gamepad2, Heart, Zap, Sparkles, X, ChevronUp, Globe, User, Cake, KeyRound, ArrowRight, Check, Wand2, Save, FolderOpen, Trash2 } from 'lucide-react';
+import { Send, RefreshCw, Users, Eye, MapPin, Gamepad2, Heart, Zap, Sparkles, X, ChevronUp, Globe, User, Cake, KeyRound, ArrowRight, Check, Wand2, Save, FolderOpen, Trash2, Smartphone } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import Markdown from 'react-markdown';
 import { GameState, INITIAL_MEMBERS, ChatMessage, MessageRole, Member, TheqooPost, SetupStep } from './types';
@@ -15,7 +15,34 @@ import { seedIdolRelations, pairKey, deriveType, hasFlag, PLAYER, type Intent } 
 
 const LOCAL_STORAGE_KEY = 'star_reality_kpop_game_state';
 
-const KKTMessageUI = ({ data }: { data: any }) => (
+const KKTMessageUI = ({ data, bare }: { data: any; bare?: boolean }) => bare ? (
+  <div className="font-sans bg-[#F5F0EA] rounded-2xl overflow-hidden border border-[#DAD8EE]">
+    <div className="bg-[#FAE100] px-4 py-3 flex items-center gap-3">
+      <div className="w-8 h-8 rounded-full bg-white/30 flex items-center justify-center text-lg">{data.avatar || '👤'}</div>
+      <div>
+        <div className="text-[13px] font-black text-[#3A1F00]">{data.sender}</div>
+        <div className="text-[9px] text-[#3A1F00]/60">카카오톡</div>
+      </div>
+    </div>
+    <div className="px-4 py-4 flex flex-col gap-3 bg-[#B2C7D9]/20">
+      {data.messages?.map((msg: any, idx: number) => (
+        <div key={idx} className="flex items-end gap-2">
+          <div className="w-7 h-7 rounded-full bg-[#FAE100] flex items-center justify-center text-sm flex-shrink-0">{data.avatar || '👤'}</div>
+          <div className="flex flex-col gap-0.5 max-w-[78%]">
+            <div className="bg-white rounded-2xl rounded-tl-none px-3 py-2 shadow-sm">
+              <p className="text-[12px] text-gray-800 leading-relaxed font-medium">{msg.text}</p>
+              {msg.translation && <p className="text-[11px] text-[#454F87] mt-0.5 leading-relaxed">{msg.translation}</p>}
+            </div>
+            <div className="flex items-center gap-1 pl-1">
+              <span className="text-[9px] text-gray-400">{msg.time}</span>
+              {!msg.isRead && <span className="text-[9px] text-[#FAE100] font-black">1</span>}
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+) : (
   <div className="my-6 max-w-xs mx-auto font-sans">
     <div className="relative bg-[#1A1A1A] rounded-[2.5rem] p-3 shadow-2xl">
       <div className="absolute top-4 left-1/2 -translate-x-1/2 w-16 h-4 bg-[#111] rounded-full flex items-center justify-center gap-1.5">
@@ -329,6 +356,77 @@ const MobileDrawer = ({ gameState, onClose, onSave, onLoad, onDelete, saveSlots,
         </div>
       </div>
     </motion.div>
+  );
+};
+
+// 手机：theqoo / KakaoTalk / Weverse / bubble 的专属入口
+const PHONE_APPS: { key: 'kkt' | 'weverse' | 'bubble' | 'theqoo'; label: string; icon: string; color: string }[] = [
+  { key: 'kkt', label: 'KakaoTalk', icon: '💬', color: '#FAE100' },
+  { key: 'weverse', label: 'Weverse', icon: '🌐', color: '#34C3B5' },
+  { key: 'bubble', label: 'bubble', icon: '🫧', color: '#8ec7f0' },
+  { key: 'theqoo', label: 'theqoo', icon: '🔥', color: '#3b5998' },
+];
+
+const PhoneModal = ({ feed, onClose, lang }: {
+  feed: NonNullable<GameState['phoneFeed']>; onClose: () => void; lang?: string;
+}) => {
+  const tw = lang === 'traditional';
+  const [tab, setTab] = useState<'kkt' | 'weverse' | 'bubble' | 'theqoo'>(
+    () => [...feed].reverse().find(f => !f.read)?.type || 'kkt'
+  );
+  const items = feed.filter(f => f.type === tab).slice().reverse();
+  return (
+    <div className="fixed inset-0 z-[70] bg-black/60 backdrop-blur-sm flex items-center justify-center p-3" onClick={onClose}>
+      <motion.div
+        initial={{ opacity: 0, y: 40, scale: 0.94 }} animate={{ opacity: 1, y: 0, scale: 1 }}
+        className="relative w-full max-w-sm h-[88vh] bg-[#1A1A1A] rounded-[2.8rem] p-2.5 shadow-2xl flex flex-col"
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="bg-[#F3F2FA] rounded-[2.4rem] overflow-hidden flex-1 flex flex-col min-h-0 relative">
+          {/* 刘海 */}
+          <div className="absolute top-2 left-1/2 -translate-x-1/2 w-24 h-5 bg-[#111] rounded-full z-20 flex items-center justify-center gap-1.5">
+            <div className="w-2 h-2 rounded-full bg-[#333]" />
+            <div className="w-3 h-3 rounded-full bg-[#2a2a2a] border border-[#444]" />
+          </div>
+          {/* 状态栏 + 关闭 */}
+          <div className="px-6 pt-2.5 pb-1 flex items-center justify-between flex-shrink-0 relative z-10">
+            <span className="text-[10px] font-bold text-gray-500">9:41</span>
+            <button onClick={onClose} className="p-1.5 rounded-full hover:bg-[#DAD8EE] text-[#454F87]"><X className="w-4 h-4" /></button>
+          </div>
+          {/* App tabs */}
+          <div className="px-3 pb-2 pt-3 flex gap-1.5 flex-shrink-0">
+            {PHONE_APPS.map(app => {
+              const unread = feed.filter(f => f.type === app.key && !f.read).length;
+              const active = tab === app.key;
+              return (
+                <button key={app.key} onClick={() => setTab(app.key)}
+                  className={`relative flex-1 flex flex-col items-center gap-1 py-2 rounded-2xl border transition-all ${active ? 'bg-white border-[#5B6BB0] shadow-sm' : 'bg-white/50 border-transparent hover:bg-white'}`}>
+                  <span className="w-9 h-9 rounded-[0.8rem] flex items-center justify-center text-lg shadow-sm" style={{ background: app.color }}>{app.icon}</span>
+                  <span className={`text-[9px] font-black ${active ? 'text-[#2A2A3D]' : 'text-[#454F87]/70'}`}>{app.label}</span>
+                  {unread > 0 && <span className="absolute top-1 right-2 min-w-[16px] h-4 px-1 rounded-full bg-[#FF3B30] text-white text-[9px] font-black flex items-center justify-center">{unread}</span>}
+                </button>
+              );
+            })}
+          </div>
+          {/* 内容流 */}
+          <div className="flex-1 overflow-y-auto custom-scrollbar px-2 pb-4 min-h-0">
+            {items.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-16 gap-2 text-[#454F87]/60">
+                <span className="text-3xl">{PHONE_APPS.find(a => a.key === tab)?.icon}</span>
+                <span className="text-[11px] font-bold">{tw ? '還沒有內容，劇情推進後這裡會收到更新' : '还没有内容，剧情推进后这里会收到更新'}</span>
+              </div>
+            ) : items.map(item => (
+              <div key={item.id} className="[&>div]:my-2 [&>div]:max-w-full">
+                {item.type === 'kkt' && <KKTMessageUI data={item.data} bare />}
+                {item.type === 'weverse' && <WeversePostUI data={item.data} />}
+                {item.type === 'bubble' && <BubbleMessageUI data={item.data} />}
+                {item.type === 'theqoo' && <TheqooPostUI post={item.data} />}
+              </div>
+            ))}
+          </div>
+        </div>
+      </motion.div>
+    </div>
   );
 };
 
@@ -769,6 +867,7 @@ export default function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [showConfirmReset, setShowConfirmReset] = useState(false);
   const [showDrawer, setShowDrawer] = useState(false);
+  const [showPhone, setShowPhone] = useState(false);
   const [isTraditional, setIsTraditional] = useState(false);
   const [showSaveSlots, setShowSaveSlots] = useState(false);
   const [worldMode, setWorldMode] = useState(true); // 俯视世界视图 ⟷ 剧情对话（临时UI，不持久化）
@@ -778,6 +877,14 @@ export default function App() {
   const worldDay = gameState.worldDay ?? 1;
   const worldSlot = gameState.worldSlot ?? 0;
   const worldLocation = gameState.worldLocation ?? 'practice_room';
+  const phoneFeed = gameState.phoneFeed || [];
+  const phoneUnread = phoneFeed.filter(f => !f.read).length;
+  const openPhone = () => setShowPhone(true);
+  const closePhone = () => {
+    setShowPhone(false);
+    // 关掉手机时全部标记已读，红点熄灭
+    setGameState(prev => ({ ...prev, phoneFeed: (prev.phoneFeed || []).map(f => (f.read ? f : { ...f, read: true })) }));
+  };
   const setWorldLocation = (loc: string) => setGameState(p => ({ ...p, worldLocation: loc }));
   const pushToast = (text: string, kind: string) => {
     const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
@@ -1039,6 +1146,20 @@ export default function App() {
 
       next.turnCount = (prev.turnCount || 0) + 1;
 
+      // 社媒内容（theqoo/KKT/Weverse/bubble）不进对话流 → 收进手机，亮未读红点
+      const PHONE_TYPES = ['kkt', 'weverse', 'bubble', 'theqoo'];
+      const phoneBlocks = contentBlocks.filter((b: any) => PHONE_TYPES.includes(b.type));
+      if (phoneBlocks.length > 0) {
+        next.phoneFeed = [
+          ...(next.phoneFeed || []),
+          ...phoneBlocks.map((b: any) => ({
+            id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+            type: b.type, data: b.data, ts: Date.now(), read: false,
+          })),
+        ].slice(-60);
+      }
+      const chatBlocks = contentBlocks.filter((b: any) => !PHONE_TYPES.includes(b.type));
+
       // 把选项也存入content，让AI下一轮能看到上一轮给了什么选项
       const isTraditionalMode = (prev as any).language === 'traditional' && (window as any).OpenCC;
       const tw = isTraditionalMode ? (window as any).OpenCC.Converter({ from: 'cn', to: 'twp' }) : (t: string) => t;
@@ -1058,7 +1179,7 @@ export default function App() {
             ? (window as any).OpenCC.Converter({ from: 'cn', to: 'twp' })(textContent + optionsText)
             : textContent + optionsText,
           timestamp: Date.now(),
-          contentBlocks,
+          contentBlocks: chatBlocks,
           currentMusicShow: musicResult || undefined,
           options: options.length > 0 ? options : undefined,
           isWeekEnd: snapshot?.isWeekEnd === true,
@@ -1250,6 +1371,8 @@ export default function App() {
           onClose={() => setCustomizing(null)}
         />
       )}
+      {/* 手机 */}
+      {showPhone && <PhoneModal feed={phoneFeed} onClose={closePhone} lang={lang} />}
       {/* 关系里程碑 toast */}
       {toasts.length > 0 && (
         <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[200] flex flex-col items-center gap-2 pointer-events-none">
@@ -1401,6 +1524,12 @@ export default function App() {
           )}
           {apiKeyMissing && <div className="bg-[#E7E6F6] text-[#454F87] text-[10px] font-black px-3 py-1 rounded-full border border-[#DAD8EE] animate-pulse">API KEY MISSING</div>}
           <div className="flex items-center gap-3">
+            {!worldMode && !isMomMode && !isCPMode && (
+              <button onClick={openPhone} className="relative flex items-center gap-1.5 text-[11px] font-black px-3 py-1.5 rounded-xl border bg-[#E7E6F6] text-[#454F87] border-[#DAD8EE] hover:bg-[#DAD8EE] transition-all">
+                <Smartphone className="w-3.5 h-3.5" /> {lang === 'traditional' ? '手機' : '手机'}
+                {phoneUnread > 0 && <span className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 px-1 rounded-full bg-[#FF3B30] text-white text-[9px] font-black flex items-center justify-center animate-pulse">{phoneUnread}</span>}
+              </button>
+            )}
             <button
               onClick={() => setWorldMode(v => !v)}
               className={`flex items-center gap-1.5 text-[11px] font-black px-3 py-1.5 rounded-xl border transition-all ${worldMode ? 'bg-[#5B6BB0] text-white border-[#5B6BB0]' : 'bg-[#E7E6F6] text-[#454F87] border-[#DAD8EE] hover:bg-[#DAD8EE]'}`}
@@ -1463,6 +1592,8 @@ export default function App() {
             appearances={gameState.appearances || {}}
             playerAppearance={gameState.playerAppearance}
             onCustomize={setCustomizing}
+            phoneUnread={phoneUnread}
+            onOpenPhone={openPhone}
           />
         </div>
         ) : (

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { MessageCircle, Clock, CalendarDays, ChevronRight, X, Users, Rss, Palette, Lock } from 'lucide-react';
+import { MessageCircle, Clock, CalendarDays, ChevronRight, X, Users, Rss, Palette, Lock, Smartphone } from 'lucide-react';
 import { Member } from './types';
 import { getSceneConfig } from './sceneConfig';
 import RelationPanel from './RelationPanel';
@@ -80,12 +80,14 @@ function moveToward(e: Entity, speed: number, dt: number): boolean {
 export default function WorldView({
   members, playerName, day, slot, locationId, identity, onTravel, onAdvanceTime, onTalk, lang,
   relations, intents, matchmakes, onSetIntent, onToggleMatchmake, onConfess, onIdolEncounter, worldFeed, onWatchEncounter,
-  appearances, playerAppearance, onCustomize,
+  appearances, playerAppearance, onCustomize, phoneUnread, onOpenPhone,
 }: {
   members: Member[];
   playerName: string;
   day: number; slot: number; locationId: string;
   identity: string[];
+  phoneUnread: number;
+  onOpenPhone: () => void;
   onTravel: (locId: string) => void;
   onAdvanceTime: () => void;
   onTalk: (m: Member, ctx: { location: WorldLocation; activity: Activity }) => void;
@@ -324,6 +326,10 @@ export default function WorldView({
 
       {/* 右上：日程 + 推进时间 */}
       <div className="absolute top-3 right-3 z-30 flex gap-2 flex-wrap justify-end">
+        <button onClick={onOpenPhone} className="relative px-3 py-1.5 rounded-xl bg-white/90 text-[#2A2A3D] text-[11px] font-black flex items-center gap-1.5 hover:bg-white transition-all shadow">
+          <Smartphone className="w-3.5 h-3.5" /> {tw ? '手機' : '手机'}
+          {phoneUnread > 0 && <span className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 px-1 rounded-full bg-[#FF3B30] text-white text-[9px] font-black flex items-center justify-center shadow animate-pulse">{phoneUnread}</span>}
+        </button>
         <button onClick={() => onCustomize({ kind: 'player' })} className="px-3 py-1.5 rounded-xl bg-white/90 text-[#2A2A3D] text-[11px] font-black flex items-center gap-1.5 hover:bg-white transition-all shadow">
           <Palette className="w-3.5 h-3.5" /> {tw ? '捏臉' : '捏脸'}
         </button>
