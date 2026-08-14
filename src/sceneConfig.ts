@@ -16,8 +16,8 @@ export const SCENE_CONFIG: Record<string, {
   },
   'dorm': {
     label: '宿舍',
-    bg: 'linear-gradient(180deg, #0a0a1a 0%, #111130 50%, #0d0d20 100%)',
-    overlay: 'rgba(0,0,0,0.4)',
+    bg: "#b2966f url('/scenes/dorm.png') center/cover no-repeat",
+    overlay: 'rgba(0,0,0,0.08)',
   },
   'dorm_hall': {
     label: '宿舍走廊',
@@ -36,8 +36,8 @@ export const SCENE_CONFIG: Record<string, {
   },
   'convenience_store': {
     label: '便利店',
-    bg: 'linear-gradient(180deg, #0a1a0a 0%, #0d2a0d 50%, #0a1a0a 100%)',
-    overlay: 'rgba(0,0,0,0.25)',
+    bg: "#d9d4c2 url('/scenes/convenience.png') center/cover no-repeat",
+    overlay: 'rgba(0,0,0,0.06)',
   },
   'hangang_day': {
     label: '汉江（白天）',
