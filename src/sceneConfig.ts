@@ -6,8 +6,8 @@ export const SCENE_CONFIG: Record<string, {
 }> = {
   'practice_room': {
     label: '练习室',
-    bg: 'linear-gradient(180deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)',
-    overlay: 'rgba(0,0,0,0.3)',
+    bg: "#cbaa84 url('/scenes/practice.png') center/cover no-repeat",
+    overlay: 'rgba(0,0,0,0.07)',
   },
   'waiting_room': {
     label: '待机室',
@@ -26,8 +26,8 @@ export const SCENE_CONFIG: Record<string, {
   },
   'recording_studio': {
     label: '录音棚',
-    bg: 'linear-gradient(180deg, #1a1200 0%, #2d2000 50%, #1a1200 100%)',
-    overlay: 'rgba(0,0,0,0.3)',
+    bg: "#2e2c3c url('/scenes/variety.png') center/cover no-repeat",
+    overlay: 'rgba(0,0,0,0.1)',
   },
   'cafe': {
     label: '咖啡厅',
@@ -66,8 +66,8 @@ export const SCENE_CONFIG: Record<string, {
   },
   'backstage_hall': {
     label: '打歌后台',
-    bg: 'linear-gradient(180deg, #1a0a2e 0%, #2d1045 50%, #1a0a2e 100%)',
-    overlay: 'rgba(0,0,0,0.3)',
+    bg: "#4a4252 url('/scenes/backstage.png') center/cover no-repeat",
+    overlay: 'rgba(0,0,0,0.1)',
   },
   'stage_wing': {
     label: '舞台侧幕',
