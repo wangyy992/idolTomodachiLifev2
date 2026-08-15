@@ -298,9 +298,16 @@ export default function WorldView({
   const ents = entitiesRef.current;
   const sorted = [...ents].sort((a, b) => a.y - b.y);
 
+  // 场景完整显示：舞台按画面比例居中，人物与背景锁在同一个盒子里（不再左右裁切）
+  const SCENE_RATIO = 1920 / 1072;
+
   return (
-    <div className="relative w-full h-full overflow-hidden select-none" style={{ background: sceneConfig.bg }}>
-      {(sceneConfig as any).bg2 && <div className="absolute inset-0 water-flip" style={{ background: (sceneConfig as any).bg2 }} />}
+    <div className="relative w-full h-full overflow-hidden select-none flex items-center justify-center" style={{ background: sceneConfig.sceneBase || '#14121f' }}>
+      <div
+        className="relative overflow-hidden"
+        style={{ aspectRatio: `${SCENE_RATIO}`, width: '100%', maxWidth: `calc(100% )`, maxHeight: '100%', background: sceneConfig.bg, backgroundSize: '100% 100%' }}
+      >
+      {(sceneConfig as any).bg2 && <div className="absolute inset-0 water-flip" style={{ background: (sceneConfig as any).bg2, backgroundSize: '100% 100%' }} />}
       <div className="absolute inset-0" style={{ background: 'radial-gradient(120% 80% at 50% 0%, rgba(255,240,210,0.18), transparent 55%)' }} />
       <div className="absolute left-0 right-0" style={{ top: `${BOUND.minY - 6}%`, bottom: 0, background: 'linear-gradient(180deg, rgba(0,0,0,0.05), rgba(0,0,0,0.35))' }} />
       <div className="absolute inset-0" style={{ background: sceneConfig.overlay }} />
@@ -516,6 +523,7 @@ export default function WorldView({
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 }

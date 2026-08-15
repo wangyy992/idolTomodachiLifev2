@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, RefreshCw, Users, Eye, MapPin, Gamepad2, Heart, Zap, Sparkles, X, ChevronUp, Globe, User, Cake, KeyRound, ArrowRight, Check, Wand2, Save, FolderOpen, Trash2, Smartphone } from 'lucide-react';
+import { Send, RefreshCw, Users, Eye, MapPin, Gamepad2, Heart, Zap, Sparkles, X, ChevronUp, Globe, User, Cake, KeyRound, ArrowRight, Check, Wand2, Save, FolderOpen, Trash2, Smartphone, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import Markdown from 'react-markdown';
 import { GameState, INITIAL_MEMBERS, ChatMessage, MessageRole, Member, TheqooPost, SetupStep } from './types';
@@ -868,6 +868,7 @@ export default function App() {
   const [showConfirmReset, setShowConfirmReset] = useState(false);
   const [showDrawer, setShowDrawer] = useState(false);
   const [showPhone, setShowPhone] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isTraditional, setIsTraditional] = useState(false);
   const [showSaveSlots, setShowSaveSlots] = useState(false);
   const [worldMode, setWorldMode] = useState(true); // 俯视世界视图 ⟷ 剧情对话（临时UI，不持久化）
@@ -1418,7 +1419,7 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      <aside className="w-72 border-r border-[#DAD8EE] flex-shrink-0 flex-col hidden lg:flex" style={{background: 'rgba(243,242,250,0.92)'}}>
+      <aside className={`${sidebarOpen ? 'w-72' : 'w-0 overflow-hidden border-r-0'} border-r border-[#DAD8EE] flex-shrink-0 flex-col hidden lg:flex transition-[width] duration-300`} style={{background: 'rgba(243,242,250,0.92)'}}>
         <div className="p-6 border-b border-[#DAD8EE]">
           <h1 className="text-base font-black text-[#5B6BB0] tracking-tighter flex items-center gap-2"><Gamepad2 className="w-5 h-5" /> 爱豆收集梦想生活</h1>
           <div className="flex items-center gap-2 mt-2">
@@ -1507,6 +1508,13 @@ export default function App() {
         <header className="h-16 bg-white border-b border-[#DAD8EE] px-4 flex items-center justify-between z-10 flex-shrink-0">
           <div className="flex items-center gap-3">
             <button onClick={handleReset} className="lg:hidden p-2 text-[#5B6BB0] hover:bg-[#E7E6F6] rounded-xl"><RefreshCw className="w-4 h-4" /></button>
+            <button
+              onClick={() => setSidebarOpen(v => !v)}
+              title={sidebarOpen ? (lang === 'traditional' ? '收起側欄' : '收起侧栏') : (lang === 'traditional' ? '展開側欄' : '展开侧栏')}
+              className="hidden lg:flex p-2 text-[#5B6BB0] hover:bg-[#E7E6F6] rounded-xl transition-colors"
+            >
+              {sidebarOpen ? <PanelLeftClose className="w-4 h-4" /> : <PanelLeftOpen className="w-4 h-4" />}
+            </button>
             <div>
               <div className="text-[10px] text-[#454F87] font-black uppercase tracking-widest">Scene</div>
               <h2 className="text-sm font-bold flex items-center gap-1 text-[#2A2A3D]"><MapPin className="w-3 h-3 text-[#5B6BB0]" /> {gameState.currentScene}</h2>

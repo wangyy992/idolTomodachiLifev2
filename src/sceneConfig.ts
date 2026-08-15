@@ -3,6 +3,7 @@ export const SCENE_CONFIG: Record<string, {
   label: string;
   bg: string; // 暂时用渐变色，之后换成 `url(/scenes/xxx.jpg)`
   bg2?: string;   // 第二帧（水面等动画），有则在 WorldView 交替显示
+  sceneBase?: string; // 舞台外侧留白底色
   overlay: string; // 叠加层透明度
 }> = {
   'practice_room': {
