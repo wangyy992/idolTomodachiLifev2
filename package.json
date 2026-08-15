@@ -11,10 +11,10 @@
     "lint": "tsc --noEmit"
   },
   "dependencies": {
-    "@vercel/analytics": "^1.0.0",
     "@dicebear/avataaars": "^9.0.0",
     "@dicebear/core": "^9.0.0",
     "@tailwindcss/vite": "^4.1.14",
+    "@vercel/analytics": "^1.6.1",
     "@vitejs/plugin-react": "^5.0.4",
     "lucide-react": "^0.546.0",
     "motion": "^12.23.24",
