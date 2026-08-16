@@ -1342,6 +1342,15 @@ export default function App() {
 
   return (
     <div className="flex h-screen overflow-hidden relative">
+      {/* 手机竖屏：提示横屏游玩 */}
+      <div className="rotate-gate fixed inset-0 z-[300] bg-[#1b1830] flex-col items-center justify-center gap-5 px-8 text-center">
+        <div className="w-16 h-24 rounded-xl border-[3px] border-[#8f9bd6] relative animate-[tilt_1.8s_ease-in-out_infinite]">
+          <div className="absolute inset-x-3 top-2 h-1 rounded bg-[#8f9bd6]/70" />
+          <div className="absolute inset-x-4 bottom-2 h-1.5 rounded-full bg-[#8f9bd6]/70" />
+        </div>
+        <div className="text-white font-black text-base">{lang === 'traditional' ? '請橫過手機遊玩' : '请横过手机游玩'}</div>
+        <div className="text-[#b6bde6] text-xs leading-relaxed">{lang === 'traditional' ? '這個世界是寬螢幕的，橫屏才能完整看到場景' : '这个世界是宽屏的，横屏才能完整看到场景'}</div>
+      </div>
       {/* VN 相遇场景 */}
       {scene && (
         <SceneView
@@ -1419,15 +1428,15 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      <aside className={`${sidebarOpen ? 'w-72' : 'w-0 overflow-hidden border-r-0'} border-r border-[#DAD8EE] flex-shrink-0 flex-col hidden lg:flex transition-[width] duration-300`} style={{background: 'rgba(243,242,250,0.92)'}}>
-        <div className="p-6 border-b border-[#DAD8EE]">
-          <h1 className="text-base font-black text-[#5B6BB0] tracking-tighter flex items-center gap-2"><Gamepad2 className="w-5 h-5" /> 爱豆收集梦想生活</h1>
+      <aside className={`${sidebarOpen ? 'w-56' : 'w-0 overflow-hidden border-r-0'} border-r border-[#DAD8EE] flex-shrink-0 flex-col hidden lg:flex transition-[width] duration-300`} style={{background: 'rgba(243,242,250,0.92)'}}>
+        <div className="p-4 border-b border-[#DAD8EE]">
+          <h1 className="text-sm font-black text-[#5B6BB0] tracking-tighter flex items-center gap-1.5"><Gamepad2 className="w-4 h-4 flex-shrink-0" /> 爱豆收集梦想生活</h1>
           <div className="flex items-center gap-2 mt-2">
             <span className="text-[9px] bg-[#5B6BB0] text-white px-2 py-0.5 rounded-full font-black uppercase">{modeLabel}</span>
             <span className="text-[10px] text-[#454F87] font-bold">Idol Tomodachi Life</span>
           </div>
         </div>
-        <div className="flex-1 overflow-y-auto p-5 flex flex-col gap-6 custom-scrollbar">
+        <div className="flex-1 overflow-y-auto p-3.5 flex flex-col gap-5 custom-scrollbar">
           {worldMode && !isMomMode && !isCPMode ? (
             <WorldPanel
               members={worldMembers}
@@ -1479,7 +1488,7 @@ export default function App() {
           </section>
           )}
         </div>
-        <div className="p-5 border-t border-[#DAD8EE] flex flex-col gap-3">
+        <div className="p-3.5 border-t border-[#DAD8EE] flex flex-col gap-2.5">
           <div className="flex gap-2.5">
             <button onClick={saveGame} className="flex-1 flex items-center justify-center gap-1.5 py-3 bg-[#5B6BB0] text-white rounded-2xl text-[11px] font-black shadow-[0_6px_16px_-6px_rgba(91,107,176,0.7)] hover:bg-[#454F87] hover:-translate-y-0.5 transition-all"><Save className="w-3.5 h-3.5" />{lang === "traditional" ? "存檔" : "存档"}</button>
             <button onClick={() => setShowSaveSlots(!showSaveSlots)} className={`flex-1 flex items-center justify-center gap-1.5 py-3 rounded-2xl text-[11px] font-black border transition-all ${showSaveSlots ? 'bg-[#E7E6F6] text-[#454F87] border-[#5B6BB0]' : 'bg-white text-[#454F87] border-[#DAD8EE] hover:bg-[#E7E6F6]'}`}><FolderOpen className="w-3.5 h-3.5" />{lang === "traditional" ? "讀檔" : "读档"} <span className="px-1.5 rounded-full bg-[#5B6BB0]/10 text-[9px]">{saveSlots.length}</span></button>

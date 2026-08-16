@@ -12,7 +12,6 @@ export interface WorldLocation {
 export const WORLD_LOCATIONS: WorldLocation[] = [
   { id: 'practice_room', label: '练习室', sceneKey: 'practice_room', icon: '🕺' },
   { id: 'backstage', label: '打歌后台', sceneKey: 'backstage_hall', icon: '🎤' },
-  { id: 'music_stage', label: '打歌舞台', sceneKey: 'stage_wing', icon: '🎶' },
   { id: 'variety_studio', label: '综艺棚', sceneKey: 'recording_studio', icon: '🎬' },
   { id: 'concert', label: '演唱会现场', sceneKey: 'concert', icon: '🎆' },
   { id: 'dorm', label: '宿舍', sceneKey: 'dorm', icon: '🛋️' },
@@ -37,7 +36,7 @@ export interface Activity {
 const ACT: Record<string, Activity> = {
   practice: { key: 'practice', label: '练习', loc: 'practice_room', available: true, mood: '专注、略疲惫' },
   stage:    { key: 'stage', label: '打歌彩排', loc: 'backstage', available: true, mood: '紧绷、要强' },
-  perform:  { key: 'perform', label: '打歌舞台', loc: 'music_stage', available: true, mood: '临上台、亢奋又紧张' },
+  perform:  { key: 'perform', label: '打歌舞台', loc: 'concert', available: true, mood: '临上台、亢奋又紧张' },
   variety:  { key: 'variety', label: '录综艺', loc: 'variety_studio', available: true, mood: '放松、综艺感' },
   concert:  { key: 'concert', label: '演唱会', loc: 'concert', available: true, mood: '肾上腺素飙升、台上台下' },
   rest:     { key: 'rest', label: '宿舍休息', loc: 'dorm', available: true, mood: '松弛、露出真实一面' },
@@ -103,7 +102,7 @@ export function getLocation(id: string): WorldLocation | undefined {
 // 身份 → 初始切入点：让"你是谁"决定你从世界的哪个角落出场
 const IDENTITY_START: { test: RegExp; loc: string }[] = [
   { test: /实习|工作人员|妆造|发型|助理|翻译|商务|经纪|staff/i, loc: 'backstage' },   // 圈内人：后台
-  { test: /记者|博主|媒体|采访/, loc: 'music_stage' },                                  // 媒体：打歌舞台边
+  { test: /记者|博主|媒体|采访/, loc: 'concert' },                                  // 媒体：打歌舞台边
   { test: /粉丝|饭|站姐|fan/i, loc: 'concert' },                                         // 粉丝：演唱会现场
   { test: /女友|男友|恋人|同栋|住户|邻居/, loc: 'dorm' },                                 // 私密关系：宿舍区
   { test: /青梅|发小|暗恋|前任/, loc: 'cafe' },                                           // 旧relationship：咖啡厅
@@ -141,8 +140,8 @@ export const PUBLIC_LOCS = ['concert', 'cafe', 'convenience', 'hangang'];
 
 // 身份类别 → 公共场所之外，额外解锁的地点
 const IDENTITY_ACCESS: { test: RegExp; extra: string[] }[] = [
-  { test: /实习|工作人员|妆造|发型|助理|翻译|商务|经纪|staff/i, extra: ['practice_room', 'backstage', 'music_stage', 'variety_studio', 'dorm'] },
-  { test: /记者|博主|媒体|采访/, extra: ['music_stage', 'variety_studio'] },
+  { test: /实习|工作人员|妆造|发型|助理|翻译|商务|经纪|staff/i, extra: ['practice_room', 'backstage', 'variety_studio', 'dorm'] },
+  { test: /记者|博主|媒体|采访/, extra: ['variety_studio'] },
   { test: /女友|男友|恋人|同栋|住户|邻居/, extra: ['dorm'] },
   { test: /青梅|发小|暗恋|前任/, extra: ['dorm'] },
 ];
@@ -171,7 +170,6 @@ export function lockReason(locationId: string, tw: boolean): string {
   switch (locationId) {
     case 'practice_room': return tw ? '練習室閒人免進，你的身份刷不開門禁。' : '练习室闲人免进，你的身份刷不开门禁。';
     case 'backstage': return tw ? '後台只認工作證，你被保安攔在門口。' : '后台只认工作证，你被保安拦在门口。';
-    case 'music_stage': return tw ? '打歌舞台是圈內人的地盤，你進不去。' : '打歌舞台是圈内人的地盘，你进不去。';
     case 'variety_studio': return tw ? '綜藝棚錄製中，無關人員止步。' : '综艺棚录制中，无关人员止步。';
     case 'dorm': return tw ? '宿舍是她們的私人領域，你這身份沒法登門。' : '宿舍是她们的私人领域，你这身份没法登门。';
     default: return tw ? '你的身份到不了這裡。' : '你的身份到不了这里。';

@@ -2,14 +2,16 @@
 export const SCENE_CONFIG: Record<string, {
   label: string;
   bg: string; // 暂时用渐变色，之后换成 `url(/scenes/xxx.jpg)`
-  bg2?: string;   // 第二帧（水面等动画），有则在 WorldView 交替显示
   sceneBase?: string; // 舞台外侧留白底色
+  ratio?: number;     // 画面宽高比（不填按 1920/1072）
   overlay: string; // 叠加层透明度
 }> = {
   'practice_room': {
     label: '练习室',
-    bg: "#cbaa84 url('/scenes/practice.png') center/cover no-repeat",
-    overlay: 'rgba(0,0,0,0.07)',
+    bg: "#241a14 url('/scenes/practice.png') center/cover no-repeat",
+    sceneBase: '#241a14',
+    ratio: 1.791044776119403,
+    overlay: 'rgba(0,0,0,0.04)',
   },
   'waiting_room': {
     label: '待机室',
@@ -18,8 +20,10 @@ export const SCENE_CONFIG: Record<string, {
   },
   'dorm': {
     label: '宿舍',
-    bg: "#b2966f url('/scenes/dorm.png') center/cover no-repeat",
-    overlay: 'rgba(0,0,0,0.08)',
+    bg: "#6b5a4a url('/scenes/dorm.png') center/cover no-repeat",
+    sceneBase: '#6b5a4a',
+    ratio: 1.833810888252149,
+    overlay: 'rgba(0,0,0,0.04)',
   },
   'dorm_hall': {
     label: '宿舍走廊',
@@ -28,29 +32,38 @@ export const SCENE_CONFIG: Record<string, {
   },
   'recording_studio': {
     label: '录音棚',
-    bg: "#2e2c3c url('/scenes/variety.png') center/cover no-repeat",
-    overlay: 'rgba(0,0,0,0.1)',
+    bg: "#3a3a44 url('/scenes/variety.png') center/cover no-repeat",
+    sceneBase: '#3a3a44',
+    ratio: 1.791044776119403,
+    overlay: 'rgba(0,0,0,0.04)',
   },
   'cafe': {
     label: '咖啡厅',
-    bg: "#2a1a10 url('/scenes/cafe.png') center/cover no-repeat",
-    overlay: 'rgba(0,0,0,0.08)',
+    bg: "#e8e0cf url('/scenes/cafe.png') center/cover no-repeat",
+    sceneBase: '#e8e0cf',
+    ratio: 1.791044776119403,
+    overlay: 'rgba(0,0,0,0.04)',
   },
   'convenience_store': {
     label: '便利店',
-    bg: "#d9d4c2 url('/scenes/convenience.png') center/cover no-repeat",
-    overlay: 'rgba(0,0,0,0.06)',
+    bg: "#cfc7b4 url('/scenes/convenience.png') center/cover no-repeat",
+    sceneBase: '#cfc7b4',
+    ratio: 1.833810888252149,
+    overlay: 'rgba(0,0,0,0.04)',
   },
   'hangang_day': {
     label: '汉江（白天）',
-    bg: 'linear-gradient(180deg, #87ceeb 0%, #4a9eda 30%, #2d7ab8 60%, #1a5a9a 100%)',
-    overlay: 'rgba(0,0,0,0.1)',
+    bg: "#8fbfe0 url('/scenes/hangang_day.png') center/cover no-repeat",
+    sceneBase: '#8fbfe0',
+    ratio: 1.791044776119403,
+    overlay: 'rgba(0,0,0,0.04)',
   },
   'hangang_night': {
     label: '汉江（夜晚）',
-    bg: "#0a1628 url('/scenes/hangang.png') center/cover no-repeat",
-    bg2: "url('/scenes/hangang_b.png') center/cover no-repeat",
-    overlay: 'rgba(0,0,0,0.12)',
+    bg: "#141a3a url('/scenes/hangang_night.png') center/cover no-repeat",
+    sceneBase: '#141a3a',
+    ratio: 1.791044776119403,
+    overlay: 'rgba(0,0,0,0.04)',
   },
   'seoul_street': {
     label: '首尔街头',
@@ -69,18 +82,24 @@ export const SCENE_CONFIG: Record<string, {
   },
   'backstage_hall': {
     label: '打歌后台',
-    bg: "#4a4252 url('/scenes/backstage.png') center/cover no-repeat",
-    overlay: 'rgba(0,0,0,0.1)',
+    bg: "#3a3630 url('/scenes/backstage.png') center/cover no-repeat",
+    sceneBase: '#3a3630',
+    ratio: 1.791044776119403,
+    overlay: 'rgba(0,0,0,0.04)',
   },
   'stage_wing': {
-    label: '舞台侧幕',
-    bg: "#141022 url('/scenes/stage.png') center/cover no-repeat",
-    overlay: 'rgba(0,0,0,0.06)',
+    label: '舞台',
+    bg: "#150f22 url('/scenes/concert.png') center/cover no-repeat",
+    sceneBase: '#150f22',
+    ratio: 1.791045,
+    overlay: 'rgba(0,0,0,0.04)',
   },
   'concert': {
     label: '演唱会现场',
-    bg: "#100c1c url('/scenes/concert.png') center/cover no-repeat",
-    overlay: 'rgba(0,0,0,0.06)',
+    bg: "#150f22 url('/scenes/concert.png') center/cover no-repeat",
+    sceneBase: '#150f22',
+    ratio: 1.791044776119403,
+    overlay: 'rgba(0,0,0,0.04)',
   },
 };
 

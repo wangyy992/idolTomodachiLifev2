@@ -107,7 +107,9 @@ export default function WorldView({
 }) {
   const tw = lang === 'traditional';
   const location = getLocation(locationId) || WORLD_LOCATIONS[0];
-  const sceneConfig = getSceneConfig(location.sceneKey);
+  // 汉江按时段切换昼/夜画面
+  const sceneKey = location.id === 'hangang' ? (slot === 2 ? 'hangang_night' : 'hangang_day') : location.sceneKey;
+  const sceneConfig = getSceneConfig(sceneKey);
   const present = idolsAt(members, locationId, day, slot);
   const presentKey = present.map(m => m.id).join(',') + `@${locationId}#${day}-${slot}`;
 
@@ -299,15 +301,19 @@ export default function WorldView({
   const sorted = [...ents].sort((a, b) => a.y - b.y);
 
   // 场景完整显示：舞台按画面比例居中，人物与背景锁在同一个盒子里（不再左右裁切）
-  const SCENE_RATIO = 1920 / 1072;
+  const SCENE_RATIO = (sceneConfig as any).ratio || 1920 / 1072;
 
   return (
     <div className="relative w-full h-full overflow-hidden select-none flex items-center justify-center" style={{ background: sceneConfig.sceneBase || '#14121f' }}>
+      {/* 留白处：同图放大模糊，视觉上满铺 */}
       <div
-        className="relative overflow-hidden"
-        style={{ aspectRatio: `${SCENE_RATIO}`, width: '100%', maxWidth: `calc(100% )`, maxHeight: '100%', background: sceneConfig.bg, backgroundSize: '100% 100%' }}
+        className="absolute inset-0 pointer-events-none"
+        style={{ background: sceneConfig.bg, backgroundSize: 'cover', backgroundPosition: 'center', filter: 'blur(26px) brightness(0.45) saturate(0.85)', transform: 'scale(1.2)' }}
+      />
+      <div
+        className="relative overflow-hidden shadow-[0_0_40px_rgba(0,0,0,0.55)]"
+        style={{ aspectRatio: `${SCENE_RATIO}`, width: '100%', maxWidth: '100%', maxHeight: '100%', background: sceneConfig.bg, backgroundSize: '100% 100%' }}
       >
-      {(sceneConfig as any).bg2 && <div className="absolute inset-0 water-flip" style={{ background: (sceneConfig as any).bg2, backgroundSize: '100% 100%' }} />}
       <div className="absolute inset-0" style={{ background: 'radial-gradient(120% 80% at 50% 0%, rgba(255,240,210,0.18), transparent 55%)' }} />
       <div className="absolute left-0 right-0" style={{ top: `${BOUND.minY - 6}%`, bottom: 0, background: 'linear-gradient(180deg, rgba(0,0,0,0.05), rgba(0,0,0,0.35))' }} />
       <div className="absolute inset-0" style={{ background: sceneConfig.overlay }} />
