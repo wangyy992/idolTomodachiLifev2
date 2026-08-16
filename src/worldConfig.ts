@@ -11,12 +11,13 @@ export interface WorldLocation {
 // 可前往的地点（away 除外）
 export const WORLD_LOCATIONS: WorldLocation[] = [
   { id: 'practice_room', label: '练习室', sceneKey: 'practice_room', icon: '🕺' },
-  { id: 'backstage', label: '打歌后台', sceneKey: 'backstage_hall', icon: '🎤' },
+  { id: 'backstage', label: '待机室', sceneKey: 'backstage_hall', icon: '🎤' },
   { id: 'variety_studio', label: '综艺棚', sceneKey: 'recording_studio', icon: '🎬' },
   { id: 'concert', label: '演唱会现场', sceneKey: 'concert', icon: '🎆' },
   { id: 'dorm', label: '宿舍', sceneKey: 'dorm', icon: '🛋️' },
   { id: 'cafe', label: '咖啡厅', sceneKey: 'cafe', icon: '☕' },
   { id: 'convenience', label: '便利店', sceneKey: 'convenience_store', icon: '🏪' },
+  { id: 'district', label: '商圈', sceneKey: 'district', icon: '🏙️' },
   { id: 'hangang', label: '汉江', sceneKey: 'hangang_night', icon: '🌉' },
 ];
 
@@ -35,12 +36,13 @@ export interface Activity {
 
 const ACT: Record<string, Activity> = {
   practice: { key: 'practice', label: '练习', loc: 'practice_room', available: true, mood: '专注、略疲惫' },
-  stage:    { key: 'stage', label: '打歌彩排', loc: 'backstage', available: true, mood: '紧绷、要强' },
+  stage:    { key: 'stage', label: '待机室候场', loc: 'backstage', available: true, mood: '紧绷、要强' },
   perform:  { key: 'perform', label: '打歌舞台', loc: 'concert', available: true, mood: '临上台、亢奋又紧张' },
   variety:  { key: 'variety', label: '录综艺', loc: 'variety_studio', available: true, mood: '放松、综艺感' },
   concert:  { key: 'concert', label: '演唱会', loc: 'concert', available: true, mood: '肾上腺素飙升、台上台下' },
   rest:     { key: 'rest', label: '宿舍休息', loc: 'dorm', available: true, mood: '松弛、露出真实一面' },
   cafe:     { key: 'cafe', label: '泡咖啡厅', loc: 'cafe', available: true, mood: '惬意、健谈' },
+  shop:     { key: 'shop', label: '逛商圈', loc: 'district', available: true, mood: '轻松、被认出的风险' },
   conv:     { key: 'conv', label: '逛便利店', loc: 'convenience', available: true, mood: '深夜、随性' },
   hangang:  { key: 'hangang', label: '汉江散步', loc: 'hangang', available: true, mood: '放空、感性' },
   tour:     { key: 'tour', label: '巡演·在外地', loc: AWAY, available: false, mood: '奔波、想家' },
@@ -83,7 +85,7 @@ export function getActivity(memberId: string, day: number, slot: number): Activi
     return hash(`${memberId}|e${day}`) % 2 ? ACT.hangang : ACT.conv;
   }
   // 自由日：每个时段随机一个休闲活动
-  const free = [ACT.cafe, ACT.hangang, ACT.rest, ACT.conv, ACT.practice];
+  const free = [ACT.cafe, ACT.hangang, ACT.rest, ACT.conv, ACT.shop, ACT.practice];
   return free[hash(`${memberId}|f${day}-${slot}`) % free.length];
 }
 
@@ -136,7 +138,7 @@ export function startingAffection(identity?: string[]): number {
 }
 
 // 人人可去的公共场所
-export const PUBLIC_LOCS = ['concert', 'cafe', 'convenience', 'hangang'];
+export const PUBLIC_LOCS = ['concert', 'cafe', 'convenience', 'hangang', 'district'];
 
 // 身份类别 → 公共场所之外，额外解锁的地点
 const IDENTITY_ACCESS: { test: RegExp; extra: string[] }[] = [
@@ -169,7 +171,7 @@ export function identitySummary(identity: string[]): { startLabel: string; affFl
 export function lockReason(locationId: string, tw: boolean): string {
   switch (locationId) {
     case 'practice_room': return tw ? '練習室閒人免進，你的身份刷不開門禁。' : '练习室闲人免进，你的身份刷不开门禁。';
-    case 'backstage': return tw ? '後台只認工作證，你被保安攔在門口。' : '后台只认工作证，你被保安拦在门口。';
+    case 'backstage': return tw ? '待機室只認工作證，你被保安攔在門口。' : '待机室只认工作证，你被保安拦在门口。';
     case 'variety_studio': return tw ? '綜藝棚錄製中，無關人員止步。' : '综艺棚录制中，无关人员止步。';
     case 'dorm': return tw ? '宿舍是她們的私人領域，你這身份沒法登門。' : '宿舍是她们的私人领域，你这身份没法登门。';
     default: return tw ? '你的身份到不了這裡。' : '你的身份到不了这里。';

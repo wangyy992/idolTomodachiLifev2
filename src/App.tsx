@@ -1358,7 +1358,7 @@ export default function App() {
           playerName={gameState.playerName}
           appearances={gameState.appearances || {}}
           playerAppearance={gameState.playerAppearance}
-          sceneBg={getSceneConfig(sceneLoc?.sceneKey || 'practice_room').bg}
+          sceneBg={getSceneConfig(sceneLoc?.id === 'hangang' ? (worldSlot === 2 ? 'hangang_night' : 'hangang_day') : (sceneLoc?.sceneKey || 'practice_room')).bg}
           sceneLabel={sceneLoc?.label || ''}
           script={sceneScript}
           options={sceneOptions}
@@ -1428,7 +1428,8 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      <aside className={`${sidebarOpen ? 'w-56' : 'w-0 overflow-hidden border-r-0'} border-r border-[#DAD8EE] flex-shrink-0 flex-col hidden lg:flex transition-[width] duration-300`} style={{background: 'rgba(243,242,250,0.92)'}}>
+      {sidebarOpen && <div className="hidden lg:block fixed inset-0 z-[90] bg-black/25" onClick={() => setSidebarOpen(false)} />}
+      <aside className={`${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} w-56 border-r border-[#DAD8EE] flex-col hidden lg:flex fixed left-0 top-0 bottom-0 z-[95] transition-transform duration-300 shadow-2xl`} style={{background: 'rgba(243,242,250,0.98)'}}>
         <div className="p-4 border-b border-[#DAD8EE]">
           <h1 className="text-sm font-black text-[#5B6BB0] tracking-tighter flex items-center gap-1.5"><Gamepad2 className="w-4 h-4 flex-shrink-0" /> 爱豆收集梦想生活</h1>
           <div className="flex items-center gap-2 mt-2">
@@ -1514,7 +1515,7 @@ export default function App() {
       </aside>
 
       <main className="flex-1 flex flex-col h-full lg:rounded-l-[2rem] lg:shadow-sm overflow-hidden" style={{background: 'rgba(255,255,255,0.85)'}}>
-        <header className="h-16 bg-white border-b border-[#DAD8EE] px-4 flex items-center justify-between z-10 flex-shrink-0">
+        <header className="h-11 bg-white border-b border-[#DAD8EE] px-4 flex items-center justify-between z-10 flex-shrink-0">
           <div className="flex items-center gap-3">
             <button onClick={handleReset} className="lg:hidden p-2 text-[#5B6BB0] hover:bg-[#E7E6F6] rounded-xl"><RefreshCw className="w-4 h-4" /></button>
             <button
