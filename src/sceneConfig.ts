@@ -101,6 +101,13 @@ export const SCENE_CONFIG: Record<string, {
     ratio: 1.791045,
     overlay: 'rgba(0,0,0,0.04)',
   },
+  'rooftop': {
+    label: '公司天台',
+    bg: "#4a5a72 url('/scenes/rooftop.png') center/cover no-repeat",
+    sceneBase: '#4a5a72',
+    ratio: 1.791045,
+    overlay: 'rgba(0,0,0,0.04)',
+  },
   'concert': {
     label: '演唱会现场',
     bg: "#150f22 url('/scenes/concert.png') center/cover no-repeat",
@@ -126,6 +133,9 @@ export const SCENE_NAME_MAP: Record<string, string> = {
   '首尔': 'seoul_street',
   '首尔街头': 'district',
   '商圈': 'district',
+  '天台': 'rooftop',
+  '公司天台': 'rooftop',
+  '楼顶': 'rooftop',
   '弘大': 'district',
   '机场': 'airport_departure',
   '机场出发': 'airport_departure',

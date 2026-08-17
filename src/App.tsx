@@ -533,7 +533,7 @@ const CharacterCreationWizard = ({ onComplete, members }: { onComplete: (data: a
     </div>
   );
 
-  const flow: string[] = data.gameMode === 'mom' ? ['basics', 'mode', 'daughter'] : ['basics', 'mode', 'face', 'identity', 'idols'];
+  const flow: string[] = ['basics', 'face', 'identity', 'idols'];
   const cur = flow[Math.min(stepIdx, flow.length - 1)];
   const isLast = stepIdx >= flow.length - 1;
   const go = (d: number) => setStepIdx(i => Math.max(0, Math.min(flow.length - 1, i + d)));

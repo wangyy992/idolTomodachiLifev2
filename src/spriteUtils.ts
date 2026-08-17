@@ -144,7 +144,8 @@ export function getAppearance(seed: string): Appearance {
 // 玩家默认外观：中性稳定
 export function getPlayerAppearance(seed: string): Appearance {
   const base = getAppearance('player::' + seed);
-  return { ...base, top: 'basic', bottom: 'pants', glasses: '', blush: -1, hat: '', earring: '', beard: -1 };
+  // 默认：黄皮肤 / 黑头发 / 黑眼睛
+  return { ...base, skin: 0, hairColor: 0, eyes: 0, top: 'basic', bottom: 'pants', glasses: '', blush: -1, hat: '', earring: '', beard: -1 };
 }
 
 // 爱豆默认外观：优先用还原真人的预设，否则按 id 稳定随机

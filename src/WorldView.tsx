@@ -50,7 +50,7 @@ interface Entity {
 }
 
 const BOUND = { minX: 8, maxX: 92, minY: 44, maxY: 88 };
-const SPRITE = 58;
+const SPRITE = 76;
 const TALK_DIST = 9;
 const IDOL_SPEED = 7;
 const PLAYER_SPEED = 22;

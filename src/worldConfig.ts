@@ -18,6 +18,7 @@ export const WORLD_LOCATIONS: WorldLocation[] = [
   { id: 'cafe', label: '咖啡厅', sceneKey: 'cafe', icon: '☕' },
   { id: 'convenience', label: '便利店', sceneKey: 'convenience_store', icon: '🏪' },
   { id: 'district', label: '商圈', sceneKey: 'district', icon: '🏙️' },
+  { id: 'rooftop', label: '公司天台', sceneKey: 'rooftop', icon: '🌇' },
   { id: 'hangang', label: '汉江', sceneKey: 'hangang_night', icon: '🌉' },
 ];
 
@@ -43,6 +44,7 @@ const ACT: Record<string, Activity> = {
   rest:     { key: 'rest', label: '宿舍休息', loc: 'dorm', available: true, mood: '松弛、露出真实一面' },
   cafe:     { key: 'cafe', label: '泡咖啡厅', loc: 'cafe', available: true, mood: '惬意、健谈' },
   shop:     { key: 'shop', label: '逛商圈', loc: 'district', available: true, mood: '轻松、被认出的风险' },
+  roof:     { key: 'roof', label: '天台放空', loc: 'rooftop', available: true, mood: '独处、心里有事' },
   conv:     { key: 'conv', label: '逛便利店', loc: 'convenience', available: true, mood: '深夜、随性' },
   hangang:  { key: 'hangang', label: '汉江散步', loc: 'hangang', available: true, mood: '放空、感性' },
   tour:     { key: 'tour', label: '巡演·在外地', loc: AWAY, available: false, mood: '奔波、想家' },
@@ -85,7 +87,7 @@ export function getActivity(memberId: string, day: number, slot: number): Activi
     return hash(`${memberId}|e${day}`) % 2 ? ACT.hangang : ACT.conv;
   }
   // 自由日：每个时段随机一个休闲活动
-  const free = [ACT.cafe, ACT.hangang, ACT.rest, ACT.conv, ACT.shop, ACT.practice];
+  const free = [ACT.cafe, ACT.hangang, ACT.rest, ACT.conv, ACT.shop, ACT.roof, ACT.practice];
   return free[hash(`${memberId}|f${day}-${slot}`) % free.length];
 }
 
@@ -142,7 +144,7 @@ export const PUBLIC_LOCS = ['concert', 'cafe', 'convenience', 'hangang', 'distri
 
 // 身份类别 → 公共场所之外，额外解锁的地点
 const IDENTITY_ACCESS: { test: RegExp; extra: string[] }[] = [
-  { test: /实习|工作人员|妆造|发型|助理|翻译|商务|经纪|staff/i, extra: ['practice_room', 'backstage', 'variety_studio', 'dorm'] },
+  { test: /实习|工作人员|妆造|发型|助理|翻译|商务|经纪|staff/i, extra: ['practice_room', 'backstage', 'variety_studio', 'dorm', 'rooftop'] },
   { test: /记者|博主|媒体|采访/, extra: ['variety_studio'] },
   { test: /女友|男友|恋人|同栋|住户|邻居/, extra: ['dorm'] },
   { test: /青梅|发小|暗恋|前任/, extra: ['dorm'] },
@@ -173,6 +175,7 @@ export function lockReason(locationId: string, tw: boolean): string {
     case 'practice_room': return tw ? '練習室閒人免進，你的身份刷不開門禁。' : '练习室闲人免进，你的身份刷不开门禁。';
     case 'backstage': return tw ? '待機室只認工作證，你被保安攔在門口。' : '待机室只认工作证，你被保安拦在门口。';
     case 'variety_studio': return tw ? '綜藝棚錄製中，無關人員止步。' : '综艺棚录制中，无关人员止步。';
+    case 'rooftop': return tw ? '天台在公司樓上，你刷不開那道門。' : '天台在公司楼上，你刷不开那道门。';
     case 'dorm': return tw ? '宿舍是她們的私人領域，你這身份沒法登門。' : '宿舍是她们的私人领域，你这身份没法登门。';
     default: return tw ? '你的身份到不了這裡。' : '你的身份到不了这里。';
   }
