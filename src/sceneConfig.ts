@@ -3,12 +3,14 @@ export const SCENE_CONFIG: Record<string, {
   label: string;
   bg: string; // 暂时用渐变色，之后换成 `url(/scenes/xxx.jpg)`
   sceneBase?: string; // 舞台外侧留白底色
+  blur?: string;      // 留白处的低清模糊底
   ratio?: number;     // 画面宽高比（不填按 1920/1072）
   overlay: string; // 叠加层透明度
 }> = {
   'practice_room': {
     label: '练习室',
-    bg: "#241a14 url('/scenes/practice.png') center/cover no-repeat",
+    bg: "#241a14 url('/scenes/practice.webp') center/cover no-repeat",
+    blur: "url('/scenes/practice_blur.webp') center/cover no-repeat",
     sceneBase: '#241a14',
     ratio: 1.791044776119403,
     overlay: 'rgba(0,0,0,0.04)',
@@ -20,7 +22,8 @@ export const SCENE_CONFIG: Record<string, {
   },
   'dorm': {
     label: '宿舍',
-    bg: "#6b5a4a url('/scenes/dorm.png') center/cover no-repeat",
+    bg: "#6b5a4a url('/scenes/dorm.webp') center/cover no-repeat",
+    blur: "url('/scenes/dorm_blur.webp') center/cover no-repeat",
     sceneBase: '#6b5a4a',
     ratio: 1.833810888252149,
     overlay: 'rgba(0,0,0,0.04)',
@@ -32,35 +35,40 @@ export const SCENE_CONFIG: Record<string, {
   },
   'recording_studio': {
     label: '录音棚',
-    bg: "#3a3a44 url('/scenes/variety.png') center/cover no-repeat",
+    bg: "#3a3a44 url('/scenes/variety.webp') center/cover no-repeat",
+    blur: "url('/scenes/variety_blur.webp') center/cover no-repeat",
     sceneBase: '#3a3a44',
     ratio: 1.791044776119403,
     overlay: 'rgba(0,0,0,0.04)',
   },
   'cafe': {
     label: '咖啡厅',
-    bg: "#e8e0cf url('/scenes/cafe.png') center/cover no-repeat",
+    bg: "#e8e0cf url('/scenes/cafe.webp') center/cover no-repeat",
+    blur: "url('/scenes/cafe_blur.webp') center/cover no-repeat",
     sceneBase: '#e8e0cf',
     ratio: 1.791044776119403,
     overlay: 'rgba(0,0,0,0.04)',
   },
   'convenience_store': {
     label: '便利店',
-    bg: "#cfc7b4 url('/scenes/convenience.png') center/cover no-repeat",
+    bg: "#cfc7b4 url('/scenes/convenience.webp') center/cover no-repeat",
+    blur: "url('/scenes/convenience_blur.webp') center/cover no-repeat",
     sceneBase: '#cfc7b4',
     ratio: 1.833810888252149,
     overlay: 'rgba(0,0,0,0.04)',
   },
   'hangang_day': {
     label: '汉江（白天）',
-    bg: "#8fbfe0 url('/scenes/hangang_day.png') center/cover no-repeat",
+    bg: "#8fbfe0 url('/scenes/hangang_day.webp') center/cover no-repeat",
+    blur: "url('/scenes/hangang_day_blur.webp') center/cover no-repeat",
     sceneBase: '#8fbfe0',
     ratio: 1.791044776119403,
     overlay: 'rgba(0,0,0,0.04)',
   },
   'hangang_night': {
     label: '汉江（夜晚）',
-    bg: "#141a3a url('/scenes/hangang_night.png') center/cover no-repeat",
+    bg: "#141a3a url('/scenes/hangang_night.webp') center/cover no-repeat",
+    blur: "url('/scenes/hangang_night_blur.webp') center/cover no-repeat",
     sceneBase: '#141a3a',
     ratio: 1.791044776119403,
     overlay: 'rgba(0,0,0,0.04)',
@@ -82,35 +90,40 @@ export const SCENE_CONFIG: Record<string, {
   },
   'backstage_hall': {
     label: '待机室',
-    bg: "#3a3630 url('/scenes/backstage.png') center/cover no-repeat",
+    bg: "#3a3630 url('/scenes/backstage.webp') center/cover no-repeat",
+    blur: "url('/scenes/backstage_blur.webp') center/cover no-repeat",
     sceneBase: '#3a3630',
     ratio: 1.791044776119403,
     overlay: 'rgba(0,0,0,0.04)',
   },
   'stage_wing': {
     label: '舞台',
-    bg: "#150f22 url('/scenes/concert.png') center/cover no-repeat",
+    bg: "#150f22 url('/scenes/concert.webp') center/cover no-repeat",
+    blur: "url('/scenes/concert_blur.webp') center/cover no-repeat",
     sceneBase: '#150f22',
     ratio: 1.791045,
     overlay: 'rgba(0,0,0,0.04)',
   },
   'district': {
     label: '商圈',
-    bg: "#8a6a52 url('/scenes/district.png') center/cover no-repeat",
+    bg: "#8a6a52 url('/scenes/district.webp') center/cover no-repeat",
+    blur: "url('/scenes/district_blur.webp') center/cover no-repeat",
     sceneBase: '#8a6a52',
     ratio: 1.791045,
     overlay: 'rgba(0,0,0,0.04)',
   },
   'rooftop': {
     label: '公司天台',
-    bg: "#4a5a72 url('/scenes/rooftop.png') center/cover no-repeat",
+    bg: "#4a5a72 url('/scenes/rooftop.webp') center/cover no-repeat",
+    blur: "url('/scenes/rooftop_blur.webp') center/cover no-repeat",
     sceneBase: '#4a5a72',
     ratio: 1.791045,
     overlay: 'rgba(0,0,0,0.04)',
   },
   'concert': {
     label: '演唱会现场',
-    bg: "#150f22 url('/scenes/concert.png') center/cover no-repeat",
+    bg: "#150f22 url('/scenes/concert.webp') center/cover no-repeat",
+    blur: "url('/scenes/concert_blur.webp') center/cover no-repeat",
     sceneBase: '#150f22',
     ratio: 1.791044776119403,
     overlay: 'rgba(0,0,0,0.04)',

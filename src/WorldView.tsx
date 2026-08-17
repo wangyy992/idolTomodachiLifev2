@@ -308,7 +308,7 @@ export default function WorldView({
       {/* 留白处：同图放大模糊，视觉上满铺 */}
       <div
         className="absolute inset-0 pointer-events-none"
-        style={{ background: sceneConfig.bg, backgroundSize: 'cover', backgroundPosition: 'center', filter: 'blur(26px) brightness(0.45) saturate(0.85)', transform: 'scale(1.2)' }}
+        style={{ background: (sceneConfig as any).blur || sceneConfig.bg, backgroundSize: 'cover', backgroundPosition: 'center', filter: 'blur(26px) brightness(0.45) saturate(0.85)', transform: 'scale(1.2)' }}
       />
       <div
         className="relative overflow-hidden shadow-[0_0_40px_rgba(0,0,0,0.55)]"
