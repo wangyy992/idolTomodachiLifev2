@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { MessageCircle, Clock, CalendarDays, ChevronRight, X, Users, Rss, Palette, Lock, Smartphone, CalendarRange, Megaphone } from 'lucide-react';
 import { buildYearPhases, phaseAt, weekOf, dayInWeek, isMusicShowDay, WEEKS_PER_YEAR } from './calendar';
+import { SpritePreview } from './FaceCustomizer';
 import { Member } from './types';
 import { getSceneConfig } from './sceneConfig';
 import RelationPanel from './RelationPanel';
@@ -130,6 +131,7 @@ export default function WorldView({
   const [showRelations, setShowRelations] = useState(false);
   const [showFeed, setShowFeed] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
+  const [showFacePick, setShowFacePick] = useState(false);
   const [lockToast, setLockToast] = useState<string | null>(null);
   // 主团（取在场成员里最常见的团）用于日历/打歌
   const mainGroup = React.useMemo(() => {
@@ -371,7 +373,7 @@ export default function WorldView({
           <Smartphone className="w-4 h-4" />
           {phoneUnread > 0 && <span className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 px-1 rounded-full bg-[#FF3B30] text-white text-[9px] font-black flex items-center justify-center shadow animate-pulse">{phoneUnread}</span>}
         </button>
-        <button onClick={() => onCustomize({ kind: 'player' })} title={tw ? '捏臉' : '捏脸'} className="w-8 h-8 rounded-xl flex items-center justify-center text-[#F1ECFF] transition-all hover:bg-white/10" style={{ background: 'rgba(14,11,26,0.6)', backdropFilter: 'blur(6px)', border: '1px solid rgba(255,255,255,0.1)' }}>
+        <button onClick={() => setShowFacePick(true)} title={tw ? '捏臉' : '捏脸'} className="w-8 h-8 rounded-xl flex items-center justify-center text-[#F1ECFF] transition-all hover:bg-white/10" style={{ background: 'rgba(14,11,26,0.6)', backdropFilter: 'blur(6px)', border: '1px solid rgba(255,255,255,0.1)' }}>
           <Palette className="w-4 h-4" />
         </button>
         <button onClick={() => setShowRelations(true)} title={tw ? '關係' : '关系'} className="w-8 h-8 rounded-xl flex items-center justify-center text-[#F1ECFF] transition-all hover:bg-white/10" style={{ background: 'rgba(14,11,26,0.6)', backdropFilter: 'blur(6px)', border: '1px solid rgba(255,255,255,0.1)' }}>
@@ -529,6 +531,32 @@ export default function WorldView({
           onSetIntent={onSetIntent} onToggleMatchmake={onToggleMatchmake} onSetPairAffinity={onSetPairAffinity} onConfess={onConfess}
           onClose={() => setShowRelations(false)} lang={lang} onCustomize={onCustomize}
         />
+      )}
+
+      {/* 捏脸：选谁的脸（原来这个按钮只能捏玩家，爱豆入口藏在关系网里不好发现）*/}
+      {showFacePick && (
+        <div className="absolute inset-0 z-40 bg-black/70 backdrop-blur-md flex items-center justify-center p-4" onClick={() => setShowFacePick(false)}>
+          <div className="ink-panel ink-scroll rounded-[18px] p-5 max-w-md w-full max-h-[80%] overflow-auto" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-[14px] font-black text-[#F1ECFF] flex items-center gap-2"><Palette className="w-4 h-4 text-[#C9A227]" /> {tw ? '捏誰的臉' : '捏谁的脸'}</h3>
+              <button onClick={() => setShowFacePick(false)} className="w-7 h-7 rounded-lg bg-white/[0.06] hover:bg-white/[0.12] text-[#B7B2D9] flex items-center justify-center"><X className="w-4 h-4" /></button>
+            </div>
+            <div className="grid grid-cols-3 gap-2.5">
+              <button onClick={() => { setShowFacePick(false); onCustomize({ kind: 'player' }); }}
+                className="flex flex-col items-center gap-1 p-2 rounded-xl bg-white/[0.03] border border-[rgba(201,162,39,0.3)] hover:border-[rgba(201,162,39,0.6)] transition-all">
+                <SpritePreview appearance={normalizeAppearance(playerAppearance, getPlayerAppearance(playerName || 'you'))} size={52} />
+                <span className="text-[11px] font-black text-[#F1ECFF]">{tw ? '你' : '你'}</span>
+              </button>
+              {members.map(m => (
+                <button key={m.id} onClick={() => { setShowFacePick(false); onCustomize({ kind: 'idol', id: m.id }); }}
+                  className="flex flex-col items-center gap-1 p-2 rounded-xl bg-white/[0.03] border border-white/10 hover:border-[rgba(201,162,39,0.5)] transition-all">
+                  <SpritePreview appearance={normalizeAppearance(appearances[m.id], getDefaultAppearance(m.id))} size={52} />
+                  <span className="text-[11px] font-black text-[#F1ECFF] truncate max-w-[64px]">{m.name}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
       )}
 
       {/* 年历：一年的档期一眼看完，玩家能提前规划 */}

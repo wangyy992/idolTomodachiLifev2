@@ -9,7 +9,7 @@ import WorldView from './WorldView';
 import FaceCustomizer, { SpritePreview } from './FaceCustomizer';
 import SceneView from './SceneView';
 import WorldPanel from './WorldPanel';
-import { getPlayerAppearance, getDefaultAppearance, normalizeAppearance, type Appearance } from './spriteUtils';
+import { getPlayerAppearance, getDefaultAppearance, getAppearance, normalizeAppearance, type Appearance } from './spriteUtils';
 import { nextTime, idolsAt, getLocation, getActivity, getStartLocation, startingAffection, identitySummary, WORLD_LOCATIONS, type WorldLocation, type Activity } from './worldConfig';
 import { seedIdolRelations, pairKey, deriveType, hasFlag, PLAYER, type Intent } from './relations';
 import { computeMusicShow, isMusicShowDay, weekOf, DAYS_PER_YEAR } from './calendar';
@@ -479,7 +479,12 @@ const CharacterCreationWizard = ({ onComplete, members }: { onComplete: (data: a
     daughterNationality: '', daughterPersonality: '', daughterBackground: '', daughterName: '',
     playerApiKey: '', playerModel: 'deepseek-v4-flash', language: 'simplified',
     playerAppearance: getPlayerAppearance('you') as Appearance,
+    customMembers: [] as any[],
   });
+  // 自建角色（像 Tomodachi Life 那样把自己想要的人放进来）
+  const [ocDraft, setOcDraft] = useState<any | null>(null);
+  const [ocFace, setOcFace] = useState(false);
+  const [source, setSource] = useState<'idol' | 'oc'>('idol');
   const [customIdentity, setCustomIdentity] = useState('');
   const lang = data.language || 'simplified';
 
@@ -593,7 +598,7 @@ const CharacterCreationWizard = ({ onComplete, members }: { onComplete: (data: a
   const canNext = () => {
     if (cur === 'basics') return !!data.playerName.trim();
     if (cur === 'identity') return data.identity.length > 0 || !!customIdentity.trim();
-    if (cur === 'idols') return data.targets.length >= 1;
+    if (cur === 'idols') return data.targets.length >= 1 || data.customMembers.length >= 1;
     if (cur === 'daughter') return !!(data.daughterNationality && data.daughterPersonality && data.daughterBackground);
     return true;
   };
@@ -610,6 +615,59 @@ const CharacterCreationWizard = ({ onComplete, members }: { onComplete: (data: a
       <div className="absolute top-1/3 right-1/4 w-56 h-56 rounded-full blur-3xl opacity-15 pointer-events-none" style={{ background: 'radial-gradient(circle, #FF7A93, transparent 70%)' }} />
       {showFace && (
         <FaceCustomizer appearance={data.playerAppearance} onChange={a => setData({ ...data, playerAppearance: a })} title={T('捏你的脸', '捏你的臉')} lang={lang} onClose={() => setShowFace(false)} />
+      )}
+      {/* 自建角色编辑器 */}
+      {ocDraft && (
+        <div className="fixed inset-0 z-[120] bg-black/75 backdrop-blur-md flex items-center justify-center p-4" onClick={() => setOcDraft(null)}>
+          <div className="ink-panel ink-scroll rounded-[22px] w-full max-w-md max-h-[92%] overflow-auto p-5" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-[14px] font-black text-[#F1ECFF]">{T('自建角色','自建角色')}</h3>
+              <button onClick={() => setOcDraft(null)} className="w-7 h-7 rounded-lg bg-white/[0.06] text-[#B7B2D9] flex items-center justify-center"><X className="w-4 h-4" /></button>
+            </div>
+            <div className="flex justify-center mb-4">
+              <div className="relative flex items-center justify-center rounded-2xl p-3" style={{ background: 'radial-gradient(50% 60% at 50% 40%, rgba(120,110,220,0.18), transparent 70%)' }}>
+                <div style={{ filter: 'drop-shadow(0 0 14px rgba(150,140,255,0.35))' }}><SpritePreview appearance={ocDraft.appearance} size={96} /></div>
+              </div>
+            </div>
+            <div className="flex flex-col gap-3">
+              <div>
+                <div className="gold-caption mb-1.5">{T('名字','名字')}</div>
+                <input value={ocDraft.name} onChange={e => setOcDraft({ ...ocDraft, name: e.target.value })} className={inputCls} placeholder={T('给他/她起个名字…','給他/她起個名字…')} />
+              </div>
+              <div>
+                <div className="gold-caption mb-1.5">{T('性格 / 设定','性格 / 設定')}</div>
+                <textarea value={ocDraft.realPersonality} onChange={e => setOcDraft({ ...ocDraft, realPersonality: e.target.value })}
+                  className={inputCls + ' h-24 resize-none'} placeholder={T('写几句他/她是什么样的人，AI 会照着演…','寫幾句他/她是什麼樣的人，AI 會照著演…')} />
+              </div>
+              <div className="flex gap-2">
+                <button onClick={() => setOcDraft({ ...ocDraft, appearance: getAppearance('oc-' + Math.random()) })}
+                  className="flex-1 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-[#B7B2D9] text-[12px] font-black">🔀 {T('随机外观','隨機外觀')}</button>
+                <button onClick={() => setOcFace(true)}
+                  className="flex-1 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-[#B7B2D9] text-[12px] font-black">🎨 {T('捏脸','捏臉')}</button>
+              </div>
+              <button
+                disabled={!ocDraft.name.trim()}
+                onClick={() => {
+                  const exists = data.customMembers.some((x: any) => x.id === ocDraft.id);
+                  setData({
+                    ...data,
+                    customMembers: exists
+                      ? data.customMembers.map((x: any) => (x.id === ocDraft.id ? ocDraft : x))
+                      : [...data.customMembers, ocDraft],
+                  });
+                  setOcDraft(null);
+                }}
+                className="w-full py-3 rounded-xl text-white text-[13px] font-black disabled:opacity-40 transition-all"
+                style={{ background: 'linear-gradient(135deg,#6C79C4,#454F87)' }}>
+                {T('保存','保存')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {ocFace && ocDraft && (
+        <FaceCustomizer appearance={ocDraft.appearance} onChange={a => setOcDraft({ ...ocDraft, appearance: a })}
+          title={ocDraft.name ? `${T('捏','捏')}${ocDraft.name}` : T('捏这个角色','捏這個角色')} lang={lang} onClose={() => setOcFace(false)} />
       )}
       <motion.div initial={{ opacity: 0, scale: 0.95, y: 10 }} animate={{ opacity: 1, scale: 1, y: 0 }} className="relative rounded-[26px] shadow-[0_30px_70px_-20px_rgba(0,0,0,0.7)] w-full max-w-xl overflow-hidden flex flex-col border border-[rgba(201,162,39,0.25)]" style={{ background: 'linear-gradient(165deg, #1C1830, #0E0C1C)' }}>
         <div className="relative px-6 py-6 text-white overflow-hidden border-b border-white/[0.06]" style={{ background: 'linear-gradient(135deg, #6C79C4 0%, #5B6BB0 55%, #7C6BAE 100%)' }}>
@@ -720,7 +778,41 @@ const CharacterCreationWizard = ({ onComplete, members }: { onComplete: (data: a
                 })()}
               </>)}
 
-              {cur === 'idols' && <MemberPicker label={T('选择你的自担','選擇您的自擔')} />}
+              {cur === 'idols' && (<>
+                <div className="flex gap-2">
+                  {[{ k: 'idol', n: T('从爱豆里选','從愛豆裡選') }, { k: 'oc', n: T('我自己创建','我自己創建') }].map(o => (
+                    <button key={o.k} onClick={() => setSource(o.k as any)}
+                      className={`flex-1 py-2.5 rounded-xl border text-[12px] font-black transition-all ${source === o.k ? 'bg-[rgba(201,162,39,0.1)] border-[rgba(201,162,39,0.5)] text-[#F1ECFF]' : 'bg-white/[0.03] border-white/10 text-[#B7B2D9]'}`}>
+                      {o.n}
+                    </button>
+                  ))}
+                </div>
+                {source === 'idol' ? <MemberPicker label={T('选择你的自担','選擇您的自擔')} /> : (
+                  <div className="flex flex-col gap-3">
+                    <p className="text-[10px] text-[#8B86B8] leading-relaxed">
+                      {T('自己创建角色：起名、写性格、捏脸。他们会和爱豆一样有作息、会走动、能攻略也能被撮合。',
+                         '自己創建角色：起名、寫性格、捏臉。他們會和愛豆一樣有作息、會走動、能攻略也能被撮合。')}
+                    </p>
+                    {data.customMembers.map((o: any) => (
+                      <div key={o.id} className="flex items-center gap-3 rounded-xl bg-white/[0.03] border border-white/10 p-2.5">
+                        <div className="rounded-lg bg-white/[0.05] p-0.5 flex-shrink-0"><SpritePreview appearance={o.appearance} size={36} /></div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-[12px] font-black text-[#F1ECFF] truncate">{o.name}</div>
+                          <div className="text-[10px] text-[#8B86B8] truncate">{o.realPersonality || T('未填性格','未填性格')}</div>
+                        </div>
+                        <button onClick={() => setOcDraft({ ...o })} className="px-2 py-1 rounded-lg bg-white/[0.06] text-[#B7B2D9] text-[10px] font-black">{T('编辑','編輯')}</button>
+                        <button onClick={() => setData({ ...data, customMembers: data.customMembers.filter((x: any) => x.id !== o.id) })}
+                          className="w-7 h-7 rounded-lg text-[#8b90b8] hover:text-[#FF7A93] flex items-center justify-center"><Trash2 className="w-3.5 h-3.5" /></button>
+                      </div>
+                    ))}
+                    <button
+                      onClick={() => setOcDraft({ id: 'oc_' + Math.random().toString(36).slice(2, 8), name: '', realPersonality: '', group: '自建', appearance: getAppearance('oc-' + Math.random()) })}
+                      className="w-full py-3 rounded-xl border border-dashed border-white/20 text-[#B7B2D9] text-[12px] font-black hover:border-[rgba(201,162,39,0.5)] transition-all">
+                      + {T('新建一个角色','新建一個角色')}
+                    </button>
+                  </div>
+                )}
+              </>)}
 
               {cur === 'daughter' && (
                 <div className="flex flex-col gap-5">
@@ -1108,6 +1200,19 @@ export default function App() {
       return m;
     });
 
+    // 自建角色（OC）：并进成员表，之后日程/关系/prompt 全部按普通成员走
+    const ocs: Member[] = (data.customMembers || []).map((o: any) => ({
+      id: o.id, name: o.name, stageName: o.name, group: o.group || '自建',
+      age: o.age || 2002, nationality: o.nationality || '—', role: o.role || '',
+      publicPersona: o.publicPersona || '你自己创建的角色',
+      realPersonality: o.realPersonality || '（未填写性格，AI 会按名字与设定自由发挥）',
+      affection: affFloor > 0 ? affFloor : 0,
+      careerPressure: 40, status: '自由',
+    }));
+    const allMembers = [...initializedMembers, ...ocs];
+    // 自建角色也算"你关注的人"，否则不会出现在世界地图/关系网里
+    const allTargets = [...(data.targets || []), ...ocs.map(o => o.id)];
+
     const daughterProfile = isMomMode ? {
       nationality: data.daughterNationality,
       personality: data.daughterPersonality,
@@ -1119,12 +1224,16 @@ export default function App() {
     const startLoc = isMomMode ? undefined : getStartLocation(data.identity);
     const startScene = startLoc ? getLocation(startLoc)?.label : undefined;
     const newState: GameState = {
-      ...gameState, ...data, members: initializedMembers,
+      ...gameState, ...data, members: allMembers, targets: allTargets,
       setupStep: SetupStep.CARDS, history: [], turnCount: 0,
       ...(startLoc ? { worldLocation: startLoc, worldDay: 1, worldSlot: 0, currentScene: startScene } : {}),
       ...(daughterProfile ? { daughterProfile, momTrustLevel: 50 } : {}),
       ...(data.playerApiKey ? { playerApiKey: data.playerApiKey, playerModel: data.playerModel } : {}),
-      language: data.language
+      language: data.language,
+      appearances: {
+        ...(gameState.appearances || {}),
+        ...Object.fromEntries((data.customMembers || []).filter((o: any) => o.appearance).map((o: any) => [o.id, o.appearance])),
+      },
     } as any;
     setGameState(newState);
     handleAIStep(summary, newState);
