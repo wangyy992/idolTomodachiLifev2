@@ -118,14 +118,22 @@ export function getLocation(id: string): WorldLocation | undefined {
 
 // 身份 → 初始切入点：让"你是谁"决定你从世界的哪个角落出场
 // 注：建号只提供 5 个原型身份（圈内工作人员/普通粉丝/公寓同栋住户/青梅竹马/现任女友），
-// 但这里的规则保持宽松，兼容旧存档与玩家自定义输入的身份。
+// 但这里的规则放宽，尽量让玩家自定义输入的身份也能命中一个合理开局（兼容旧存档）。
+// —— 家人/亲属一律用完整词（哥哥/姐姐/表哥…），避免「站姐」里的「姐」被误判成亲人。
+const STAFF_RE = /实习|练习生|同期|工作人员|职员|员工|工作证|妆造|化妆|造型|发型|服装|造型师|摄影|摄像|录音|灯光|舞美|道具|助理|助手|翻译|商务|经纪|企划|宣传|公关|公司|保镖|保安|司机|老师|编舞|声乐|导师|staff/i;
+const MEDIA_RE = /记者|博主|媒体|采访|编辑|写手|主持|自媒体|摄影记者/;
+const FAN_RE = /粉丝|粉头|铁粉|唯粉|团粉|饭|站姐|应援|后援|私生|fan/i;
+const INTIMATE_RE = /女友|男友|女朋友|男朋友|恋人|对象|伴侣|未婚夫|未婚妻|老公|老婆|丈夫|妻子|同栋|住户|邻居|室友|同居|合租|家人|亲人|亲戚|哥哥|姐姐|弟弟|妹妹|表哥|表姐|表弟|表妹|堂哥|堂姐/;
+const OLDREL_RE = /青梅|发小|从小|一起长大|暗恋|单恋|前任|前男友|前女友|初恋|旧识|故人|同学|同班|校友|同桌/;
+const LIFE_RE = /留学|打工|便利店|咖啡|奶茶|学生|学校|上班|白领|店员|服务员|老板|上班族|路人|素人/;
+
 const IDENTITY_START: { test: RegExp; loc: string }[] = [
-  { test: /实习|工作人员|妆造|发型|助理|翻译|商务|经纪|staff/i, loc: 'backstage' },   // 圈内人：后台
-  { test: /记者|博主|媒体|采访/, loc: 'concert' },                                  // 媒体：打歌舞台边
-  { test: /粉丝|饭|站姐|fan/i, loc: 'concert' },                                         // 粉丝：演唱会现场
-  { test: /女友|男友|恋人|同栋|住户|邻居/, loc: 'dorm' },                                 // 私密关系：宿舍区
-  { test: /青梅|发小|暗恋|前任/, loc: 'cafe' },                                           // 旧relationship：咖啡厅
-  { test: /留学|打工|便利店|咖啡/, loc: 'cafe' },                                         // 普通生活：咖啡厅
+  { test: STAFF_RE, loc: 'backstage' },     // 圈内人：后台
+  { test: MEDIA_RE, loc: 'concert' },       // 媒体：打歌舞台边
+  { test: FAN_RE, loc: 'concert' },         // 粉丝：演唱会现场
+  { test: INTIMATE_RE, loc: 'dorm' },       // 私密关系/家人：宿舍区
+  { test: OLDREL_RE, loc: 'cafe' },         // 旧关系/同学：咖啡厅
+  { test: LIFE_RE, loc: 'cafe' },           // 普通生活：咖啡厅
 ];
 
 // 依身份挑一个合理的起始地点；无匹配则回落练习室
@@ -139,11 +147,13 @@ export function getStartLocation(identity?: string[]): string {
 
 // 关系型身份 → 起始好感度下限：让"你们本来就认识"变成真实数值，而非从陌生人开始
 const IDENTITY_AFFECTION: { test: RegExp; floor: number }[] = [
-  { test: /现任女友|现任男友|恋人/, floor: 62 },  // 已在恋爱
-  { test: /青梅|发小/, floor: 40 },               // 从小认识
-  { test: /前任/, floor: 34 },                    // 旧情复杂
-  { test: /暗恋/, floor: 18 },                    // 单向，略有接触
-  { test: /同栋|住户|邻居/, floor: 12 },          // 抬头不见低头见的脸熟
+  { test: /现任|女友|男友|女朋友|男朋友|恋人|对象|伴侣|未婚夫|未婚妻|老公|老婆|丈夫|妻子/, floor: 62 }, // 已在恋爱/伴侣
+  { test: /家人|亲人|亲戚|哥哥|姐姐|弟弟|妹妹|表哥|表姐|表弟|表妹|堂哥|堂姐/, floor: 35 },              // 亲属，本来就熟
+  { test: /青梅|发小|从小|一起长大/, floor: 40 },  // 从小认识
+  { test: /前任|前男友|前女友|初恋|旧情/, floor: 34 }, // 旧情复杂
+  { test: /同学|同班|校友|同桌|旧识|故人/, floor: 22 }, // 有过交集
+  { test: /暗恋|单恋/, floor: 18 },                // 单向，略有接触
+  { test: /同栋|住户|邻居|室友|同居|合租/, floor: 12 }, // 抬头不见低头见的脸熟
 ];
 
 export function startingAffection(identity?: string[]): number {
@@ -160,10 +170,10 @@ export const PUBLIC_LOCS = ['concert', 'cafe', 'convenience', 'hangang', 'distri
 
 // 身份类别 → 公共场所之外，额外解锁的地点
 const IDENTITY_ACCESS: { test: RegExp; extra: string[] }[] = [
-  { test: /实习|工作人员|妆造|发型|助理|翻译|商务|经纪|staff/i, extra: ['practice_room', 'backstage', 'variety_studio', 'dorm', 'rooftop'] },
-  { test: /记者|博主|媒体|采访/, extra: ['variety_studio'] },
-  { test: /女友|男友|恋人|同栋|住户|邻居/, extra: ['dorm'] },
-  { test: /青梅|发小|暗恋|前任/, extra: ['dorm'] },
+  { test: STAFF_RE, extra: ['practice_room', 'backstage', 'variety_studio', 'dorm', 'rooftop'] },
+  { test: MEDIA_RE, extra: ['variety_studio'] },
+  { test: INTIMATE_RE, extra: ['dorm'] },
+  { test: OLDREL_RE, extra: ['dorm'] },
 ];
 
 // 当前身份能进入的地点集合（多身份取并集）
