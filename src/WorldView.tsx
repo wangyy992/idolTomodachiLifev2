@@ -57,6 +57,8 @@ const TALK_DIST = 9;
 const IDOL_SPEED = 7;
 const PLAYER_SPEED = 22;
 const ENCOUNTER_DIST = 11;       // 爱豆相遇触发距离（百分比）
+const WATCH_PAIR_DIST = 26;      // 两个爱豆算"在一起"、可围观的距离（放宽）
+const WATCH_NEAR_DIST = 16;      // 你走近其中一个爱豆即可触发围观的距离
 const ENCOUNTER_COOLDOWN = 4500; // 同一对相遇冷却（ms）
 const BUBBLE_TTL = 2200;         // 相遇气泡存活（ms）
 // 时段光照氛围（上午暖 / 下午亮 / 晚上暮色）
@@ -279,15 +281,16 @@ export default function WorldView({
           onIdolEncounter(a.id, b.id, kind);
         }
       }
-      // 可围观的爱豆对：两人靠近，且玩家也在旁边
+      // 可围观的爱豆对：你走近任意一个爱豆、她附近还有另一个爱豆就能围观（放宽，不必精确站中间）
       let wpair: { aId: string; bId: string } | null = null;
       if (player) {
-        let wbest = 16;
+        let wbest = Infinity;
         for (let i = 0; i < idols.length; i++) {
           for (let j = i + 1; j < idols.length; j++) {
             const a = idols[i], b = idols[j];
-            if (Math.hypot(a.x - b.x, a.y - b.y) > ENCOUNTER_DIST + 3) continue;
-            const dp = Math.hypot(player.x - (a.x + b.x) / 2, player.y - (a.y + b.y) / 2);
+            if (Math.hypot(a.x - b.x, a.y - b.y) > WATCH_PAIR_DIST) continue;      // 两人大致在同一片区域
+            const dp = Math.min(Math.hypot(player.x - a.x, player.y - a.y), Math.hypot(player.x - b.x, player.y - b.y));
+            if (dp > WATCH_NEAR_DIST) continue;                                     // 你走近了其中一个
             if (dp < wbest) { wbest = dp; wpair = { aId: a.id, bId: b.id }; }
           }
         }
