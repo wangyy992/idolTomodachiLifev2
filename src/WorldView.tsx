@@ -5,7 +5,7 @@ import { getSceneConfig } from './sceneConfig';
 import RelationPanel from './RelationPanel';
 import { pairKey, type WorldRelation, type Intent } from './relations';
 import {
-  WORLD_LOCATIONS, TIME_SLOTS, AWAY, getActivity, idolsAt, getLocation,
+  WORLD_LOCATIONS, TIME_SLOTS, AWAY, getActivity, idolsAt, getLocation, isGroupDay,
   getAccessibleLocations, lockReason,
   type Activity, type WorldLocation,
 } from './worldConfig';
@@ -367,13 +367,13 @@ export default function WorldView({
       <div ref={stageRef} className="absolute inset-0 z-10 cursor-pointer" onClick={onFloorClick}>
         {sorted.map(e => {
           const isNear = !e.isPlayer && e.id === nearId;
-          const activity = e.member ? getActivity(e.member.id, day, slot) : null;
+          const activity = e.member ? getActivity(e.member.id, day, slot, e.member.group) : null;
           return (
             <div
               key={e.id}
               className="absolute"
               style={{ left: `${e.x}%`, top: `${e.y}%`, transform: 'translate(-50%, -100%)', zIndex: Math.round(e.y) + (e.isPlayer ? 1 : 0) }}
-              onClick={(ev) => { if (!e.isPlayer && e.member) { ev.stopPropagation(); onTalk(e.member, { location, activity: getActivity(e.member.id, day, slot) }); } }}
+              onClick={(ev) => { if (!e.isPlayer && e.member) { ev.stopPropagation(); onTalk(e.member, { location, activity: getActivity(e.member.id, day, slot, e.member.group) }); } }}
             >
               <div className="absolute left-1/2 -translate-x-1/2" style={{ bottom: -4, width: SPRITE * 0.5, height: SPRITE * 0.16, borderRadius: '50%', background: 'rgba(0,0,0,0.35)', filter: 'blur(2px)' }} />
               <div className="absolute left-1/2 -translate-x-1/2 -top-6 flex flex-col items-center gap-0.5 whitespace-nowrap">
@@ -503,11 +503,22 @@ export default function WorldView({
                 </tr>
               </thead>
               <tbody>
-                {members.map(m => (
+                {Object.entries(members.reduce((acc, m) => {
+                  (acc[m.group] = acc[m.group] || []).push(m); return acc;
+                }, {} as Record<string, Member[]>)).flatMap(([g, gm]) => [
+                  <tr key={`g-${g}`}>
+                    <td colSpan={TIME_SLOTS.length + 1} className="pt-3 pb-1 px-2">
+                      <span className="gold-caption">{g}</span>
+                      <span className="ml-2 text-[9px] font-bold" style={{ color: isGroupDay(g, day) ? '#C9A227' : '#8B86B8' }}>
+                        {isGroupDay(g, day) ? (tw ? '· 團體行程日（全團同進同出）' : '· 团体行程日（全团同进同出）') : (tw ? '· 休息日（各自散開，好約）' : '· 休息日（各自散开，好约）')}
+                      </span>
+                    </td>
+                  </tr>,
+                  ...gm.map(m => (
                   <tr key={m.id} className="border-t border-white/[0.08]">
-                    <td className="py-2 px-2 font-bold text-[#F1ECFF] whitespace-nowrap">{m.name}<span className="text-[9px] text-[#8B86B8] ml-1">{m.group}</span></td>
+                    <td className="py-2 px-2 font-bold text-[#F1ECFF] whitespace-nowrap">{m.name}</td>
                     {TIME_SLOTS.map((_, i) => {
-                      const a = getActivity(m.id, day, i);
+                      const a = getActivity(m.id, day, i, m.group);
                       const here = a.available && a.loc === locationId;
                       const loc = a.loc === AWAY ? null : getLocation(a.loc);
                       const gated = a.available && a.loc !== AWAY && !accessible.has(a.loc);
@@ -523,7 +534,8 @@ export default function WorldView({
                       );
                     })}
                   </tr>
-                ))}
+                  )),
+                ])}
               </tbody>
             </table>
             <p className="text-[10px] text-[#8B86B8] mt-3 flex items-center gap-1 flex-wrap leading-relaxed">{tw ? '劃掉=在外地/聯繫不上；' : '划掉=在外地/联系不上；'}<Lock className="w-2.5 h-2.5" />{tw ? '=你的身份進不去。點下方地點欄過去找人；沒人就「推進時段」等日程變化。' : '=你的身份进不去。点下方地点栏过去找人；没人就「推进时段」等日程变化。'}</p>
