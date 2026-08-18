@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { MessageCircle, Clock, CalendarDays, ChevronRight, X, Users, Rss, Palette, Lock, Smartphone } from 'lucide-react';
+import { MessageCircle, Clock, CalendarDays, ChevronRight, X, Users, Rss, Palette, Lock, Smartphone, CalendarRange, Megaphone } from 'lucide-react';
+import { buildYearPhases, phaseAt, weekOf, dayInWeek, isMusicShowDay, WEEKS_PER_YEAR } from './calendar';
 import { Member } from './types';
 import { getSceneConfig } from './sceneConfig';
 import RelationPanel from './RelationPanel';
@@ -78,7 +79,7 @@ function moveToward(e: Entity, speed: number, dt: number): boolean {
 }
 
 export default function WorldView({
-  members, playerName, day, slot, locationId, identity, actionUsed, onTravel, onAdvanceTime, onTalk, lang,
+  members, playerName, day, slot, locationId, identity, actionUsed, onSupport, onTravel, onAdvanceTime, onTalk, lang,
   relations, intents, matchmakes, onSetIntent, onToggleMatchmake, onSetPairAffinity, onConfess, onIdolEncounter, worldFeed, onWatchEncounter,
   appearances, playerAppearance, onCustomize, phoneUnread, onOpenPhone,
 }: {
@@ -87,6 +88,7 @@ export default function WorldView({
   day: number; slot: number; locationId: string;
   identity: string[];
   actionUsed: boolean;
+  onSupport: () => void;
   phoneUnread: number;
   onOpenPhone: () => void;
   onTravel: (locId: string) => void;
@@ -125,7 +127,17 @@ export default function WorldView({
   const [showSchedule, setShowSchedule] = useState(false);
   const [showRelations, setShowRelations] = useState(false);
   const [showFeed, setShowFeed] = useState(false);
+  const [showCalendar, setShowCalendar] = useState(false);
   const [lockToast, setLockToast] = useState<string | null>(null);
+  // 主团（取在场成员里最常见的团）用于日历/打歌
+  const mainGroup = React.useMemo(() => {
+    const c: Record<string, number> = {};
+    members.forEach(m => { c[m.group] = (c[m.group] || 0) + 1; });
+    return Object.entries(c).sort((a, b) => b[1] - a[1])[0]?.[0] || '';
+  }, [members.map(m => m.group).join('|')]);
+  const curPhase = mainGroup ? phaseAt(mainGroup, day) : null;
+  const isPromo = curPhase?.kind === 'promo';
+  const showDay = mainGroup ? isMusicShowDay(mainGroup, day) : false;
 
   // 身份 → 可进入地点；进不去的地点上锁
   const accessible = React.useMemo(() => getAccessibleLocations(identity), [identity.join('|')]);
@@ -332,6 +344,12 @@ export default function WorldView({
           <div className="px-3 py-1.5 rounded-full bg-white/95 text-[#211D33] text-xs font-black flex items-center gap-1.5">
             <span>{location.icon}</span> {location.label}
           </div>
+          {curPhase && (
+            <div className="px-3 py-1.5 rounded-full text-xs font-black flex items-center gap-1.5"
+              style={{ background: showDay ? 'rgba(201,162,39,0.9)' : 'rgba(201,162,39,0.2)', color: showDay ? '#211D33' : '#F1ECFF', border: '1px solid rgba(201,162,39,0.5)' }}>
+              <span>{curPhase.icon}</span>{showDay ? (tw ? '今天打歌' : '今天打歌') : curPhase.label}
+            </div>
+          )}
         </div>
         <div
           className="px-3 py-1 rounded-full text-[10px] font-bold pointer-events-none flex items-center gap-1.5"
@@ -364,6 +382,16 @@ export default function WorldView({
         <button onClick={() => setShowSchedule(true)} title={tw ? '日程' : '日程'} className="w-8 h-8 rounded-xl flex items-center justify-center text-[#F1ECFF] transition-all hover:bg-white/10" style={{ background: 'rgba(14,11,26,0.6)', backdropFilter: 'blur(6px)', border: '1px solid rgba(255,255,255,0.1)' }}>
           <CalendarDays className="w-4 h-4" />
         </button>
+        <button onClick={() => setShowCalendar(true)} title={tw ? '年曆' : '年历'} className="w-8 h-8 rounded-xl flex items-center justify-center text-[#F1ECFF] transition-all hover:bg-white/10" style={{ background: 'rgba(14,11,26,0.6)', backdropFilter: 'blur(6px)', border: '1px solid rgba(255,255,255,0.1)' }}>
+          <CalendarRange className="w-4 h-4" />
+        </button>
+        {isPromo && (
+          <button onClick={onSupport} disabled={actionUsed} title={tw ? '應援打投' : '应援打投'}
+            className="px-3 py-1.5 rounded-xl text-white text-[11px] font-black flex items-center gap-1 transition-all disabled:opacity-40"
+            style={{ background: 'linear-gradient(135deg,#FF7A93,#e35c78)', boxShadow: '0 6px 16px -6px rgba(255,122,147,0.8)' }}>
+            <Megaphone className="w-3.5 h-3.5" /> {tw ? '應援' : '应援'}
+          </button>
+        )}
         <button onClick={onAdvanceTime} className={`px-3 py-1.5 rounded-xl text-white text-[11px] font-black flex items-center gap-1 transition-all border-none ${actionUsed ? 'animate-pulse' : ''}`} style={{ background: 'linear-gradient(135deg,#6C79C4,#454F87)', boxShadow: actionUsed ? '0 6px 20px -4px rgba(201,162,39,0.9)' : '0 6px 16px -6px rgba(91,107,176,0.8)' }}>
           {tw ? '推進時段' : '推进时段'} <ChevronRight className="w-3.5 h-3.5" />
         </button>
@@ -492,6 +520,60 @@ export default function WorldView({
           onSetIntent={onSetIntent} onToggleMatchmake={onToggleMatchmake} onSetPairAffinity={onSetPairAffinity} onConfess={onConfess}
           onClose={() => setShowRelations(false)} lang={lang} onCustomize={onCustomize}
         />
+      )}
+
+      {/* 年历：一年的档期一眼看完，玩家能提前规划 */}
+      {showCalendar && (
+        <div className="absolute inset-0 z-40 bg-black/70 backdrop-blur-md flex items-center justify-center p-4" onClick={() => setShowCalendar(false)}>
+          <div className="ink-panel ink-scroll rounded-[18px] p-5 max-w-2xl w-full max-h-[85%] overflow-auto" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-1">
+              <h3 className="text-[14px] font-black text-[#F1ECFF] flex items-center gap-2"><CalendarRange className="w-4 h-4 text-[#C9A227]" /> {mainGroup} {tw ? '年曆' : '年历'}</h3>
+              <button onClick={() => setShowCalendar(false)} className="w-7 h-7 rounded-lg bg-white/[0.06] hover:bg-white/[0.12] text-[#B7B2D9] flex items-center justify-center transition-colors"><X className="w-4 h-4" /></button>
+            </div>
+            <p className="text-[10px] text-[#8B86B8] mb-4">{tw ? `第 ${weekOf(day)} 週 · 第 ${day} 天（第 ${dayInWeek(day)} 日）` : `第 ${weekOf(day)} 周 · 第 ${day} 天（周内第 ${dayInWeek(day)} 日）`}</p>
+
+            {/* 52 周条带 */}
+            <div className="grid gap-1 mb-4" style={{ gridTemplateColumns: 'repeat(13, minmax(0, 1fr))' }}>
+              {Array.from({ length: WEEKS_PER_YEAR }, (_, i) => i + 1).map(w => {
+                const p = mainGroup ? buildYearPhases(mainGroup).find(ph => w >= ph.startWeek && w <= ph.endWeek) : null;
+                const isNow = w === weekOf(day);
+                const bg = p?.kind === 'promo' ? 'rgba(201,162,39,0.55)'
+                  : p?.kind === 'comeback' ? 'rgba(201,162,39,0.28)'
+                  : p?.kind === 'tour' ? 'rgba(108,121,196,0.5)'
+                  : p?.kind === 'awards' ? 'rgba(255,122,147,0.5)'
+                  : 'rgba(255,255,255,0.06)';
+                return (
+                  <div key={w} title={`第${w}周${p ? ' · ' + p.label : ''}`}
+                    className="h-6 rounded flex items-center justify-center text-[8px] font-bold"
+                    style={{ background: bg, color: p ? '#F1ECFF' : '#6b6790', outline: isNow ? '2px solid #C9A227' : 'none' }}>
+                    {p ? p.icon : w % 4 === 1 ? w : ''}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* 档期清单 */}
+            <div className="gold-caption mb-2">{tw ? '今年的大事' : '今年的大事'}</div>
+            <div className="flex flex-col gap-1.5">
+              {(mainGroup ? buildYearPhases(mainGroup) : []).map((p, i) => {
+                const now = weekOf(day) >= p.startWeek && weekOf(day) <= p.endWeek;
+                const past = weekOf(day) > p.endWeek;
+                return (
+                  <div key={i} className="flex items-center gap-3 rounded-[10px] px-3 py-2 bg-white/[0.03]"
+                    style={{ border: now ? '1px solid rgba(201,162,39,0.5)' : '1px solid transparent', opacity: past ? 0.45 : 1 }}>
+                    <span className="text-base">{p.icon}</span>
+                    <span className="text-[12px] font-black text-[#F1ECFF] flex-1">{p.label}</span>
+                    <span className="text-[10px] text-[#8B86B8]">{tw ? `第 ${p.startWeek}-${p.endWeek} 週` : `第 ${p.startWeek}-${p.endWeek} 周`}</span>
+                    {now && <span className="text-[9px] font-black text-[#C9A227]">{tw ? '進行中' : '进行中'}</span>}
+                  </div>
+                );
+              })}
+            </div>
+            <p className="text-[10px] text-[#8B86B8] mt-4 leading-relaxed">
+              {tw ? '打歌期每週第 4、7 天有打歌舞台，成績由你平時的應援與她的狀態決定。' : '打歌期每周第 4、7 天有打歌舞台，成绩由你平时的应援与她的状态决定。'}
+            </p>
+          </div>
+        </div>
       )}
 
       {/* 日程面板 */}

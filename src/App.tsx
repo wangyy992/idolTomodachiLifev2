@@ -12,6 +12,7 @@ import WorldPanel from './WorldPanel';
 import { getPlayerAppearance, getDefaultAppearance, normalizeAppearance, type Appearance } from './spriteUtils';
 import { nextTime, idolsAt, getLocation, getStartLocation, startingAffection, identitySummary, WORLD_LOCATIONS, type WorldLocation, type Activity } from './worldConfig';
 import { seedIdolRelations, pairKey, deriveType, hasFlag, PLAYER, type Intent } from './relations';
+import { computeMusicShow, isMusicShowDay, weekOf } from './calendar';
 
 const LOCAL_STORAGE_KEY = 'star_reality_kpop_game_state';
 
@@ -1289,6 +1290,21 @@ export default function App() {
     handleSend(line, { focusIds: [m.id], consumeAction: true });
   };
 
+  // 应援打投：占用本时段行动点，累积到打歌成绩（回归期才有）
+  const handleSupport = () => {
+    const isTw = (gameState as any).language === 'traditional';
+    if (actionUsed) { pushToast(isTw ? '這個時段的精力用完了' : '这个时段的精力用完了', 'friendly'); return; }
+    setGameState(prev => {
+      const p = prev.playerImpact || { albumImpact: 0, voteImpact: 0 };
+      return {
+        ...prev,
+        playerImpact: { albumImpact: Math.min(60, p.albumImpact + 6), voteImpact: Math.min(60, p.voteImpact + 8) },
+        actionUsedAt: `${prev.worldDay ?? 1}-${prev.worldSlot ?? 0}`,
+      };
+    });
+    pushToast(isTw ? '你做了一輪打投與控評 —— 會反映在打歌成績上' : '你做了一轮打投与控评 —— 会反映在打歌成绩上', 'romance');
+  };
+
   // 推进时段：先结算"你不在场"的其它地点里同处一地的爱豆对（后台世界推进），再跳时间
   // 围观两个爱豆相遇 → 切到剧情，让 DeepSeek 演这场戏（关系模块已在 prompt 里，结算走 RELDELTA）
   const handleWatchEncounter = (a: Member, b: Member, ctx: { location: WorldLocation }) => {
@@ -1344,7 +1360,45 @@ export default function App() {
         }
       }
       const nt = nextTime(day, slot);
-      return { ...prev, worldRelations: rels, worldFeed: feed.slice(0, 15), worldDay: nt.day, worldSlot: nt.slot };
+      let next: any = { ...prev, worldRelations: rels, worldFeed: feed.slice(0, 15), worldDay: nt.day, worldSlot: nt.slot };
+
+      // 打歌日晚上结算一位：分数由代码算（可累积、可对比），玩家的应援与爱豆士气都算进去
+      const mainGroup = tmembers[0]?.group;
+      if (mainGroup && nt.slot === 2 && isMusicShowDay(mainGroup, nt.day)) {
+        const rivals = Array.from(new Set(prev.members.map(m => m.group))).filter(g => g !== mainGroup).slice(0, 3);
+        const morale = tmembers.length
+          ? Math.round(tmembers.reduce((s, m) => s + (m.affection || 0), 0) / tmembers.length * 0.5 + 50)
+          : 50;
+        const boost = prev.playerImpact || { albumImpact: 0, voteImpact: 0 };
+        const res = computeMusicShow(mainGroup, rivals.length ? rivals : ['其他团'], nt.day, {
+          morale,
+          boost: { vote: boost.voteImpact, sns: Math.round(boost.voteImpact * 0.6), digital: boost.albumImpact },
+        });
+        const result = { week: weekOf(nt.day), winner: res.winner, scores: res.scores };
+        next.currentMusicShow = result;
+        next.musicShowHistory = [...(prev.musicShowHistory || []), result];
+        next.playerImpact = { albumImpact: 0, voteImpact: 0 }; // 每场结算后清空本轮投入
+        const won = res.winner === mainGroup;
+        next.worldFeed = [{
+          id: `ms-${nt.day}`,
+          text: won ? `${mainGroup} 拿下本周一位！` : `本周一位是 ${res.winner}，${mainGroup} 差 ${res.scores[0].total - (res.scores.find(s => s.group === mainGroup)?.total || 0)} 分`,
+          kind: won ? 'romance' : 'tension', day: nt.day, slot: nt.slot,
+        }, ...next.worldFeed].slice(0, 15);
+        next.phoneFeed = [...(prev.phoneFeed || []), {
+          id: `msp-${nt.day}`, type: 'theqoo' as const, ts: Date.now(), read: false,
+          data: {
+            title: won ? `${mainGroup} 今天一位了…真的哭了` : `今天一位是 ${res.winner}，${mainGroup} 也太可惜了`,
+            category: '음악방송', viewsCount: 40000 + Math.floor(Math.random() * 60000),
+            likesCount: 800 + Math.floor(Math.random() * 3000), commentsCount: 120,
+            comments: [
+              { authorId: 'ㅇㅇ', content: won ? '무대 진짜 미쳤다' : '아쉽다 다음엔 꼭', translation: won ? '舞台真的绝了' : '好可惜，下次一定' },
+              { authorId: 'ㅇㅇ', content: `총점 ${res.scores[0].total}`, translation: `总分 ${res.scores[0].total}` },
+            ],
+          },
+        }];
+        setTimeout(() => pushToast(won ? `🏆 ${mainGroup} 本周一位！` : `本周一位：${res.winner}`, won ? 'romance' : 'tension'), 0);
+      }
+      return next;
     });
   };
 
@@ -1694,6 +1748,7 @@ export default function App() {
             locationId={worldLocation}
             identity={gameState.identity || []}
             actionUsed={actionUsed}
+            onSupport={handleSupport}
             onTravel={setWorldLocation}
             onAdvanceTime={handleAdvanceTime}
             onTalk={handleTalkTo}
