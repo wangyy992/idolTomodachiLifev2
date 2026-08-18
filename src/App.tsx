@@ -10,7 +10,7 @@ import FaceCustomizer, { SpritePreview } from './FaceCustomizer';
 import SceneView from './SceneView';
 import WorldPanel from './WorldPanel';
 import { getPlayerAppearance, getDefaultAppearance, getAppearance, normalizeAppearance, type Appearance } from './spriteUtils';
-import { nextTime, idolsAt, getLocation, getActivity, getStartLocation, startingAffection, identitySummary, WORLD_LOCATIONS, type WorldLocation, type Activity } from './worldConfig';
+import { nextTime, idolsAt, getLocation, getActivity, unitKeyOf, getStartLocation, startingAffection, identitySummary, WORLD_LOCATIONS, type WorldLocation, type Activity } from './worldConfig';
 import { seedIdolRelations, pairKey, deriveType, hasFlag, PLAYER, type Intent } from './relations';
 import { computeMusicShow, isMusicShowDay, weekOf, DAYS_PER_YEAR } from './calendar';
 import { availableEnding, buildYearbook } from './endings';
@@ -1548,6 +1548,8 @@ export default function App() {
         const present = idolsAt(tmembers, L.id, day, slot);
         for (let i = 0; i < present.length; i++) {
           for (let j = i + 1; j < present.length; j++) {
+            // 私密地点（练习室/天台/宿舍/演唱会）不同公司/团不同屏，不产生跨单位相遇
+            if (unitKeyOf(L.id, present[i]) !== unitKeyOf(L.id, present[j])) continue;
             if (Math.random() > 0.6) continue;
             const a = present[i], b = present[j], k = pairKey(a.id, b.id);
             const match = (prev.matchmakes || []).includes(k);

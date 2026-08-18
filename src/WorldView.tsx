@@ -8,7 +8,7 @@ import RelationPanel from './RelationPanel';
 import { pairKey, type WorldRelation, type Intent } from './relations';
 import {
   WORLD_LOCATIONS, TIME_SLOTS, AWAY, getActivity, idolsAt, getLocation, isGroupDay,
-  getAccessibleLocations, lockReason,
+  getAccessibleLocations, lockReason, LOCATION_SCOPE, unitKeyOf, unitLabelOf, parseLocKey,
   type Activity, type WorldLocation,
 } from './worldConfig';
 import {
@@ -115,12 +115,34 @@ export default function WorldView({
   onCustomize: (t: { kind: 'player' } | { kind: 'idol'; id: string }) => void;
 }) {
   const tw = lang === 'traditional';
-  const location = getLocation(locationId) || WORLD_LOCATIONS[0];
+  // 地点 key 可能带单位后缀（如 dorm@ITZY / practice_room@JYP）；取 base 找场景，用 unit 过滤在场
+  const { base: baseLoc, unit: locUnit } = parseLocKey(locationId);
+  const location = getLocation(baseLoc) || WORLD_LOCATIONS[0];
   // 汉江按时段切换昼/夜画面
   const sceneKey = location.id === 'hangang' ? (slot === 2 ? 'hangang_night' : 'hangang_day') : location.sceneKey;
   const sceneConfig = getSceneConfig(sceneKey);
-  const present = idolsAt(members, locationId, day, slot);
+  // 私密地点只显示同一单位（公司/团）的成员，跨公司/跨团不同屏
+  const rawPresent = idolsAt(members, baseLoc, day, slot);
+  const scope = LOCATION_SCOPE[baseLoc] || 'shared';
+  let effUnit = locUnit;
+  if (!effUnit && scope !== 'shared' && rawPresent.length) {
+    // 没指定单位（如开局默认地点）→ 取在场里第一个单位，保证也不混
+    effUnit = unitKeyOf(baseLoc, [...rawPresent].sort((a, b) => (a.id < b.id ? -1 : 1))[0]);
+  }
+  const present = effUnit ? rawPresent.filter(m => unitKeyOf(baseLoc, m) === effUnit) : rawPresent;
   const presentKey = present.map(m => m.id).join(',') + `@${locationId}#${day}-${slot}`;
+  // 私密地点：本时段在场的各"单位"（公司/团），给顶部切换抽屉用
+  const localUnits: { unit: string; label: string; count: number }[] = (() => {
+    if (scope === 'shared') return [];
+    const map = new Map<string, { unit: string; label: string; count: number }>();
+    for (const m of rawPresent) {
+      const u = unitKeyOf(baseLoc, m); if (!u) continue;
+      const e = map.get(u) || { unit: u, label: unitLabelOf(baseLoc, m.group), count: 0 };
+      e.count++; map.set(u, e);
+    }
+    return [...map.values()].sort((a, b) => (a.unit < b.unit ? -1 : 1));
+  })();
+  const effUnitLabel = effUnit ? (localUnits.find(u => u.unit === effUnit)?.label || effUnit) : '';
 
   const stageRef = useRef<HTMLDivElement>(null);
   const entitiesRef = useRef<Entity[]>([]);
@@ -355,7 +377,7 @@ export default function WorldView({
             <Clock className="w-3.5 h-3.5" /> {tw ? '第' : '第'}{day}{tw ? '天' : '天'} · {TIME_SLOTS[slot]}
           </div>
           <div className="px-3 py-1.5 rounded-full bg-white/95 text-[#211D33] text-xs font-black flex items-center gap-1.5">
-            <span>{location.icon}</span> {location.label}
+            <span>{location.icon}</span> {location.label}{effUnitLabel && <span className="text-[#5B6BB0]">· {effUnitLabel}</span>}
           </div>
           {curPhase && (
             <div className="px-3 py-1.5 rounded-full text-xs font-black flex items-center gap-1.5"
@@ -374,6 +396,21 @@ export default function WorldView({
             ? (tw ? '本時段已用完 —— 只能閒聊，推進時段恢復' : '本时段已用完 —— 只能闲聊，推进时段恢复')
             : <><span className="text-[#C9A227]">●</span>{tw ? '本時段還可深入互動 1 次' : '本时段还可深入互动 1 次'}</>}
         </div>
+        {/* 私密地点：选团/选公司抽屉（跨公司/跨团不同屏，各用各的房间）*/}
+        {scope !== 'shared' && localUnits.length > 1 && (
+          <div className="flex items-center gap-1 px-1.5 py-1 rounded-full" style={{ background: 'rgba(8,6,16,0.55)', backdropFilter: 'blur(6px)' }}>
+            <span className="text-[9px] text-white/50 font-bold pl-1">{scope === 'company' ? (tw ? '選公司' : '选公司') : (tw ? '選團' : '选团')}</span>
+            {localUnits.map(u => {
+              const on = u.unit === effUnit;
+              return (
+                <button key={u.unit} onClick={() => onTravel(`${baseLoc}@${u.unit}`)}
+                  className={`px-2.5 py-1 rounded-full text-[10px] font-black flex items-center gap-1 transition-all ${on ? 'bg-white text-[#211D33]' : 'bg-white/15 text-white hover:bg-white/25'}`}>
+                  {u.label}<span className={`min-w-[13px] h-[13px] px-0.5 rounded-full text-[8px] flex items-center justify-center ${on ? 'bg-[#5B6BB0] text-white' : 'bg-white/25 text-white'}`}>{u.count}</span>
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* 右上：快捷入口（毛玻璃图标） + 推进时段（主操作） */}
@@ -490,7 +527,7 @@ export default function WorldView({
       <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-30 flex gap-1.5 px-2 py-1.5 rounded-2xl max-w-[95%] overflow-x-auto" style={{ background: 'rgba(8,6,16,0.55)', backdropFilter: 'blur(6px)' }}>
         {WORLD_LOCATIONS.map(loc => {
           const n = countAt(loc.id);
-          const active = loc.id === locationId;
+          const active = loc.id === baseLoc;
           const locked = !accessible.has(loc.id);
           return (
             <button
@@ -664,7 +701,7 @@ export default function WorldView({
                     <td className="py-2 px-2 font-bold text-[#F1ECFF] whitespace-nowrap">{m.name}</td>
                     {TIME_SLOTS.map((_, i) => {
                       const a = getActivity(m.id, day, i, m.group);
-                      const here = a.available && a.loc === locationId;
+                      const here = a.available && a.loc === baseLoc;
                       const loc = a.loc === AWAY ? null : getLocation(a.loc);
                       const gated = a.available && a.loc !== AWAY && !accessible.has(a.loc);
                       return (

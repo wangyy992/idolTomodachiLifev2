@@ -24,6 +24,38 @@ export const WORLD_LOCATIONS: WorldLocation[] = [
 
 export const AWAY = 'away';
 
+// 团 → 公司：同公司的团共用公司楼内空间（练习室/天台），跨公司不能同屏
+export const COMPANY: Record<string, string> = {
+  ITZY: 'JYP', TWICE: 'JYP', NMIXX: 'JYP',
+  aespa: 'SM',
+  ILLIT: 'HYBE', 'LE SSERAFIM': 'HYBE',
+  IVE: 'Starship',
+};
+export const companyOf = (group: string) => COMPANY[group] || group;
+
+// 地点归属：shared=谁都能同屏；company=同公司才同屏；group=同团才同屏
+export const LOCATION_SCOPE: Record<string, 'shared' | 'company' | 'group'> = {
+  practice_room: 'company', rooftop: 'company',   // 公司楼内
+  dorm: 'group', concert: 'group',                // 各团各自的宿舍 / 演唱会
+  backstage: 'shared', variety_studio: 'shared',  // 打歌待机室 / 综艺棚：跨公司互动区
+  district: 'shared', cafe: 'shared', convenience: 'shared', hangang: 'shared',
+};
+// 某成员在某地点的"归属单位"（公司 / 团 / 无）
+export function unitKeyOf(locId: string, m: { group: string }): string | null {
+  const sc = LOCATION_SCOPE[locId] || 'shared';
+  return sc === 'company' ? companyOf(m.group) : sc === 'group' ? m.group : null;
+}
+// 私密地点的 chip 标签后缀（同公司用公司名，同团用团名）
+export function unitLabelOf(locId: string, group: string): string {
+  const sc = LOCATION_SCOPE[locId] || 'shared';
+  return sc === 'company' ? companyOf(group) : sc === 'group' ? group : '';
+}
+// 地点 key：公共场所就是 locId；私密地点带单位后缀 `locId@单位`
+export function parseLocKey(key: string): { base: string; unit: string | null } {
+  const i = key.indexOf('@');
+  return i < 0 ? { base: key, unit: null } : { base: key.slice(0, i), unit: key.slice(i + 1) };
+}
+
 export const TIME_SLOTS = ['上午', '下午', '晚上'] as const;
 export type SlotIndex = 0 | 1 | 2;
 
