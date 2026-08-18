@@ -44,7 +44,7 @@ function SpriteThumb({ appearance, size = 42, selected, onClick, label }: {
   return (
     <button
       onClick={onClick} title={label}
-      className={`flex flex-col items-center gap-0.5 p-1 rounded-xl border-2 transition-all ${selected ? 'border-[#5B6BB0] bg-[#E7E6F6]' : 'border-transparent bg-white/60 hover:bg-white'}`}
+      className={`flex flex-col items-center gap-0.5 p-1 rounded-xl border-2 transition-all ${selected ? 'border-[#C9A227] bg-[rgba(201,162,39,0.1)]' : 'border-transparent bg-white/[0.04] hover:bg-white/[0.08]'}`}
     >
       <div style={{ width: size, height: size, overflow: 'hidden', imageRendering: 'pixelated' }}>
         {sheet && <div style={{
@@ -54,7 +54,7 @@ function SpriteThumb({ appearance, size = 42, selected, onClick, label }: {
           backgroundPosition: '0px 0px', imageRendering: 'pixelated',
         }} />}
       </div>
-      <span className="text-[8px] font-bold text-[#454F87] leading-none max-w-[46px] truncate">{label}</span>
+      <span className={`text-[8px] font-bold leading-none max-w-[46px] truncate ${selected ? 'text-[#F1ECFF]' : 'text-[#8B86B8]'}`}>{label}</span>
     </button>
   );
 }
@@ -64,7 +64,7 @@ function Swatches({ colors, value, onPick }: { colors: string[]; value: number; 
     <div className="flex flex-wrap gap-1.5">
       {colors.map((c, i) => (
         <button key={i} onClick={() => onPick(i)}
-          className={`w-6 h-6 rounded-lg border-2 transition-all ${value === i ? 'border-[#2A2A3D] scale-110' : 'border-white/60 hover:scale-105'}`}
+          className={`w-6 h-6 rounded-full border-2 transition-all ${value === i ? 'border-[#C9A227] scale-110' : 'border-white/25 hover:scale-105'}`}
           style={{ background: c }} />
       ))}
     </div>
@@ -86,12 +86,12 @@ export default function FaceCustomizer({ appearance, onChange, title, lang, onCl
 
   const Section = ({ label, children }: { label: string; children: React.ReactNode }) => (
     <div className="flex flex-col gap-2">
-      <div className="text-[11px] font-black text-[#454F87] uppercase tracking-wide">{label}</div>
+      <div className="gold-caption">{label}</div>
       {children}
     </div>
   );
   const Grid = ({ children }: { children: React.ReactNode }) => (
-    <div className="flex flex-wrap gap-1.5 bg-[#EBEAF6] rounded-xl p-2">{children}</div>
+    <div className="flex flex-wrap gap-1.5 bg-white/[0.03] rounded-xl p-2">{children}</div>
   );
 
   // 缩略图：把某个字段换成候选值来预览
@@ -105,10 +105,10 @@ export default function FaceCustomizer({ appearance, onChange, title, lang, onCl
   );
 
   return (
-    <div className="absolute inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-3" onClick={onClose}>
-      <div className="bg-[#F3F2FA] rounded-2xl w-full max-w-xl max-h-[94%] flex flex-col shadow-2xl" onClick={e => e.stopPropagation()}>
+    <div className="absolute inset-0 z-50 bg-black/70 backdrop-blur-md flex items-center justify-center p-3" onClick={onClose}>
+      <div className="rounded-[26px] w-full max-w-xl max-h-[94%] flex flex-col shadow-[0_30px_70px_-20px_rgba(0,0,0,0.7)] border border-[rgba(201,162,39,0.25)]" style={{ background: 'linear-gradient(165deg, #1C1830, #0E0C1C)' }} onClick={e => e.stopPropagation()}>
         {/* 头部 + 预览 */}
-        <div className="flex items-center justify-between px-5 py-3 bg-[#5B6BB0] text-white rounded-t-2xl">
+        <div className="flex items-center justify-between px-5 py-3 text-white rounded-t-[26px] border-b border-white/[0.06]" style={{ background: 'linear-gradient(135deg, #6C79C4, #454F87)' }}>
           <h3 className="text-sm font-black">{title}</h3>
           <div className="flex items-center gap-2">
             <button onClick={randomize} className="px-2 py-1 rounded-lg bg-white/20 hover:bg-white/30 text-[11px] font-black flex items-center gap-1"><Shuffle className="w-3 h-3" /> {tw ? '隨機' : '随机'}</button>
@@ -116,14 +116,15 @@ export default function FaceCustomizer({ appearance, onChange, title, lang, onCl
           </div>
         </div>
 
-        <div className="flex items-center justify-center py-3 bg-gradient-to-b from-[#E7E6F6] to-[#F3F2FA] border-b border-[#DAD8EE]">
-          <div className="rounded-2xl p-2" style={{ background: 'radial-gradient(circle at 50% 35%, #E7E6F6, #DAD8EE)' }}>
+        <div className="relative flex items-center justify-center py-5 border-b border-white/[0.06]" style={{ background: 'radial-gradient(50% 70% at 50% 40%, rgba(120,110,220,0.16), transparent 70%)' }}>
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-24 h-4 rounded-full bg-black/40 blur-[4px]" />
+          <div className="relative" style={{ filter: 'drop-shadow(0 0 18px rgba(150,140,255,0.35))' }}>
             <SpritePreview appearance={a} size={104} dir="down" />
           </div>
         </div>
 
         {/* 衣橱 */}
-        <div className="flex-1 overflow-auto p-4 flex flex-col gap-4">
+        <div className="flex-1 overflow-auto ink-scroll p-4 flex flex-col gap-4">
           <Section label={tw ? '髮型' : '发型'}>
             {thumbRow(['', ...HAIR_STYLES], 'hairStyle', a.hairStyle, tw ? '光頭' : '光头')}
             {a.hairStyle && <Swatches colors={HAIR_SWATCHES} value={a.hairColor} onPick={i => set({ hairColor: i })} />}
@@ -158,18 +159,18 @@ export default function FaceCustomizer({ appearance, onChange, title, lang, onCl
 
           <Section label={tw ? '妝容' : '妆容'}>
             <div className="flex gap-4">
-              <label className="flex items-center gap-1.5 text-[11px] font-black text-[#454F87] cursor-pointer">
-                <input type="checkbox" checked={(a.blush ?? -1) >= 0} onChange={e => set({ blush: e.target.checked ? 2 : -1 })} /> {tw ? '腮紅' : '腮红'}
+              <label className="flex items-center gap-1.5 text-[11px] font-black text-[#B7B2D9] cursor-pointer">
+                <input type="checkbox" checked={(a.blush ?? -1) >= 0} onChange={e => set({ blush: e.target.checked ? 2 : -1 })} style={{ accentColor: '#C9A227' }} /> {tw ? '腮紅' : '腮红'}
               </label>
-              <label className="flex items-center gap-1.5 text-[11px] font-black text-[#454F87] cursor-pointer">
-                <input type="checkbox" checked={(a.lipstick ?? -1) >= 0} onChange={e => set({ lipstick: e.target.checked ? 2 : -1 })} /> {tw ? '口紅' : '口红'}
+              <label className="flex items-center gap-1.5 text-[11px] font-black text-[#B7B2D9] cursor-pointer">
+                <input type="checkbox" checked={(a.lipstick ?? -1) >= 0} onChange={e => set({ lipstick: e.target.checked ? 2 : -1 })} style={{ accentColor: '#C9A227' }} /> {tw ? '口紅' : '口红'}
               </label>
             </div>
           </Section>
         </div>
 
-        <div className="p-4 border-t border-[#DAD8EE]">
-          <button onClick={onClose} className="w-full py-3 rounded-xl bg-[#5B6BB0] text-white font-black text-sm hover:bg-[#454F87] transition-all">{tw ? '完成' : '完成'}</button>
+        <div className="p-4 border-t border-white/[0.06]">
+          <button onClick={onClose} className="w-full py-3 rounded-xl text-white font-black text-sm transition-all" style={{ background: 'linear-gradient(135deg,#6C79C4,#454F87)', boxShadow: '0 8px 20px -6px rgba(91,107,176,0.7)' }}>{tw ? '完成' : '完成'}</button>
         </div>
       </div>
     </div>

@@ -1,5 +1,24 @@
 @import "tailwindcss";
 
+/* ── 墨黑 + 鎏金 设计令牌 ── */
+:root {
+  --bg-deep: #05040a;
+  --bg-deep-2: #0B0A14;
+  --panel-grad: linear-gradient(165deg, #1C1830, #0E0C1C);
+  --border-gold-soft: rgba(201,162,39,0.15);
+  --border-gold: rgba(201,162,39,0.3);
+  --border-gold-strong: rgba(201,162,39,0.5);
+  --gold: #C9A227;
+  --violet: #5B6BB0;
+  --violet-dark: #454F87;
+  --violet-light: #6C79C4;
+  --violet-grad: linear-gradient(135deg, #6C79C4, #454F87);
+  --pink: #FF7A93;
+  --text-primary: #F1ECFF;
+  --text-secondary: #B7B2D9;
+  --text-muted: #8B86B8;
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -11,8 +30,23 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow: hidden;
-  background: #0d1117;
+  background: var(--bg-deep);
   touch-action: manipulation;
+}
+
+/* 墨色面板 + 金色细线 */
+.ink-panel {
+  background: var(--panel-grad);
+  border: 1px solid var(--border-gold);
+  box-shadow: 0 30px 60px rgba(0,0,0,0.55);
+}
+/* 金色区块小标题 */
+.gold-caption {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gold);
 }
 
 input, textarea, select {
@@ -36,9 +70,14 @@ input, textarea, select {
   background: transparent;
 }
 .custom-scroll::-webkit-scrollbar-thumb {
-  background: rgba(196, 147, 106, 0.4);
+  background: rgba(201, 162, 39, 0.45);
   border-radius: 10px;
 }
+/* 暗色面板内的滚动条 */
+.ink-scroll::-webkit-scrollbar { width: 4px; }
+.ink-scroll::-webkit-scrollbar-track { background: transparent; }
+.ink-scroll::-webkit-scrollbar-thumb { background: rgba(201,162,39,0.35); border-radius: 10px; }
+.ink-scroll::-webkit-scrollbar-thumb:hover { background: rgba(201,162,39,0.6); }
 
 /* 对话框文字动画 */
 @keyframes fadeInChar {

@@ -324,10 +324,10 @@ export default function WorldView({
       {/* 顶部：时间 + 地点 + 日程按钮 */}
       <div className="absolute top-3 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center gap-1.5">
         <div className="flex items-center gap-2">
-          <div className="px-3 py-1.5 rounded-full bg-black/45 backdrop-blur text-white text-xs font-black flex items-center gap-1.5">
+          <div className="px-3 py-1.5 rounded-full text-[#F1ECFF] text-xs font-black flex items-center gap-1.5" style={{ background: 'rgba(14,11,26,0.6)', backdropFilter: 'blur(6px)', border: '1px solid rgba(255,255,255,0.1)' }}>
             <Clock className="w-3.5 h-3.5" /> {tw ? '第' : '第'}{day}{tw ? '天' : '天'} · {TIME_SLOTS[slot]}
           </div>
-          <div className="px-3 py-1.5 rounded-full bg-white/90 text-[#2A2A3D] text-xs font-black flex items-center gap-1.5">
+          <div className="px-3 py-1.5 rounded-full bg-white/95 text-[#211D33] text-xs font-black flex items-center gap-1.5">
             <span>{location.icon}</span> {location.label}
           </div>
         </div>
@@ -338,26 +338,26 @@ export default function WorldView({
         </div>
       </div>
 
-      {/* 右上：日程 + 推进时间 */}
-      <div className="absolute top-3 right-3 z-30 flex gap-2 flex-wrap justify-end">
-        <button onClick={onOpenPhone} className="relative px-3 py-1.5 rounded-xl bg-white/90 text-[#2A2A3D] text-[11px] font-black flex items-center gap-1.5 hover:bg-white transition-all shadow">
-          <Smartphone className="w-3.5 h-3.5" /> {tw ? '手機' : '手机'}
+      {/* 右上：快捷入口（毛玻璃图标） + 推进时段（主操作） */}
+      <div className="absolute top-3 right-3 z-30 flex gap-1.5 flex-wrap justify-end">
+        <button onClick={onOpenPhone} title={tw ? '手機' : '手机'} className="relative w-8 h-8 rounded-xl flex items-center justify-center text-[#F1ECFF] transition-all hover:bg-white/10" style={{ background: 'rgba(14,11,26,0.6)', backdropFilter: 'blur(6px)', border: '1px solid rgba(255,255,255,0.1)' }}>
+          <Smartphone className="w-4 h-4" />
           {phoneUnread > 0 && <span className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 px-1 rounded-full bg-[#FF3B30] text-white text-[9px] font-black flex items-center justify-center shadow animate-pulse">{phoneUnread}</span>}
         </button>
-        <button onClick={() => onCustomize({ kind: 'player' })} className="px-3 py-1.5 rounded-xl bg-white/90 text-[#2A2A3D] text-[11px] font-black flex items-center gap-1.5 hover:bg-white transition-all shadow">
-          <Palette className="w-3.5 h-3.5" /> {tw ? '捏臉' : '捏脸'}
+        <button onClick={() => onCustomize({ kind: 'player' })} title={tw ? '捏臉' : '捏脸'} className="w-8 h-8 rounded-xl flex items-center justify-center text-[#F1ECFF] transition-all hover:bg-white/10" style={{ background: 'rgba(14,11,26,0.6)', backdropFilter: 'blur(6px)', border: '1px solid rgba(255,255,255,0.1)' }}>
+          <Palette className="w-4 h-4" />
         </button>
-        <button onClick={() => setShowFeed(true)} className="relative px-3 py-1.5 rounded-xl bg-white/90 text-[#2A2A3D] text-[11px] font-black flex items-center gap-1.5 hover:bg-white transition-all shadow">
-          <Rss className="w-3.5 h-3.5" /> {tw ? '動態' : '动态'}
+        <button onClick={() => setShowRelations(true)} title={tw ? '關係' : '关系'} className="w-8 h-8 rounded-xl flex items-center justify-center text-[#F1ECFF] transition-all hover:bg-white/10" style={{ background: 'rgba(14,11,26,0.6)', backdropFilter: 'blur(6px)', border: '1px solid rgba(255,255,255,0.1)' }}>
+          <Users className="w-4 h-4" />
+        </button>
+        <button onClick={() => setShowFeed(true)} title={tw ? '動態' : '动态'} className="relative w-8 h-8 rounded-xl flex items-center justify-center text-[#F1ECFF] transition-all hover:bg-white/10" style={{ background: 'rgba(14,11,26,0.6)', backdropFilter: 'blur(6px)', border: '1px solid rgba(255,255,255,0.1)' }}>
+          <Rss className="w-4 h-4" />
           {worldFeed.length > 0 && <span className="absolute -top-1 -right-1 min-w-[15px] h-[15px] px-1 rounded-full bg-[#FF7A93] text-white text-[8px] flex items-center justify-center">{worldFeed.length}</span>}
         </button>
-        <button onClick={() => setShowRelations(true)} className="px-3 py-1.5 rounded-xl bg-white/90 text-[#2A2A3D] text-[11px] font-black flex items-center gap-1.5 hover:bg-white transition-all shadow">
-          <Users className="w-3.5 h-3.5" /> {tw ? '關係' : '关系'}
+        <button onClick={() => setShowSchedule(true)} title={tw ? '日程' : '日程'} className="w-8 h-8 rounded-xl flex items-center justify-center text-[#F1ECFF] transition-all hover:bg-white/10" style={{ background: 'rgba(14,11,26,0.6)', backdropFilter: 'blur(6px)', border: '1px solid rgba(255,255,255,0.1)' }}>
+          <CalendarDays className="w-4 h-4" />
         </button>
-        <button onClick={() => setShowSchedule(true)} className="px-3 py-1.5 rounded-xl bg-white/90 text-[#2A2A3D] text-[11px] font-black flex items-center gap-1.5 hover:bg-white transition-all shadow">
-          <CalendarDays className="w-3.5 h-3.5" /> {tw ? '日程' : '日程'}
-        </button>
-        <button onClick={onAdvanceTime} className="px-3 py-1.5 rounded-xl bg-[#5B6BB0] text-white text-[11px] font-black flex items-center gap-1 hover:bg-[#454F87] transition-all shadow">
+        <button onClick={onAdvanceTime} className="px-3 py-1.5 rounded-xl text-white text-[11px] font-black flex items-center gap-1 transition-all border-none" style={{ background: 'linear-gradient(135deg,#6C79C4,#454F87)', boxShadow: '0 6px 16px -6px rgba(91,107,176,0.8)' }}>
           {tw ? '推進時段' : '推进时段'} <ChevronRight className="w-3.5 h-3.5" />
         </button>
       </div>
@@ -386,7 +386,7 @@ export default function WorldView({
                 </div>
                 {!e.isPlayer && activity && <div className="px-1 rounded text-[8px] text-white/80 bg-black/30">{activity.mood.split('、')[0]}</div>}
               </div>
-              <div className={`${!e.isPlayer ? 'cursor-pointer' : ''} ${isNear ? 'drop-shadow-[0_0_8px_rgba(196,147,106,0.9)]' : ''}`}>
+              <div className={!e.isPlayer ? 'cursor-pointer' : ''} style={{ filter: isNear ? 'drop-shadow(0 0 9px rgba(201,162,39,0.85)) drop-shadow(0 3px 4px rgba(0,0,0,0.5))' : 'drop-shadow(0 3px 4px rgba(0,0,0,0.45))' }}>
                 <PixelSprite sheet={stripsRef.current[e.id] ?? null} facing={e.facing} frame={e.frame} size={SPRITE} />
               </div>
             </div>
@@ -429,7 +429,7 @@ export default function WorldView({
       )}
 
       {/* 底部：地点切换栏 */}
-      <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-30 flex gap-1.5 px-2 py-1.5 rounded-2xl bg-black/40 backdrop-blur max-w-[95%] overflow-x-auto">
+      <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-30 flex gap-1.5 px-2 py-1.5 rounded-2xl max-w-[95%] overflow-x-auto" style={{ background: 'rgba(8,6,16,0.55)', backdropFilter: 'blur(6px)' }}>
         {WORLD_LOCATIONS.map(loc => {
           const n = countAt(loc.id);
           const active = loc.id === locationId;
@@ -439,7 +439,7 @@ export default function WorldView({
               key={loc.id}
               onClick={() => tryTravel(loc.id)}
               title={locked ? lockReason(loc.id, tw) : undefined}
-              className={`relative flex-shrink-0 px-2.5 py-1.5 rounded-xl text-[10px] font-black flex items-center gap-1 transition-all ${active ? 'bg-white text-[#2A2A3D]' : locked ? 'bg-white/5 text-white/40' : 'bg-white/15 text-white hover:bg-white/25'}`}
+              className={`relative flex-shrink-0 px-2.5 py-1.5 rounded-xl text-[10px] font-black flex items-center gap-1 transition-all ${active ? 'bg-white text-[#211D33]' : locked ? 'bg-white/[0.05] text-white/35' : 'bg-white/15 text-white hover:bg-white/25'}`}
             >
               <span className={locked ? 'grayscale opacity-70' : ''}>{loc.icon}</span> {loc.label}
               {locked
@@ -452,21 +452,21 @@ export default function WorldView({
 
       {/* 世界动态流 */}
       {showFeed && (
-        <div className="absolute inset-0 z-40 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setShowFeed(false)}>
-          <div className="bg-white rounded-2xl p-5 max-w-md w-full max-h-[80%] overflow-auto shadow-2xl" onClick={e => e.stopPropagation()}>
+        <div className="absolute inset-0 z-40 bg-black/70 backdrop-blur-md flex items-center justify-center p-4" onClick={() => setShowFeed(false)}>
+          <div className="ink-panel ink-scroll rounded-[18px] p-5 max-w-md w-full max-h-[80%] overflow-auto" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-base font-black text-[#2A2A3D] flex items-center gap-2"><Rss className="w-4 h-4 text-[#5B6BB0]" /> {tw ? '世界動態' : '世界动态'}</h3>
-              <button onClick={() => setShowFeed(false)} className="p-1.5 rounded-lg hover:bg-[#E7E6F6] text-[#454F87]"><X className="w-4 h-4" /></button>
+              <h3 className="text-[14px] font-black text-[#F1ECFF] flex items-center gap-2"><Rss className="w-4 h-4 text-[#C9A227]" /> {tw ? '世界動態' : '世界动态'}</h3>
+              <button onClick={() => setShowFeed(false)} className="w-7 h-7 rounded-lg bg-white/[0.06] hover:bg-white/[0.12] text-[#B7B2D9] flex items-center justify-center transition-colors"><X className="w-4 h-4" /></button>
             </div>
             {worldFeed.length === 0 ? (
-              <div className="text-[11px] text-[#454F87] py-3">{tw ? '暫無動態。推進時段後，其它地點的愛豆也會各自相處，這裡會記錄下來。' : '暂无动态。推进时段后，其它地点的爱豆也会各自相处，这里会记录下来。'}</div>
+              <div className="text-[11px] text-[#8B86B8] py-3 leading-relaxed">{tw ? '暫無動態。推進時段後，其它地點的愛豆也會各自相處，這裡會記錄下來。' : '暂无动态。推进时段后，其它地点的爱豆也会各自相处，这里会记录下来。'}</div>
             ) : (
               <div className="flex flex-col gap-2">
                 {worldFeed.map(f => (
-                  <div key={f.id} className="flex items-center gap-2 bg-[#F3F2FA] rounded-xl p-2.5 border border-[#DAD8EE]">
-                    <span className="text-base">{f.kind === 'romance' ? '💗' : f.kind === 'tension' ? '⚡' : '💬'}</span>
-                    <span className="text-[11px] font-bold text-[#2A2A3D] flex-1">{f.text}</span>
-                    <span className="text-[9px] text-[#454F87] whitespace-nowrap">D{f.day}·{TIME_SLOTS[f.slot]}</span>
+                  <div key={f.id} className="flex items-center gap-2.5 bg-white/[0.03] rounded-[10px] px-3 py-2.5">
+                    <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: f.kind === 'romance' ? '#FF7A93' : f.kind === 'tension' ? '#C9A227' : '#6C79C4' }} />
+                    <span className="text-[11px] text-[#F1ECFF] flex-1">{f.text}</span>
+                    <span className="text-[9px] text-[#8B86B8] whitespace-nowrap">D{f.day}·{TIME_SLOTS[f.slot]}</span>
                   </div>
                 ))}
               </div>
@@ -486,37 +486,37 @@ export default function WorldView({
 
       {/* 日程面板 */}
       {showSchedule && (
-        <div className="absolute inset-0 z-40 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setShowSchedule(false)}>
-          <div className="bg-white rounded-2xl p-5 max-w-2xl w-full max-h-[85%] overflow-auto shadow-2xl" onClick={e => e.stopPropagation()}>
+        <div className="absolute inset-0 z-40 bg-black/70 backdrop-blur-md flex items-center justify-center p-4" onClick={() => setShowSchedule(false)}>
+          <div className="ink-panel ink-scroll rounded-[18px] p-5 max-w-2xl w-full max-h-[85%] overflow-auto" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-base font-black text-[#2A2A3D] flex items-center gap-2"><CalendarDays className="w-4 h-4 text-[#5B6BB0]" /> {tw ? `第${day}天 · 日程` : `第${day}天 · 日程`}</h3>
-              <button onClick={() => setShowSchedule(false)} className="p-1.5 rounded-lg hover:bg-[#E7E6F6] text-[#454F87]"><X className="w-4 h-4" /></button>
+              <h3 className="text-[14px] font-black text-[#F1ECFF] flex items-center gap-2"><CalendarDays className="w-4 h-4 text-[#C9A227]" /> {tw ? `第${day}天 · 日程` : `第${day}天 · 日程`}</h3>
+              <button onClick={() => setShowSchedule(false)} className="w-7 h-7 rounded-lg bg-white/[0.06] hover:bg-white/[0.12] text-[#B7B2D9] flex items-center justify-center transition-colors"><X className="w-4 h-4" /></button>
             </div>
             <table className="w-full text-[11px] border-collapse">
               <thead>
-                <tr className="text-[#454F87]">
+                <tr className="text-[#8B86B8]">
                   <th className="text-left py-2 px-2 font-black">成员</th>
                   {TIME_SLOTS.map((s, i) => (
-                    <th key={s} className={`text-left py-2 px-2 font-black ${i === slot ? 'text-[#5B6BB0]' : ''}`}>{s}{i === slot ? ' ●' : ''}</th>
+                    <th key={s} className={`text-left py-2 px-2 font-black ${i === slot ? 'text-[#C9A227]' : ''}`}>{s}{i === slot ? ' ●' : ''}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {members.map(m => (
-                  <tr key={m.id} className="border-t border-[#DAD8EE]">
-                    <td className="py-2 px-2 font-bold text-[#2A2A3D] whitespace-nowrap">{m.name}<span className="text-[9px] text-[#454F87] ml-1">{m.group}</span></td>
+                  <tr key={m.id} className="border-t border-white/[0.08]">
+                    <td className="py-2 px-2 font-bold text-[#F1ECFF] whitespace-nowrap">{m.name}<span className="text-[9px] text-[#8B86B8] ml-1">{m.group}</span></td>
                     {TIME_SLOTS.map((_, i) => {
                       const a = getActivity(m.id, day, i);
                       const here = a.available && a.loc === locationId;
                       const loc = a.loc === AWAY ? null : getLocation(a.loc);
                       const gated = a.available && a.loc !== AWAY && !accessible.has(a.loc);
                       return (
-                        <td key={i} className={`py-2 px-2 ${i === slot ? 'bg-[#F3F2FA]' : ''}`}>
-                          <div className={`flex items-center gap-1 ${!a.available ? 'text-[#B0A89E] line-through' : gated ? 'text-[#B0A89E]' : 'text-[#2A2A3D]'}`}>
+                        <td key={i} className={`py-2 px-2 ${i === slot ? 'bg-[rgba(201,162,39,0.08)]' : ''}`}>
+                          <div className={`flex items-center gap-1 ${!a.available ? 'text-[#5b5678] line-through' : gated ? 'text-[#5b5678]' : 'text-[#F1ECFF]'}`}>
                             {loc && <span className={gated ? 'grayscale opacity-70' : ''}>{loc.icon}</span>}
                             <span className="font-bold">{a.label}</span>
-                            {gated && <Lock className="w-2.5 h-2.5 text-[#B0A89E]" />}
-                            {here && i === slot && <span className="text-[8px] text-[#5B6BB0] font-black">· 在这</span>}
+                            {gated && <Lock className="w-2.5 h-2.5 text-[#5b5678]" />}
+                            {here && i === slot && <span className="text-[8px] text-[#C9A227] font-black">· 在这</span>}
                           </div>
                         </td>
                       );
@@ -525,7 +525,7 @@ export default function WorldView({
                 ))}
               </tbody>
             </table>
-            <p className="text-[10px] text-[#454F87] mt-3 flex items-center gap-1 flex-wrap">{tw ? '劃掉=在外地/聯繫不上；' : '划掉=在外地/联系不上；'}<Lock className="w-2.5 h-2.5" />{tw ? '=你的身份進不去。點下方地點欄過去找人；沒人就「推進時段」等日程變化。' : '=你的身份进不去。点下方地点栏过去找人；没人就「推进时段」等日程变化。'}</p>
+            <p className="text-[10px] text-[#8B86B8] mt-3 flex items-center gap-1 flex-wrap leading-relaxed">{tw ? '劃掉=在外地/聯繫不上；' : '划掉=在外地/联系不上；'}<Lock className="w-2.5 h-2.5" />{tw ? '=你的身份進不去。點下方地點欄過去找人；沒人就「推進時段」等日程變化。' : '=你的身份进不去。点下方地点栏过去找人；没人就「推进时段」等日程变化。'}</p>
           </div>
         </div>
       )}

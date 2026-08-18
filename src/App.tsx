@@ -249,15 +249,15 @@ const OptionsUI = ({ options, isLatest, lang }: { options: any[], isLatest: bool
   if (!isLatest || !options?.length) return null;
   const l = lang || 'simplified';
   return (
-    <div className="mt-4 rounded-2xl bg-gradient-to-br from-[#F3F2FA] to-[#E7E6F6] border border-[#DAD8EE] p-4">
-      <div className="text-[9px] font-black text-[#454F87] uppercase tracking-widest mb-3 flex items-center gap-1.5"><span className="w-1 h-1 rounded-full bg-[#FF7A93]" />{l === "traditional" ? "當時的選擇" : "当时的选择"}</div>
+    <div className="mt-4 rounded-2xl bg-white/[0.03] border border-white/10 p-4">
+      <div className="gold-caption mb-3 flex items-center gap-1.5"><span className="w-1 h-1 rounded-full bg-[#FF7A93]" />{l === "traditional" ? "當時的選擇" : "当时的选择"}</div>
       <div className="flex flex-col gap-2">
         {options.map((opt: any, i) => {
           const text = (typeof opt === 'string' ? opt : opt.text).replace(/^[A-Da-d][\.、。\)]\s*/, '');
           return (
-            <div key={i} className="flex items-start gap-2.5 bg-white/70 rounded-xl px-3 py-2.5 border border-white">
+            <div key={i} className="flex items-start gap-2.5 bg-white/[0.03] rounded-xl px-3 py-2.5 border border-white/[0.06]">
               <span className="mt-0.5 w-5 h-5 rounded-lg bg-[#E7E6F6] text-[#5B6BB0] text-[10px] font-black flex items-center justify-center flex-shrink-0">{'ABCD'[i] || '·'}</span>
-              <span className="text-[13px] text-[#3c3752] font-semibold leading-relaxed">{text}</span>
+              <span className="text-[13px] text-[#D8D4EE] font-semibold leading-relaxed">{text}</span>
             </div>
           );
         })}
@@ -278,75 +278,75 @@ const MobileDrawer = ({ gameState, onClose, onSave, onLoad, onDelete, saveSlots,
   return (
     <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
       transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-      className="fixed inset-x-0 bottom-0 z-50 bg-[#F3F2FA] rounded-t-[2rem] shadow-2xl border-t border-[#DAD8EE] max-h-[70vh] overflow-y-auto">
-      <div className="flex justify-center pt-3 pb-2"><div className="w-10 h-1 bg-[#DAD8EE] rounded-full"></div></div>
-      <div className="flex items-center justify-between px-6 pb-4 border-b border-[#DAD8EE]">
-        <h3 className="font-black text-[#5B6BB0] text-sm uppercase tracking-widest">
+      className="fixed inset-x-0 bottom-0 z-50 rounded-t-[2rem] shadow-2xl border-t border-[rgba(201,162,39,0.25)] max-h-[70vh] overflow-y-auto ink-scroll" style={{ background: 'linear-gradient(180deg, #1C1830, #0E0C1C)' }}>
+      <div className="flex justify-center pt-3 pb-2"><div className="w-10 h-1 bg-white/15 rounded-full"></div></div>
+      <div className="flex items-center justify-between px-6 pb-4 border-b border-white/[0.06]">
+        <h3 className="gold-caption text-sm">
           {isMomMode ? '母女信任度' : isCPMode ? (lang === 'traditional' ? 'CP 羈絆值' : 'CP 羁绊值') : (lang === 'traditional' ? '角色狀態' : '角色状态')}
         </h3>
-        <button onClick={onClose} className="p-2 hover:bg-[#E7E6F6] rounded-full transition-all"><X className="w-4 h-4 text-[#454F87]" /></button>
+        <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-all"><X className="w-4 h-4 text-[#B7B2D9]" /></button>
       </div>
       <div className="p-5 flex flex-col gap-5">
         {isCPMode ? (
-          <div className="bg-white p-4 rounded-2xl border border-[#5B6BB0]">
+          <div className="bg-white/[0.03] p-4 rounded-2xl border border-[rgba(201,162,39,0.3)]">
             <div className="flex justify-between items-center mb-2">
-              <span className="text-sm font-bold text-[#2A2A3D]">{targetMembers.map(m => m.name).join(' ♡ ')}</span>
-              <span className="text-[11px] text-[#5B6BB0] font-black">{cpAffection}/100</span>
+              <span className="text-sm font-bold text-[#F1ECFF]">{targetMembers.map(m => m.name).join(' ♡ ')}</span>
+              <span className="text-[11px] text-[#C9A227] font-black">{cpAffection}/100</span>
             </div>
-            <div className="h-2 bg-[#E7E6F6] rounded-full overflow-hidden">
-              <motion.div animate={{ width: `${cpAffection}%` }} className="h-full bg-gradient-to-r from-[#5B6BB0] to-[#454F87] rounded-full" />
+            <div className="h-[3px] bg-white/[0.08] rounded-full overflow-hidden">
+              <motion.div animate={{ width: `${cpAffection}%` }} className="h-full rounded-full" style={{ background: 'linear-gradient(90deg,#6C79C4,#C9A227)' }} />
             </div>
           </div>
         ) : isMomMode ? (
-          <div className="bg-white p-4 rounded-2xl border border-[#DAD8EE]">
+          <div className="bg-white/[0.03] p-4 rounded-2xl border border-white/10">
             <div className="flex justify-between items-center mb-2">
-              <span className="text-sm font-bold text-[#2A2A3D]">{daughterProfile?.name || '女儿'}</span>
-              <span className="text-[11px] text-[#5B6BB0] font-mono font-bold">{(gameState as any).momTrustLevel || 50}/100</span>
+              <span className="text-sm font-bold text-[#F1ECFF]">{daughterProfile?.name || '女儿'}</span>
+              <span className="text-[11px] text-[#C9A227] font-mono font-bold">{(gameState as any).momTrustLevel || 50}/100</span>
             </div>
-            <div className="h-2 bg-[#E7E6F6] rounded-full overflow-hidden">
-              <motion.div animate={{ width: `${(gameState as any).momTrustLevel || 50}%` }} className="h-full bg-[#5B6BB0] rounded-full" />
+            <div className="h-[3px] bg-white/[0.08] rounded-full overflow-hidden">
+              <motion.div animate={{ width: `${(gameState as any).momTrustLevel || 50}%` }} className="h-full rounded-full" style={{ background: 'linear-gradient(90deg,#6C79C4,#C9A227)' }} />
             </div>
-            {daughterProfile && <div className="text-[10px] text-[#454F87] mt-2">{daughterProfile.nationality} · {daughterProfile.personality}</div>}
+            {daughterProfile && <div className="text-[10px] text-[#8B86B8] mt-2">{daughterProfile.nationality} · {daughterProfile.personality}</div>}
           </div>
         ) : (
           <div className="flex flex-col gap-3">
             {targetMembers.map(member => (
-              <div key={member.id} className="bg-white p-4 rounded-2xl border border-[#DAD8EE]">
+              <div key={member.id} className="bg-white/[0.03] p-4 rounded-2xl border border-white/10">
                 <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm font-bold text-[#2A2A3D]">{member.name}</span>
-                  <span className="text-[11px] text-[#5B6BB0] font-mono font-bold">{member.affection}/100</span>
+                  <span className="text-sm font-bold text-[#F1ECFF]">{member.name}</span>
+                  <span className="text-[11px] text-[#C9A227] font-mono font-bold">{member.affection}/100</span>
                 </div>
-                <div className="h-2 bg-[#E7E6F6] rounded-full overflow-hidden mb-1">
-                  <motion.div animate={{ width: `${member.affection}%` }} className="h-full bg-[#5B6BB0] rounded-full" />
+                <div className="h-[3px] bg-white/[0.08] rounded-full overflow-hidden mb-1">
+                  <motion.div animate={{ width: `${member.affection}%` }} className="h-full rounded-full" style={{ background: 'linear-gradient(90deg,#6C79C4,#C9A227)' }} />
                 </div>
-                <div className="text-[10px] text-[#454F87]">{member.status}</div>
+                <div className="text-[10px] text-[#8B86B8]">{member.status}</div>
               </div>
             ))}
           </div>
         )}
-        <div className="bg-white p-4 rounded-2xl border border-[#DAD8EE] flex flex-col gap-2">
-          <div className="flex justify-between text-xs"><span className="text-[#454F87]">{lang === "traditional" ? "場景" : "场景"}</span><span className="font-bold text-[#2A2A3D]">{gameState.currentScene}</span></div>
-          <div className="flex justify-between text-xs"><span className="text-[#454F87]">Round</span><span className="font-bold text-[#5B6BB0]">{roundCount}</span></div>
-          {gameState.isComebackSetting && <div className="text-[10px] font-black text-[#454F87] bg-[#E7E6F6] px-2 py-1 rounded-lg">{lang === "traditional" ? "回歸期進行中" : "回归期进行中"}</div>}
+        <div className="bg-white/[0.03] p-4 rounded-2xl border border-white/10 flex flex-col gap-2">
+          <div className="flex justify-between text-xs"><span className="text-[#8B86B8]">{lang === "traditional" ? "場景" : "场景"}</span><span className="font-bold text-[#F1ECFF]">{gameState.currentScene}</span></div>
+          <div className="flex justify-between text-xs"><span className="text-[#8B86B8]">Round</span><span className="font-bold text-[#C9A227]">{roundCount}</span></div>
+          {gameState.isComebackSetting && <div className="text-[10px] font-black text-[#C9A227] bg-white/[0.06] px-2 py-1 rounded-lg">{lang === "traditional" ? "回歸期進行中" : "回归期进行中"}</div>}
         </div>
         <div className="flex flex-col gap-2.5">
           <div className="flex gap-2.5">
-            <button onClick={() => { onSave(); onClose(); }} className="flex-1 flex items-center justify-center gap-1.5 py-3 bg-[#5B6BB0] text-white rounded-2xl text-[11px] font-black shadow-[0_6px_16px_-6px_rgba(91,107,176,0.7)] active:scale-95 transition-all"><Save className="w-3.5 h-3.5" />{lang === "traditional" ? "存檔" : "存档"}</button>
-            <label className="flex-1 flex items-center justify-center gap-1.5 py-3 bg-white border border-[#DAD8EE] text-[#454F87] rounded-2xl text-[11px] font-black text-center cursor-pointer hover:bg-[#E7E6F6] active:scale-95 transition-all">
+            <button onClick={() => { onSave(); onClose(); }} className="flex-1 flex items-center justify-center gap-1.5 py-3 text-white rounded-2xl text-[11px] font-black active:scale-95 transition-all" style={{ background: 'linear-gradient(135deg,#6C79C4,#454F87)', boxShadow: '0 6px 16px -6px rgba(91,107,176,0.7)' }}><Save className="w-3.5 h-3.5" />{lang === "traditional" ? "存檔" : "存档"}</button>
+            <label className="flex-1 flex items-center justify-center gap-1.5 py-3 bg-white/[0.04] border border-white/10 text-[#B7B2D9] rounded-2xl text-[11px] font-black text-center cursor-pointer hover:bg-white/[0.09] active:scale-95 transition-all">
               <Sparkles className="w-3.5 h-3.5" />{lang === "traditional" ? "換壁紙" : "换壁纸"}
               <input type="file" accept="image/*" className="hidden" onChange={onWallpaperUpload} />
             </label>
           </div>
           {wallpaper && <button onClick={onClearWallpaper} className="w-full py-2.5 text-[#8b90b8] rounded-2xl text-[10px] font-black hover:text-[#FF7A93] transition-all">{lang === "traditional" ? "移除壁紙" : "移除壁纸"}</button>}
           {saveSlots.length > 0 && (
-            <div className="rounded-2xl bg-white border border-[#DAD8EE] p-2.5 flex flex-col gap-2 mt-1">
-              <div className="text-[9px] font-black text-[#454F87] uppercase tracking-widest px-1 flex items-center gap-1.5"><FolderOpen className="w-3 h-3" />{lang === "traditional" ? "讀檔" : "读档"}</div>
+            <div className="rounded-2xl bg-white/[0.03] border border-white/10 p-2.5 flex flex-col gap-2 mt-1">
+              <div className="gold-caption px-1 flex items-center gap-1.5"><FolderOpen className="w-3 h-3" />{lang === "traditional" ? "讀檔" : "读档"}</div>
               {saveSlots.map((slot: any, si: number) => (
-                <div key={slot.id} className="bg-[#F3F2FA] border border-[#DAD8EE] rounded-xl p-2.5 flex items-center gap-2.5 active:scale-[0.98] transition-all">
+                <div key={slot.id} className="bg-white/[0.03] border border-white/10 rounded-xl p-2.5 flex items-center gap-2.5 active:scale-[0.98] transition-all">
                   <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#6C79C4] to-[#454F87] text-white flex items-center justify-center text-[11px] font-black flex-shrink-0">{saveSlots.length - si}</div>
                   <button onClick={() => { onLoad(slot.id); onClose(); }} className="flex-1 min-w-0 text-left">
-                    <div className="text-[11px] font-black text-[#2A2A3D] truncate">{(slot as any).subject || slot.scene}</div>
-                    <div className="text-[9px] text-[#454F87]/80 truncate mt-0.5">{slot.scene} · R{slot.round} · {slot.time}</div>
+                    <div className="text-[11px] font-black text-[#F1ECFF] truncate">{(slot as any).subject || slot.scene}</div>
+                    <div className="text-[9px] text-[#8B86B8] truncate mt-0.5">{slot.scene} · R{slot.round} · {slot.time}</div>
                   </button>
                   <button onClick={() => onDelete(slot.id)} className="w-7 h-7 rounded-lg text-[#8b90b8] hover:bg-[#FF7A93]/10 hover:text-[#FF7A93] flex items-center justify-center flex-shrink-0"><Trash2 className="w-3.5 h-3.5" /></button>
                 </div>
@@ -360,9 +360,9 @@ const MobileDrawer = ({ gameState, onClose, onSave, onLoad, onDelete, saveSlots,
 };
 
 // 手机：theqoo / KakaoTalk / Weverse / bubble 的专属入口
-const PHONE_APPS: { key: 'kkt' | 'weverse' | 'bubble' | 'theqoo'; label: string; icon: string; color: string }[] = [
+const PHONE_APPS: { key: 'kkt' | 'weverse' | 'bubble' | 'theqoo'; label: string; icon: string; color: string; mono?: boolean }[] = [
   { key: 'kkt', label: 'KakaoTalk', icon: '💬', color: '#FAE100' },
-  { key: 'weverse', label: 'Weverse', icon: '🌐', color: '#34C3B5' },
+  { key: 'weverse', label: 'Weverse', icon: '🌐', color: '#141420', mono: true },
   { key: 'bubble', label: 'bubble', icon: '🫧', color: '#8ec7f0' },
   { key: 'theqoo', label: 'theqoo', icon: '🔥', color: '#3b5998' },
 ];
@@ -379,37 +379,37 @@ const PhoneModal = ({ feed, onClose, lang }: {
     <div className="fixed inset-0 z-[70] bg-black/60 backdrop-blur-sm flex items-center justify-center p-3" onClick={onClose}>
       <motion.div
         initial={{ opacity: 0, y: 40, scale: 0.94 }} animate={{ opacity: 1, y: 0, scale: 1 }}
-        className="relative w-full max-w-sm h-[88vh] bg-[#1A1A1A] rounded-[2.8rem] p-2.5 shadow-2xl flex flex-col"
+        className="relative w-full max-w-sm h-[88vh] bg-[#0c0a16] rounded-[2.8rem] p-2.5 shadow-2xl flex flex-col"
         onClick={e => e.stopPropagation()}
       >
-        <div className="bg-[#F3F2FA] rounded-[2.4rem] overflow-hidden flex-1 flex flex-col min-h-0 relative">
+        <div className="bg-[#17131f] rounded-[2.4rem] overflow-hidden flex-1 flex flex-col min-h-0 relative">
           {/* 刘海 */}
-          <div className="absolute top-2 left-1/2 -translate-x-1/2 w-24 h-5 bg-[#111] rounded-full z-20 flex items-center justify-center gap-1.5">
-            <div className="w-2 h-2 rounded-full bg-[#333]" />
-            <div className="w-3 h-3 rounded-full bg-[#2a2a2a] border border-[#444]" />
-          </div>
+          <div className="absolute top-2 left-1/2 -translate-x-1/2 w-20 h-4 bg-[#0c0a16] rounded-full z-20" />
           {/* 状态栏 + 关闭 */}
-          <div className="px-6 pt-2.5 pb-1 flex items-center justify-between flex-shrink-0 relative z-10">
-            <span className="text-[10px] font-bold text-gray-500">9:41</span>
-            <button onClick={onClose} className="p-1.5 rounded-full hover:bg-[#DAD8EE] text-[#454F87]"><X className="w-4 h-4" /></button>
+          <div className="px-6 pt-3 pb-1 flex items-center justify-between flex-shrink-0 relative z-10">
+            <span className="text-[10px] font-bold text-[#8B86B8]">9:41</span>
+            <button onClick={onClose} className="p-1.5 rounded-full hover:bg-white/10 text-[#B7B2D9]"><X className="w-4 h-4" /></button>
           </div>
           {/* App tabs */}
-          <div className="px-3 pb-2 pt-3 flex gap-1.5 flex-shrink-0">
+          <div className="px-3 pb-2.5 pt-2 flex gap-1.5 flex-shrink-0">
             {PHONE_APPS.map(app => {
               const unread = feed.filter(f => f.type === app.key && !f.read).length;
               const active = tab === app.key;
               return (
                 <button key={app.key} onClick={() => setTab(app.key)}
-                  className={`relative flex-1 flex flex-col items-center gap-1 py-2 rounded-2xl border transition-all ${active ? 'bg-white border-[#5B6BB0] shadow-sm' : 'bg-white/50 border-transparent hover:bg-white'}`}>
-                  <span className="w-9 h-9 rounded-[0.8rem] flex items-center justify-center text-lg shadow-sm" style={{ background: app.color }}>{app.icon}</span>
-                  <span className={`text-[9px] font-black ${active ? 'text-[#2A2A3D]' : 'text-[#454F87]/70'}`}>{app.label}</span>
+                  className="relative flex-1 flex flex-col items-center gap-1 py-2 rounded-2xl border transition-all"
+                  style={active
+                    ? { background: 'rgba(201,162,39,0.12)', borderColor: 'rgba(201,162,39,0.45)' }
+                    : { background: 'rgba(255,255,255,0.04)', borderColor: 'transparent' }}>
+                  <span className="w-[34px] h-[34px] rounded-[0.7rem] flex items-center justify-center text-lg shadow-sm" style={{ background: app.color, border: app.mono ? '1px solid rgba(255,255,255,0.25)' : 'none' }}>{app.icon}</span>
+                  <span className={`text-[9px] font-black ${active ? 'text-[#F1ECFF]' : 'text-[#8B86B8]'}`}>{app.label}</span>
                   {unread > 0 && <span className="absolute top-1 right-2 min-w-[16px] h-4 px-1 rounded-full bg-[#FF3B30] text-white text-[9px] font-black flex items-center justify-center">{unread}</span>}
                 </button>
               );
             })}
           </div>
           {/* 内容流 */}
-          <div className="flex-1 overflow-y-auto custom-scrollbar px-2 pb-4 min-h-0">
+          <div className="flex-1 overflow-y-auto ink-scroll px-2 pb-4 pt-2 min-h-0 bg-[#F1EFF7]">
             {items.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 gap-2 text-[#454F87]/60">
                 <span className="text-3xl">{PHONE_APPS.find(a => a.key === tab)?.icon}</span>
@@ -494,23 +494,24 @@ const CharacterCreationWizard = ({ onComplete, members }: { onComplete: (data: a
 
   const MemberPicker = ({ max, label }: { max?: number, label: string }) => (
     <div className="flex flex-col gap-3">
-      <label className="text-xs font-black text-[#454F87] uppercase">{label}{max === 1 ? '（选1人）' : max ? `（选${max}人）` : '（可多选）'}</label>
+      <label className="gold-caption">{label}{max === 1 ? '（选1人）' : max ? `（选${max}人）` : '（可多选）'}</label>
       <div className="flex flex-wrap gap-2">
         {allGroups.map(g => (
           <button key={g} onClick={() => setSelectedGroup(selectedGroup === g ? null : g)}
-            className={`px-3 py-1.5 rounded-full text-[11px] font-bold border transition-all ${selectedGroup === g ? 'bg-[#5B6BB0] border-[#5B6BB0] text-white' : 'bg-white border-[#DAD8EE] text-[#2A2A3D]'}`}>
+            className={`px-3 py-1.5 rounded-full text-[11px] font-bold border transition-all ${selectedGroup === g ? 'text-white border-transparent' : 'bg-white/[0.03] border-white/10 text-[#B7B2D9]'}`}
+            style={selectedGroup === g ? { background: 'linear-gradient(135deg,#6C79C4,#454F87)' } : undefined}>
             {g}
           </button>
         ))}
       </div>
       {selectedGroup && (
-        <div className="grid grid-cols-2 gap-2 max-h-44 overflow-y-auto p-1 custom-scrollbar">
+        <div className="grid grid-cols-2 gap-2 max-h-44 overflow-y-auto p-1 ink-scroll">
           {(groupedMembers[selectedGroup] || []).map(m => {
             const selected = data.targets.includes(m.id);
             const disabled = !selected && !!max && data.targets.length >= max;
             return (
               <button key={m.id} onClick={() => !disabled && toggleTarget(m.id, max)}
-                className={`p-3 rounded-2xl border text-[11px] transition-all flex flex-col items-center gap-1 ${selected ? 'bg-[#E7E6F6] border-[#5B6BB0] text-[#454F87] font-bold' : disabled ? 'bg-white border-[#DAD8EE] text-gray-300 cursor-not-allowed' : 'bg-white border-[#DAD8EE] text-[#2A2A3D]'}`}>
+                className={`p-3 rounded-2xl border text-[11px] transition-all flex flex-col items-center gap-1 ${selected ? 'bg-[rgba(201,162,39,0.1)] border-[rgba(201,162,39,0.5)] text-[#F1ECFF] font-bold' : disabled ? 'bg-white/[0.02] border-white/[0.06] text-white/25 cursor-not-allowed' : 'bg-white/[0.03] border-white/10 text-[#B7B2D9]'}`}>
                 <div className="font-black text-xs">{m.name}</div>
                 <div className="text-[9px] opacity-60">{m.stageName}</div>
               </button>
@@ -523,8 +524,8 @@ const CharacterCreationWizard = ({ onComplete, members }: { onComplete: (data: a
           {data.targets.map(id => {
             const m = members.find(x => x.id === id);
             return m ? (
-              <span key={id} className="text-[10px] bg-[#E7E6F6] text-[#454F87] px-2 py-1 rounded-full border border-[#DAD8EE] font-bold flex items-center gap-1">
-                {m.name}<button onClick={() => toggleTarget(id)} className="text-[#5B6BB0] hover:text-[#454F87]">×</button>
+              <span key={id} className="text-[10px] bg-[rgba(201,162,39,0.1)] text-[#F1ECFF] px-2 py-1 rounded-full border border-[rgba(201,162,39,0.4)] font-bold flex items-center gap-1">
+                {m.name}<button onClick={() => toggleTarget(id)} className="text-[#C9A227] hover:text-[#F1ECFF]">×</button>
               </span>
             ) : null;
           })}
@@ -538,9 +539,9 @@ const CharacterCreationWizard = ({ onComplete, members }: { onComplete: (data: a
   const isLast = stepIdx >= flow.length - 1;
   const go = (d: number) => setStepIdx(i => Math.max(0, Math.min(flow.length - 1, i + d)));
   const T = (s: string, t: string) => (lang === 'traditional' ? t : s);
-  const inputCls = "w-full bg-white border border-[#DAD8EE] rounded-2xl px-4 py-3.5 text-base focus:border-[#5B6BB0] focus:ring-4 focus:ring-[#5B6BB0]/10 outline-none text-[#2A2A3D] transition-all";
+  const inputCls = "w-full bg-white/[0.04] border border-white/10 rounded-2xl px-4 py-3.5 text-base focus:border-[#C9A227] focus:ring-4 focus:ring-[#C9A227]/10 outline-none text-[#F1ECFF] placeholder:text-[#8B86B8] transition-all";
   const Label = ({ icon: Icon, children }: { icon: any; children: React.ReactNode }) => (
-    <label className="flex items-center gap-2 text-[13px] font-bold text-[#454F87] mb-2.5"><Icon className="w-4 h-4 text-[#5B6BB0]" /> {children}</label>
+    <label className="flex items-center gap-2 text-[13px] font-bold text-[#B7B2D9] mb-2.5"><Icon className="w-4 h-4 text-[#C9A227]" /> {children}</label>
   );
   const canNext = () => {
     if (cur === 'basics') return !!data.playerName.trim();
@@ -556,15 +557,15 @@ const CharacterCreationWizard = ({ onComplete, members }: { onComplete: (data: a
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6 sm:p-8 relative overflow-hidden" style={{ background: 'linear-gradient(160deg, #EDEFFB 0%, #F3F2FA 45%, #F7EEF3 100%)' }}>
-      <div className="absolute -top-24 -left-20 w-80 h-80 rounded-full blur-3xl opacity-40 pointer-events-none" style={{ background: 'radial-gradient(circle, #7C83C3, transparent 70%)' }} />
-      <div className="absolute -bottom-28 -right-16 w-96 h-96 rounded-full blur-3xl opacity-30 pointer-events-none" style={{ background: 'radial-gradient(circle, #FF7A93, transparent 70%)' }} />
-      <div className="absolute top-1/3 right-1/4 w-56 h-56 rounded-full blur-3xl opacity-20 pointer-events-none" style={{ background: 'radial-gradient(circle, #5B6BB0, transparent 70%)' }} />
+    <div className="min-h-screen flex items-center justify-center p-6 sm:p-8 relative overflow-hidden" style={{ background: 'radial-gradient(120% 90% at 50% 0%, #0B0A14 0%, #05040a 70%)' }}>
+      <div className="absolute -top-24 -left-20 w-80 h-80 rounded-full blur-3xl opacity-25 pointer-events-none" style={{ background: 'radial-gradient(circle, #6C79C4, transparent 70%)' }} />
+      <div className="absolute -bottom-28 -right-16 w-96 h-96 rounded-full blur-3xl opacity-20 pointer-events-none" style={{ background: 'radial-gradient(circle, #C9A227, transparent 70%)' }} />
+      <div className="absolute top-1/3 right-1/4 w-56 h-56 rounded-full blur-3xl opacity-15 pointer-events-none" style={{ background: 'radial-gradient(circle, #FF7A93, transparent 70%)' }} />
       {showFace && (
         <FaceCustomizer appearance={data.playerAppearance} onChange={a => setData({ ...data, playerAppearance: a })} title={T('捏你的脸', '捏你的臉')} lang={lang} onClose={() => setShowFace(false)} />
       )}
-      <motion.div initial={{ opacity: 0, scale: 0.95, y: 10 }} animate={{ opacity: 1, scale: 1, y: 0 }} className="relative bg-white rounded-[2rem] shadow-[0_24px_70px_-20px_rgba(60,50,110,0.45)] w-full max-w-xl overflow-hidden flex flex-col ring-1 ring-black/5">
-        <div className="relative px-6 py-6 text-white overflow-hidden" style={{ background: 'linear-gradient(135deg, #6C79C4 0%, #5B6BB0 55%, #7C6BAE 100%)' }}>
+      <motion.div initial={{ opacity: 0, scale: 0.95, y: 10 }} animate={{ opacity: 1, scale: 1, y: 0 }} className="relative rounded-[26px] shadow-[0_30px_70px_-20px_rgba(0,0,0,0.7)] w-full max-w-xl overflow-hidden flex flex-col border border-[rgba(201,162,39,0.25)]" style={{ background: 'linear-gradient(165deg, #1C1830, #0E0C1C)' }}>
+        <div className="relative px-6 py-6 text-white overflow-hidden border-b border-white/[0.06]" style={{ background: 'linear-gradient(135deg, #6C79C4 0%, #5B6BB0 55%, #7C6BAE 100%)' }}>
           <div className="absolute inset-0 opacity-25 pointer-events-none" style={{ background: 'radial-gradient(circle at 18% 0%, white, transparent 45%)' }} />
           <Sparkles className="absolute right-4 top-3 w-4 h-4 text-white/40" />
           <Heart className="absolute right-10 top-8 w-3 h-3 text-white/25" />
@@ -576,10 +577,10 @@ const CharacterCreationWizard = ({ onComplete, members }: { onComplete: (data: a
             </div>
           </div>
           <div className="relative flex justify-center gap-1.5 mt-4">
-            {flow.map((_, i) => <div key={i} className={`h-1.5 rounded-full transition-all duration-300 ${i === stepIdx ? 'w-7 bg-white' : i < stepIdx ? 'w-3.5 bg-white/70' : 'w-3.5 bg-white/25'}`} />)}
+            {flow.map((_, i) => <div key={i} className="h-[3px] rounded-full transition-all duration-300" style={{ width: i === stepIdx ? 28 : 22, background: i <= stepIdx ? '#C9A227' : 'rgba(255,255,255,0.12)' }} />)}
           </div>
         </div>
-        <div className="px-6 py-8 sm:px-9 sm:py-9 flex-1 overflow-y-auto max-h-[70vh] custom-scrollbar bg-[#F3F2FA]">
+        <div className="px-6 py-8 sm:px-9 sm:py-9 flex-1 overflow-y-auto max-h-[70vh] ink-scroll">
           <AnimatePresence mode="wait">
             <motion.div key={cur} initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -16 }} className="flex flex-col gap-7">
               {cur === 'basics' && (<>
@@ -589,7 +590,7 @@ const CharacterCreationWizard = ({ onComplete, members }: { onComplete: (data: a
                     {[{id:'simplified',name:'简体中文'},{id:'traditional',name:'繁體中文'}].map(l => {
                       const on = data.language === l.id;
                       return (
-                        <button key={l.id} onClick={() => setData({...data, language: l.id})} className={`relative py-3.5 rounded-2xl border text-[13px] font-bold transition-all ${on ? 'bg-[#5B6BB0] border-[#5B6BB0] text-white shadow-sm' : 'bg-white border-[#DAD8EE] text-[#454F87] hover:border-[#5B6BB0]/50'}`}>
+                        <button key={l.id} onClick={() => setData({...data, language: l.id})} className={`relative py-3.5 rounded-2xl border text-[13px] font-bold transition-all ${on ? 'bg-[rgba(201,162,39,0.1)] border-[rgba(201,162,39,0.5)] text-[#F1ECFF]' : 'bg-white/[0.03] border-white/10 text-[#B7B2D9] hover:border-white/25'}`}>
                           {on && <Check className="absolute right-2 top-2 w-3.5 h-3.5" />}{l.name}
                         </button>
                       );
@@ -598,14 +599,14 @@ const CharacterCreationWizard = ({ onComplete, members }: { onComplete: (data: a
                 </div>
                 <div><Label icon={User}>{T('你的名字','您的名字')}</Label><input type="text" value={data.playerName} onChange={e => setData({...data, playerName: e.target.value})} className={inputCls} placeholder={T('请输入角色昵称...','請輸入角色暱稱...')} /></div>
                 <div><Label icon={Cake}>{T('年龄','年齡')}</Label><input type="number" value={data.playerAge} onChange={e => setData({...data, playerAge: parseInt(e.target.value)})} className={inputCls} /></div>
-                <div className="rounded-2xl bg-white border border-[#DAD8EE] p-4 sm:p-5 shadow-sm">
+                <div className="rounded-2xl bg-white/[0.03] border border-white/10 p-4 sm:p-5">
                   <Label icon={KeyRound}>DeepSeek API Key（{T('可选','可選')}）</Label>
                   <input type="password" value={data.playerApiKey} onChange={e => setData({...data, playerApiKey: e.target.value})} className={inputCls} placeholder={T('填入自己的key可免费无限玩～','填入自己的key可免費無限玩～')} />
-                  <p className="text-[10px] text-[#454F87]/70 mt-2.5 pl-0.5 leading-relaxed">{T('不填则使用公共额度。key仅存于本地，不会上传。','不填則使用公共額度。key僅存於本地，不會上傳。')}</p>
+                  <p className="text-[10px] text-[#8B86B8] mt-2.5 pl-0.5 leading-relaxed">{T('不填则使用公共额度。key仅存于本地，不会上传。','不填則使用公共額度。key僅存於本地，不會上傳。')}</p>
                   {data.playerApiKey && (
                     <div className="grid grid-cols-2 gap-2 mt-2.5">
                       {[{id:'deepseek-v4-flash',name:'Flash',desc:T('快速省钱','快速省錢')},{id:'deepseek-v3',name:'V3',desc:T('质量更好','品質更好')}].map(m => (
-                        <button key={m.id} onClick={() => setData({...data, playerModel: m.id})} className={`p-2.5 rounded-xl border-2 text-left transition-all ${data.playerModel === m.id ? 'bg-white border-[#5B6BB0] text-[#454F87]' : 'bg-white border-[#DAD8EE] text-[#2A2A3D]'}`}><div className="font-black text-[11px]">{m.name}</div><div className="text-[10px] opacity-60">{m.desc}</div></button>
+                        <button key={m.id} onClick={() => setData({...data, playerModel: m.id})} className={`p-2.5 rounded-xl border-2 text-left transition-all ${data.playerModel === m.id ? 'bg-[rgba(201,162,39,0.1)] border-[rgba(201,162,39,0.5)] text-[#F1ECFF]' : 'bg-white/[0.03] border-white/10 text-[#B7B2D9]'}`}><div className="font-black text-[11px]">{m.name}</div><div className="text-[10px] opacity-60">{m.desc}</div></button>
                       ))}
                     </div>
                   )}
@@ -623,28 +624,31 @@ const CharacterCreationWizard = ({ onComplete, members }: { onComplete: (data: a
 
               {cur === 'face' && (
                 <div className="flex flex-col items-center gap-4 py-2">
-                  <div className="text-xs font-black text-[#454F87] uppercase self-start">{T('捏你的脸','捏你的臉')}</div>
-                  <div className="rounded-2xl p-4" style={{ background: 'radial-gradient(circle at 50% 30%, #E7E6F6, #DAD8EE)' }}><SpritePreview appearance={data.playerAppearance} size={128} /></div>
-                  <button onClick={() => setShowFace(true)} className="px-6 py-2.5 rounded-xl bg-[#5B6BB0] text-white text-sm font-black hover:bg-[#454F87] transition-all flex items-center gap-2"><Sparkles className="w-4 h-4" /> {T('开始捏脸','開始捏臉')}</button>
-                  <p className="text-[10px] text-[#454F87] opacity-70 text-center">{T('爱豆的样子进世界后可在「关系」面板里逐个捏。','愛豆的樣子進世界後可在「關係」面板裡逐個捏。')}</p>
+                  <div className="gold-caption self-start">{T('捏你的脸','捏你的臉')}</div>
+                  <div className="relative rounded-2xl p-4 flex items-center justify-center" style={{ background: 'radial-gradient(50% 60% at 50% 40%, rgba(120,110,220,0.18), transparent 70%)' }}>
+                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-24 h-4 rounded-full bg-black/40 blur-[4px]" />
+                    <div className="relative" style={{ filter: 'drop-shadow(0 0 18px rgba(150,140,255,0.35))' }}><SpritePreview appearance={data.playerAppearance} size={128} /></div>
+                  </div>
+                  <button onClick={() => setShowFace(true)} className="px-6 py-2.5 rounded-xl text-white text-sm font-black transition-all flex items-center gap-2" style={{ background: 'linear-gradient(135deg,#6C79C4,#454F87)', boxShadow: '0 8px 20px -6px rgba(91,107,176,0.7)' }}><Sparkles className="w-4 h-4" /> {T('开始捏脸','開始捏臉')}</button>
+                  <p className="text-[10px] text-[#8B86B8] text-center">{T('爱豆的样子进世界后可在「关系」面板里逐个捏。','愛豆的樣子進世界後可在「關係」面板裡逐個捏。')}</p>
                 </div>
               )}
 
               {cur === 'identity' && (<>
-                <label className="text-xs font-black text-[#454F87] uppercase">{T('选择你的身份（可多选）','選擇您的身份（可複選）')}</label>
+                <label className="gold-caption">{T('选择你的身份（可多选）','選擇您的身份（可複選）')}</label>
                 <div className="grid grid-cols-2 gap-2">{currentIds.map(i => (
-                  <button key={i} onClick={() => setData({...data, identity: data.identity.includes(i) ? data.identity.filter(x => x !== i) : [...data.identity, i]})} className={`p-3 rounded-xl border text-[11px] transition-all ${data.identity.includes(i) ? 'bg-[#E7E6F6] border-[#5B6BB0] text-[#454F87] font-bold' : 'bg-white border-[#DAD8EE] text-[#2A2A3D]'}`}>{i}</button>
+                  <button key={i} onClick={() => setData({...data, identity: data.identity.includes(i) ? data.identity.filter(x => x !== i) : [...data.identity, i]})} className={`p-3 rounded-xl border text-[11px] transition-all ${data.identity.includes(i) ? 'bg-[rgba(201,162,39,0.1)] border-[rgba(201,162,39,0.5)] text-[#F1ECFF] font-bold' : 'bg-white/[0.03] border-white/10 text-[#B7B2D9]'}`}>{i}</button>
                 ))}</div>
-                <input type="text" value={customIdentity} onChange={e => setCustomIdentity(e.target.value)} placeholder={T('或手动输入自定义身份...','或手動輸入自訂身份...')} className="w-full bg-white border border-[#DAD8EE] rounded-xl p-3 text-base focus:ring-1 focus:ring-[#5B6BB0] outline-none text-[#2A2A3D]" onKeyDown={(e) => { if (e.key === 'Enter') { const val = customIdentity.trim(); if (val && !data.identity.includes(val)) { setData({...data, identity: [...data.identity, val]}); setCustomIdentity(''); } e.preventDefault(); } }} />
+                <input type="text" value={customIdentity} onChange={e => setCustomIdentity(e.target.value)} placeholder={T('或手动输入自定义身份...','或手動輸入自訂身份...')} className="w-full bg-white/[0.04] border border-white/10 rounded-xl p-3 text-base focus:ring-1 focus:ring-[#C9A227] outline-none text-[#F1ECFF] placeholder:text-[#8B86B8]" onKeyDown={(e) => { if (e.key === 'Enter') { const val = customIdentity.trim(); if (val && !data.identity.includes(val)) { setData({...data, identity: [...data.identity, val]}); setCustomIdentity(''); } e.preventDefault(); } }} />
                 {(() => {
                   const chosen = [...data.identity, ...(customIdentity.trim() ? [customIdentity.trim()] : [])];
                   if (chosen.length === 0) return null;
                   const s = identitySummary(chosen);
                   return (
-                    <div className="rounded-2xl bg-gradient-to-br from-[#F3F2FA] to-[#E7E6F6] border border-[#DAD8EE] p-3.5 flex flex-col gap-2.5">
-                      <div className="text-[10px] font-black text-[#454F87] uppercase tracking-widest flex items-center gap-1.5"><Sparkles className="w-3 h-3" /> {T('这个身份意味着','這個身份意味著')}</div>
-                      <div className="flex items-start gap-2 text-[12px] text-[#3c3752]">
-                        <MapPin className="w-3.5 h-3.5 text-[#5B6BB0] mt-0.5 flex-shrink-0" />
+                    <div className="rounded-2xl bg-white/[0.03] border border-[rgba(201,162,39,0.2)] p-3.5 flex flex-col gap-2.5">
+                      <div className="gold-caption flex items-center gap-1.5"><Sparkles className="w-3 h-3" /> {T('这个身份意味着','這個身份意味著')}</div>
+                      <div className="flex items-start gap-2 text-[12px] text-[#D8D4EE]">
+                        <MapPin className="w-3.5 h-3.5 text-[#C9A227] mt-0.5 flex-shrink-0" />
                         {(() => {
                           const extra = s.unlocked.filter(l => l !== s.startLabel);
                           const tail = extra.length > 0
@@ -655,7 +659,7 @@ const CharacterCreationWizard = ({ onComplete, members }: { onComplete: (data: a
                           return <span>{T('从','從')}<b className="text-[#5B6BB0]">{s.startLabel}</b>{T('开始','開始')}{tail}</span>;
                         })()}
                       </div>
-                      <div className="flex items-start gap-2 text-[12px] text-[#3c3752]">
+                      <div className="flex items-start gap-2 text-[12px] text-[#D8D4EE]">
                         <Heart className="w-3.5 h-3.5 text-[#FF7A93] mt-0.5 flex-shrink-0" />
                         <span>{s.affFloor > 0
                           ? <>{T('你们本来就认识，起始好感 ','你們本來就認識，起始好感 ')}<b className="text-[#FF7A93]">{s.affFloor}</b></>
@@ -697,9 +701,9 @@ const CharacterCreationWizard = ({ onComplete, members }: { onComplete: (data: a
             </motion.div>
           </AnimatePresence>
         </div>
-        <div className="p-5 sm:p-6 bg-white border-t border-[#DAD8EE] flex gap-3">
-          {stepIdx > 0 && <button onClick={() => go(-1)} className="flex-1 py-3.5 bg-[#F3F2FA] text-[#454F87] rounded-2xl text-sm font-black border-2 border-[#DAD8EE] hover:bg-[#E7E6F6] transition-all">← {T('上一步','上一步')}</button>}
-          <button onClick={() => isLast ? finish() : go(1)} disabled={!canNext()} style={{ background: canNext() ? 'linear-gradient(135deg, #6C79C4, #5B6BB0)' : undefined }} className="flex-[2] py-3.5 rounded-2xl text-white text-sm font-black shadow-lg hover:shadow-xl hover:-translate-y-0.5 disabled:opacity-40 disabled:shadow-none disabled:translate-y-0 disabled:bg-[#B7B4D8] transition-all flex items-center justify-center gap-1.5">
+        <div className="p-5 sm:p-6 border-t border-white/[0.06] flex gap-3">
+          {stepIdx > 0 && <button onClick={() => go(-1)} className="flex-1 py-3.5 bg-white/[0.04] text-[#B7B2D9] rounded-2xl text-sm font-black border border-white/10 hover:bg-white/[0.09] transition-all">← {T('上一步','上一步')}</button>}
+          <button onClick={() => isLast ? finish() : go(1)} disabled={!canNext()} style={{ background: canNext() ? 'linear-gradient(135deg, #6C79C4, #454F87)' : 'rgba(255,255,255,0.08)', boxShadow: canNext() ? '0 10px 24px -8px rgba(91,107,176,0.8)' : 'none' }} className="flex-[2] py-3.5 rounded-2xl text-white text-sm font-black hover:-translate-y-0.5 disabled:opacity-50 disabled:translate-y-0 disabled:text-white/50 transition-all flex items-center justify-center gap-1.5">
             {isLast ? <><Sparkles className="w-4 h-4" /> {T('开始！','開始！')}</> : <>{T('下一步','下一步')} <ArrowRight className="w-4 h-4" /></>}
           </button>
         </div>
@@ -839,10 +843,10 @@ const MarkdownBlock = ({ content }: { content: string }) => (
 const StoryText = ({ content }: { content: string }) => {
   const script = parseScript(content);
   return (
-    <div className="flex flex-col gap-2.5 text-[15px] leading-[1.85] text-[#2A2A3D]">
+    <div className="flex flex-col gap-2.5 text-[15px] leading-[1.85] text-[#E7E6F6]">
       {script.map((s, i) => s.kind === 'narration'
-        ? <p key={i} className="text-[#3c3752]">{s.text}</p>
-        : <p key={i} className="pl-3 border-l-2 border-[#DAD8EE]"><span className="font-black text-[#5B6BB0]">{s.speaker}</span><span className="text-[#8b90b8]">：</span>「{s.text}」</p>
+        ? <p key={i} className="text-[#B7B2D9] italic">{s.text}</p>
+        : <p key={i} className="pl-3 border-l-2 border-[rgba(201,162,39,0.3)]"><span className="font-black text-[#B7A9E8]">{s.speaker}</span><span className="text-[#8B86B8]">：</span>「{s.text}」</p>
       )}
     </div>
   );
@@ -1408,12 +1412,12 @@ export default function App() {
       <div className="absolute inset-0 z-10 flex overflow-hidden">
       {showConfirmReset && (
         <div className="absolute inset-0 z-[100] bg-black/60 backdrop-blur-md flex items-center justify-center p-4">
-          <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-white rounded-[3rem] p-10 max-w-sm w-full shadow-2xl text-center flex flex-col gap-6 border border-[#DAD8EE]">
-            <div className="w-20 h-20 bg-[#E7E6F6] rounded-full flex items-center justify-center mx-auto"><RefreshCw className="w-10 h-10 text-[#5B6BB0] animate-spin-slow" /></div>
-            <div><h3 className="text-xl font-black text-[#2A2A3D]">{lang === "traditional" ? "確定重置嗎？" : "确定重置吗？"}</h3><p className="text-sm text-[#454F87] mt-2">{lang === "traditional" ? "所有進度將永久刪除。" : "所有进度将永久删除。"}</p></div>
+          <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="ink-panel rounded-[3rem] p-10 max-w-sm w-full text-center flex flex-col gap-6">
+            <div className="w-20 h-20 bg-white/[0.06] rounded-full flex items-center justify-center mx-auto"><RefreshCw className="w-10 h-10 text-[#C9A227] animate-spin-slow" /></div>
+            <div><h3 className="text-xl font-black text-[#F1ECFF]">{lang === "traditional" ? "確定重置嗎？" : "确定重置吗？"}</h3><p className="text-sm text-[#B7B2D9] mt-2">{lang === "traditional" ? "所有進度將永久刪除。" : "所有进度将永久删除。"}</p></div>
             <div className="flex flex-col gap-3">
-              <button onClick={executeReset} className="w-full py-4 bg-[#2A2A3D] text-white rounded-3xl font-black text-sm hover:bg-black transition-all">{lang === "traditional" ? "確認重置" : "确认重置"}</button>
-              <button onClick={() => setShowConfirmReset(false)} className="w-full py-4 bg-[#E7E6F6] text-[#454F87] rounded-3xl font-black text-sm hover:bg-[#DAD8EE] transition-all">{lang === "traditional" ? "返回" : "返回"}</button>
+              <button onClick={executeReset} className="w-full py-4 bg-white text-[#211D33] rounded-3xl font-black text-sm hover:bg-white/90 transition-all">{lang === "traditional" ? "確認重置" : "确认重置"}</button>
+              <button onClick={() => setShowConfirmReset(false)} className="w-full py-4 bg-white/[0.06] text-[#B7B2D9] rounded-3xl font-black text-sm hover:bg-white/[0.12] transition-all">{lang === "traditional" ? "返回" : "返回"}</button>
             </div>
           </motion.div>
         </div>
@@ -1429,15 +1433,15 @@ export default function App() {
       </AnimatePresence>
 
       {sidebarOpen && <div className="hidden lg:block fixed inset-0 z-[90] bg-black/25" onClick={() => setSidebarOpen(false)} />}
-      <aside className={`${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} w-56 border-r border-[#DAD8EE] flex-col hidden lg:flex fixed left-0 top-0 bottom-0 z-[95] transition-transform duration-300 shadow-2xl`} style={{background: 'rgba(243,242,250,0.98)'}}>
-        <div className="p-4 border-b border-[#DAD8EE]">
-          <h1 className="text-sm font-black text-[#5B6BB0] tracking-tighter flex items-center gap-1.5"><Gamepad2 className="w-4 h-4 flex-shrink-0" /> 爱豆收集梦想生活</h1>
+      <aside className={`${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} w-56 border-r border-white/[0.06] flex-col hidden lg:flex fixed left-0 top-0 bottom-0 z-[95] transition-transform duration-300 shadow-2xl`} style={{background: 'linear-gradient(180deg, #14121f, #0B0A14)'}}>
+        <div className="p-4 border-b border-white/[0.06]">
+          <h1 className="text-sm font-black text-[#F1ECFF] tracking-tighter flex items-center gap-1.5"><Gamepad2 className="w-4 h-4 flex-shrink-0 text-[#C9A227]" /> 爱豆收集梦想生活</h1>
           <div className="flex items-center gap-2 mt-2">
-            <span className="text-[9px] bg-[#5B6BB0] text-white px-2 py-0.5 rounded-full font-black uppercase">{modeLabel}</span>
-            <span className="text-[10px] text-[#454F87] font-bold">Idol Tomodachi Life</span>
+            <span className="text-[9px] text-white px-2 py-0.5 rounded-full font-black uppercase" style={{ background: 'linear-gradient(135deg,#6C79C4,#454F87)' }}>{modeLabel}</span>
+            <span className="text-[10px] text-[#8B86B8] font-bold">Idol Tomodachi Life</span>
           </div>
         </div>
-        <div className="flex-1 overflow-y-auto p-3.5 flex flex-col gap-5 custom-scrollbar">
+        <div className="flex-1 overflow-y-auto p-3.5 flex flex-col gap-5 ink-scroll">
           {worldMode && !isMomMode && !isCPMode ? (
             <WorldPanel
               members={worldMembers}
@@ -1452,105 +1456,106 @@ export default function App() {
             />
           ) : (
           <section>
-            <h3 className="text-[10px] font-black text-[#454F87] uppercase tracking-widest mb-3 flex items-center gap-2"><Users className="w-3 h-3" /> {sidebarLabel}</h3>
+            <h3 className="gold-caption mb-3 flex items-center gap-2"><Users className="w-3 h-3" /> {sidebarLabel}</h3>
             {isCPMode ? (
-              <div className="bg-white p-4 rounded-2xl border border-[#5B6BB0]">
+              <div className="bg-white/[0.03] p-4 rounded-2xl border border-[rgba(201,162,39,0.3)]">
                 <div className="flex justify-between items-center mb-2">
-                  <span className="text-xs font-bold text-[#2A2A3D]">{targetMembers.map(m => m.name).join(' ♡ ')}</span>
-                  <span className="text-[10px] text-[#5B6BB0] font-black">{cpAffection}/100</span>
+                  <span className="text-xs font-bold text-[#F1ECFF]">{targetMembers.map(m => m.name).join(' ♡ ')}</span>
+                  <span className="text-[10px] text-[#C9A227] font-black">{cpAffection}/100</span>
                 </div>
-                <div className="h-1.5 bg-[#E7E6F6] rounded-full overflow-hidden">
-                  <motion.div animate={{ width: `${cpAffection}%` }} className="h-full bg-gradient-to-r from-[#5B6BB0] to-[#454F87] rounded-full" />
+                <div className="h-[3px] bg-white/[0.08] rounded-full overflow-hidden">
+                  <motion.div animate={{ width: `${cpAffection}%` }} className="h-full rounded-full" style={{ background: 'linear-gradient(90deg,#6C79C4,#C9A227)' }} />
                 </div>
-                <div className="text-[9px] text-[#454F87] mt-2 italic">
+                <div className="text-[9px] text-[#8B86B8] mt-2 italic">
                   {cpAffection < 15 ? '互相不熟，公事公办' : cpAffection < 30 ? '有些微妙的默契' : cpAffection < 50 ? '暧昧模糊，互相试探' : cpAffection < 70 ? '明显的特殊感' : cpAffection < 85 ? '没有说破，但都知道了' : '只差最后一步'}
                 </div>
               </div>
             ) : isMomMode ? (
-              <div className="bg-white p-4 rounded-2xl border border-[#DAD8EE]">
+              <div className="bg-white/[0.03] p-4 rounded-2xl border border-white/10">
                 <div className="flex justify-between items-center mb-2">
-                  <span className="text-xs font-bold text-[#2A2A3D]">{daughterProfile?.name || '女儿'}</span>
-                  <span className="text-[10px] text-[#5B6BB0] font-mono font-bold">{momTrustLevel}/100</span>
+                  <span className="text-xs font-bold text-[#F1ECFF]">{daughterProfile?.name || '女儿'}</span>
+                  <span className="text-[10px] text-[#C9A227] font-mono font-bold">{momTrustLevel}/100</span>
                 </div>
-                <div className="h-1.5 bg-[#E7E6F6] rounded-full overflow-hidden">
-                  <motion.div animate={{ width: `${momTrustLevel}%` }} className="h-full bg-[#5B6BB0] rounded-full" />
+                <div className="h-[3px] bg-white/[0.08] rounded-full overflow-hidden">
+                  <motion.div animate={{ width: `${momTrustLevel}%` }} className="h-full rounded-full" style={{ background: 'linear-gradient(90deg,#6C79C4,#C9A227)' }} />
                 </div>
-                {daughterProfile && <div className="text-[9px] text-[#454F87] mt-1">{daughterProfile.nationality} · {daughterProfile.personality}</div>}
+                {daughterProfile && <div className="text-[9px] text-[#8B86B8] mt-1">{daughterProfile.nationality} · {daughterProfile.personality}</div>}
               </div>
             ) : (
               <div className="flex flex-col gap-2">{targetMembers.map(member => (
-                <div key={member.id} className="bg-white p-4 rounded-2xl border border-[#DAD8EE]">
-                  <div className="flex justify-between items-center mb-2"><span className="text-xs font-bold text-[#2A2A3D]">{member.name}</span><span className="text-[10px] text-[#5B6BB0] font-mono font-bold">{member.affection}/100</span></div>
-                  <div className="h-1.5 bg-[#E7E6F6] rounded-full overflow-hidden"><motion.div animate={{ width: `${member.affection}%` }} className="h-full bg-[#5B6BB0] rounded-full" /></div>
-                  <div className="text-[9px] text-[#454F87] mt-1">{member.status}</div>
+                <div key={member.id} className="bg-white/[0.03] p-4 rounded-2xl border border-white/10">
+                  <div className="flex justify-between items-center mb-2"><span className="text-xs font-bold text-[#F1ECFF]">{member.name}</span><span className="text-[10px] text-[#C9A227] font-mono font-bold">{member.affection}/100</span></div>
+                  <div className="h-[3px] bg-white/[0.08] rounded-full overflow-hidden"><motion.div animate={{ width: `${member.affection}%` }} className="h-full rounded-full" style={{ background: 'linear-gradient(90deg,#6C79C4,#C9A227)' }} /></div>
+                  <div className="text-[9px] text-[#8B86B8] mt-1">{member.status}</div>
                 </div>
               ))}</div>
             )}
           </section>
           )}
         </div>
-        <div className="p-3.5 border-t border-[#DAD8EE] flex flex-col gap-2.5">
+        <div className="p-3.5 border-t border-white/[0.06] flex flex-col gap-2.5">
           <div className="flex gap-2.5">
-            <button onClick={saveGame} className="flex-1 flex items-center justify-center gap-1.5 py-3 bg-[#5B6BB0] text-white rounded-2xl text-[11px] font-black shadow-[0_6px_16px_-6px_rgba(91,107,176,0.7)] hover:bg-[#454F87] hover:-translate-y-0.5 transition-all"><Save className="w-3.5 h-3.5" />{lang === "traditional" ? "存檔" : "存档"}</button>
-            <button onClick={() => setShowSaveSlots(!showSaveSlots)} className={`flex-1 flex items-center justify-center gap-1.5 py-3 rounded-2xl text-[11px] font-black border transition-all ${showSaveSlots ? 'bg-[#E7E6F6] text-[#454F87] border-[#5B6BB0]' : 'bg-white text-[#454F87] border-[#DAD8EE] hover:bg-[#E7E6F6]'}`}><FolderOpen className="w-3.5 h-3.5" />{lang === "traditional" ? "讀檔" : "读档"} <span className="px-1.5 rounded-full bg-[#5B6BB0]/10 text-[9px]">{saveSlots.length}</span></button>
+            <button onClick={saveGame} className="flex-1 flex items-center justify-center gap-1.5 py-3 text-white rounded-2xl text-[11px] font-black hover:-translate-y-0.5 transition-all" style={{ background: 'linear-gradient(135deg,#6C79C4,#454F87)', boxShadow: '0 6px 16px -6px rgba(91,107,176,0.7)' }}><Save className="w-3.5 h-3.5" />{lang === "traditional" ? "存檔" : "存档"}</button>
+            <button onClick={() => setShowSaveSlots(!showSaveSlots)} className={`flex-1 flex items-center justify-center gap-1.5 py-3 rounded-2xl text-[11px] font-black border transition-all ${showSaveSlots ? 'bg-[rgba(201,162,39,0.1)] text-[#F1ECFF] border-[rgba(201,162,39,0.45)]' : 'bg-white/[0.04] text-[#B7B2D9] border-white/10 hover:bg-white/[0.09]'}`}><FolderOpen className="w-3.5 h-3.5" />{lang === "traditional" ? "讀檔" : "读档"} <span className="px-1.5 rounded-full bg-white/10 text-[9px]">{saveSlots.length}</span></button>
           </div>
           {showSaveSlots && (
-            <div className="rounded-2xl bg-[#F3F2FA] border border-[#DAD8EE] p-2.5 flex flex-col gap-2 max-h-56 overflow-y-auto custom-scrollbar">
+            <div className="rounded-2xl bg-white/[0.03] border border-white/10 p-2.5 flex flex-col gap-2 max-h-56 overflow-y-auto ink-scroll">
               {saveSlots.length > 0 ? saveSlots.map((slot, si) => (
-                <div key={slot.id} className="group bg-white border border-[#DAD8EE] rounded-xl p-2.5 flex items-center gap-2.5 hover:border-[#5B6BB0] hover:shadow-md transition-all">
+                <div key={slot.id} className="group bg-white/[0.03] border border-white/10 rounded-xl p-2.5 flex items-center gap-2.5 hover:border-[rgba(201,162,39,0.45)] transition-all">
                   <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#6C79C4] to-[#454F87] text-white flex items-center justify-center text-[11px] font-black flex-shrink-0">{saveSlots.length - si}</div>
                   <button onClick={() => loadGame(slot.id)} className="flex-1 min-w-0 text-left">
-                    <div className="text-[11px] font-black text-[#2A2A3D] truncate">{(slot as any).subject || slot.scene}</div>
-                    <div className="text-[9px] text-[#454F87]/80 truncate mt-0.5">{slot.scene} · R{slot.round} · {slot.time}</div>
+                    <div className="text-[11px] font-black text-[#F1ECFF] truncate">{(slot as any).subject || slot.scene}</div>
+                    <div className="text-[9px] text-[#8B86B8] truncate mt-0.5">{slot.scene} · R{slot.round} · {slot.time}</div>
                   </button>
                   <button onClick={() => deleteSlot(slot.id)} title={lang === "traditional" ? "刪除" : "删除"} className="w-6 h-6 rounded-lg text-[#8b90b8] hover:bg-[#FF7A93]/10 hover:text-[#FF7A93] flex items-center justify-center flex-shrink-0 transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
                 </div>
               )) : (
-                <div className="text-[10px] text-[#454F87]/60 text-center py-4 font-bold">{lang === "traditional" ? "暫無存檔" : "暂无存档"}</div>
+                <div className="text-[10px] text-[#8B86B8] text-center py-4 font-bold">{lang === "traditional" ? "暫無存檔" : "暂无存档"}</div>
               )}
             </div>
           )}
-          <button onClick={handleReset} className="w-full flex items-center justify-center gap-2 py-2.5 text-[#8b90b8] rounded-2xl text-[10px] font-black hover:bg-[#F3F2FA] hover:text-[#5B6BB0] transition-all"><RefreshCw className="w-3.5 h-3.5" /> {lang === "traditional" ? "重新開始" : "重新开始"}</button>
+          <button onClick={handleReset} className="w-full flex items-center justify-center gap-2 py-2.5 text-[#8b90b8] rounded-2xl text-[10px] font-black hover:bg-white/[0.04] hover:text-[#B7A9E8] transition-all"><RefreshCw className="w-3.5 h-3.5" /> {lang === "traditional" ? "重新開始" : "重新开始"}</button>
         </div>
       </aside>
 
-      <main className="flex-1 flex flex-col h-full lg:rounded-l-[2rem] lg:shadow-sm overflow-hidden" style={{background: 'rgba(255,255,255,0.85)'}}>
-        <header className="h-11 bg-white border-b border-[#DAD8EE] px-4 flex items-center justify-between z-10 flex-shrink-0">
+      <main className="flex-1 flex flex-col h-full lg:rounded-l-[2rem] lg:shadow-sm overflow-hidden" style={{background: 'rgba(11,10,20,0.72)'}}>
+        <header className="h-11 border-b border-white/[0.06] px-4 flex items-center justify-between z-10 flex-shrink-0" style={{ background: 'rgba(14,12,28,0.85)' }}>
           <div className="flex items-center gap-3">
-            <button onClick={handleReset} className="lg:hidden p-2 text-[#5B6BB0] hover:bg-[#E7E6F6] rounded-xl"><RefreshCw className="w-4 h-4" /></button>
+            <button onClick={handleReset} className="lg:hidden p-2 text-[#B7A9E8] hover:bg-white/10 rounded-xl"><RefreshCw className="w-4 h-4" /></button>
             <button
               onClick={() => setSidebarOpen(v => !v)}
               title={sidebarOpen ? (lang === 'traditional' ? '收起側欄' : '收起侧栏') : (lang === 'traditional' ? '展開側欄' : '展开侧栏')}
-              className="hidden lg:flex p-2 text-[#5B6BB0] hover:bg-[#E7E6F6] rounded-xl transition-colors"
+              className="hidden lg:flex p-2 text-[#B7A9E8] hover:bg-white/10 rounded-xl transition-colors"
             >
               {sidebarOpen ? <PanelLeftClose className="w-4 h-4" /> : <PanelLeftOpen className="w-4 h-4" />}
             </button>
             <div>
-              <div className="text-[10px] text-[#454F87] font-black uppercase tracking-widest">Scene</div>
-              <h2 className="text-sm font-bold flex items-center gap-1 text-[#2A2A3D]"><MapPin className="w-3 h-3 text-[#5B6BB0]" /> {gameState.currentScene}</h2>
+              <div className="text-[10px] text-[#8B86B8] font-black uppercase tracking-widest">Scene</div>
+              <h2 className="text-sm font-bold flex items-center gap-1 text-[#F1ECFF]"><MapPin className="w-3 h-3 text-[#C9A227]" /> {gameState.currentScene}</h2>
             </div>
           </div>
           {(primaryTarget || isMomMode) && (
-            <button onClick={() => setShowDrawer(true)} className="lg:hidden flex items-center gap-2 bg-[#F3F2FA] px-3 py-2 rounded-2xl border border-[#DAD8EE] active:scale-95 transition-all">
-              <Heart className="w-3 h-3 text-[#5B6BB0]" />
-              <span className="text-[11px] font-bold text-[#2A2A3D]">
+            <button onClick={() => setShowDrawer(true)} className="lg:hidden flex items-center gap-2 bg-white/[0.06] px-3 py-2 rounded-2xl border border-white/10 active:scale-95 transition-all">
+              <Heart className="w-3 h-3 text-[#C9A227]" />
+              <span className="text-[11px] font-bold text-[#F1ECFF]">
                 {isMomMode ? (daughterProfile?.name || '女儿') : isCPMode ? targetMembers.map(m => m.name).join(' ♡ ') : primaryTarget?.name}
               </span>
-              <span className="text-[11px] font-black text-[#5B6BB0]">{isMomMode ? momTrustLevel : cpAffection}</span>
-              <ChevronUp className="w-3 h-3 text-[#454F87]" />
+              <span className="text-[11px] font-black text-[#C9A227]">{isMomMode ? momTrustLevel : cpAffection}</span>
+              <ChevronUp className="w-3 h-3 text-[#8B86B8]" />
             </button>
           )}
-          {apiKeyMissing && <div className="bg-[#E7E6F6] text-[#454F87] text-[10px] font-black px-3 py-1 rounded-full border border-[#DAD8EE] animate-pulse">API KEY MISSING</div>}
+          {apiKeyMissing && <div className="bg-white/[0.06] text-[#C9A227] text-[10px] font-black px-3 py-1 rounded-full border border-[rgba(201,162,39,0.3)] animate-pulse">API KEY MISSING</div>}
           <div className="flex items-center gap-3">
             {!worldMode && !isMomMode && !isCPMode && (
-              <button onClick={openPhone} className="relative flex items-center gap-1.5 text-[11px] font-black px-3 py-1.5 rounded-xl border bg-[#E7E6F6] text-[#454F87] border-[#DAD8EE] hover:bg-[#DAD8EE] transition-all">
+              <button onClick={openPhone} className="relative flex items-center gap-1.5 text-[11px] font-black px-3 py-1.5 rounded-xl border bg-white/[0.06] text-[#B7B2D9] border-white/10 hover:bg-white/[0.12] transition-all">
                 <Smartphone className="w-3.5 h-3.5" /> {lang === 'traditional' ? '手機' : '手机'}
                 {phoneUnread > 0 && <span className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 px-1 rounded-full bg-[#FF3B30] text-white text-[9px] font-black flex items-center justify-center animate-pulse">{phoneUnread}</span>}
               </button>
             )}
             <button
               onClick={() => setWorldMode(v => !v)}
-              className={`flex items-center gap-1.5 text-[11px] font-black px-3 py-1.5 rounded-xl border transition-all ${worldMode ? 'bg-[#5B6BB0] text-white border-[#5B6BB0]' : 'bg-[#E7E6F6] text-[#454F87] border-[#DAD8EE] hover:bg-[#DAD8EE]'}`}
+              className={`flex items-center gap-1.5 text-[11px] font-black px-3 py-1.5 rounded-xl border transition-all ${worldMode ? 'text-white border-transparent' : 'bg-white/[0.06] text-[#B7B2D9] border-white/10 hover:bg-white/[0.12]'}`}
+              style={worldMode ? { background: 'linear-gradient(135deg,#6C79C4,#454F87)' } : undefined}
               title={lang === 'traditional' ? '切換俯視世界 / 劇情' : '切换俯视世界 / 剧情'}
             >
               {worldMode ? <Zap className="w-3.5 h-3.5" /> : <Users className="w-3.5 h-3.5" />}
@@ -1574,13 +1579,13 @@ export default function App() {
                   });
                 }
               }}
-              className="text-[10px] font-black text-[#454F87] bg-[#E7E6F6] px-2 py-1 rounded-lg border border-[#DAD8EE] hover:bg-[#DAD8EE] transition-all"
+              className="text-[10px] font-black text-[#B7B2D9] bg-white/[0.06] px-2 py-1 rounded-lg border border-white/10 hover:bg-white/[0.12] transition-all"
             >
               {isTraditional ? '简' : '繁'}
             </button>
             <div className="text-right">
-              <div className="text-[10px] text-[#454F87] font-bold uppercase">Round</div>
-              <div className="text-sm font-bold text-[#5B6BB0]">{roundCount}</div>
+              <div className="text-[10px] text-[#8B86B8] font-bold uppercase">Round</div>
+              <div className="text-sm font-bold text-[#C9A227]">{roundCount}</div>
             </div>
           </div>
         </header>
@@ -1618,8 +1623,8 @@ export default function App() {
         <>
         <div className="flex-1 overflow-y-auto px-4 py-6 md:px-8 md:py-8 custom-scrollbar" style={{background: "transparent"}}>
           <div className="max-w-2xl w-full mx-auto flex flex-col gap-6">
-            <div className="flex items-center justify-center gap-2 text-[10px] font-black text-[#454F87]/60 uppercase tracking-[0.2em]">
-              <span className="h-px w-8 bg-[#DAD8EE]" /><Zap className="w-3 h-3" /> {lang === 'traditional' ? '劇情回顧' : '剧情回顾'}<span className="h-px w-8 bg-[#DAD8EE]" />
+            <div className="flex items-center justify-center gap-2 text-[10px] font-black text-[#8B86B8] uppercase tracking-[0.2em]">
+              <span className="h-px w-8 bg-white/10" /><Zap className="w-3 h-3 text-[#C9A227]" /> {lang === 'traditional' ? '劇情回顧' : '剧情回顾'}<span className="h-px w-8 bg-white/10" />
             </div>
             <AnimatePresence initial={false}>
             {gameState.history.map((msg, i) => {
@@ -1628,14 +1633,14 @@ export default function App() {
               if (msg.role === MessageRole.USER) {
                 return (
                   <motion.div key={i} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-3 my-0.5">
-                    <div className="flex-1 h-px bg-[#DAD8EE]/70" />
-                    <div className="px-3.5 py-1.5 rounded-full bg-[#E7E6F6] text-[#454F87] text-[12px] font-bold max-w-[80%] truncate">{msg.content}</div>
-                    <div className="flex-1 h-px bg-[#DAD8EE]/70" />
+                    <div className="flex-1 h-px bg-white/10" />
+                    <div className="px-3.5 py-1.5 rounded-full bg-white/[0.06] text-[#B7B2D9] text-[12px] font-bold max-w-[80%] truncate border border-white/10">{msg.content}</div>
+                    <div className="flex-1 h-px bg-white/10" />
                   </motion.div>
                 );
               }
               return (
-                <motion.div key={i} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="rounded-3xl bg-white/95 border border-[#DAD8EE] shadow-[0_6px_24px_-12px_rgba(60,50,110,0.3)] overflow-hidden">
+                <motion.div key={i} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="rounded-3xl border border-[rgba(201,162,39,0.2)] shadow-[0_20px_50px_-24px_rgba(0,0,0,0.7)] overflow-hidden" style={{ background: 'linear-gradient(165deg, rgba(28,24,48,0.92), rgba(14,12,28,0.92))' }}>
                   <div className="flex flex-col gap-4 p-5 md:p-6">
                     {blocks && blocks.length > 0 ? blocks.map((block, bi) => {
                       if (block.type === 'text') return <StoryText key={bi} content={block.content} />;
@@ -1650,7 +1655,7 @@ export default function App() {
                     {msg.options && <OptionsUI options={msg.options} isLatest={isLatest} lang={(gameState as any).language} />}
                     {msg.content?.includes('错误信息') && (
                       <button onClick={() => { let j = -1; for (let k = i-1; k >= 0; k--) { if (gameState.history[k].role === MessageRole.USER) { j = k; break; } } if (j !== -1) { const c = gameState.history[j].content; setGameState(prev => ({ ...prev, history: prev.history.slice(0, i) })); handleSend(c); } }}
-                        className="self-start flex items-center gap-2 text-xs font-black text-[#5B6BB0] bg-[#F3F2FA] px-3 py-2 rounded-xl border border-[#DAD8EE] hover:bg-[#E7E6F6]"><RefreshCw className="w-3 h-3" /> {lang === "traditional" ? "重試" : "重试"}</button>
+                        className="self-start flex items-center gap-2 text-xs font-black text-[#B7A9E8] bg-white/[0.04] px-3 py-2 rounded-xl border border-white/10 hover:bg-white/[0.09]"><RefreshCw className="w-3 h-3" /> {lang === "traditional" ? "重試" : "重试"}</button>
                     )}
                   </div>
                 </motion.div>
@@ -1658,24 +1663,24 @@ export default function App() {
             })}
             </AnimatePresence>
             {isLoading && (
-              <div className="rounded-3xl bg-white/95 border border-[#DAD8EE] p-5 flex gap-2 w-fit">
-                <div className="w-2 h-2 bg-[#5B6BB0] rounded-full animate-bounce" />
-                <div className="w-2 h-2 bg-[#5B6BB0] rounded-full animate-bounce [animation-delay:0.2s]" />
-                <div className="w-2 h-2 bg-[#5B6BB0] rounded-full animate-bounce [animation-delay:0.4s]" />
+              <div className="rounded-3xl border border-[rgba(201,162,39,0.2)] p-5 flex gap-2 w-fit" style={{ background: 'linear-gradient(165deg, rgba(28,24,48,0.92), rgba(14,12,28,0.92))' }}>
+                <div className="w-2 h-2 bg-[#B7A9E8] rounded-full animate-bounce" />
+                <div className="w-2 h-2 bg-[#B7A9E8] rounded-full animate-bounce [animation-delay:0.2s]" />
+                <div className="w-2 h-2 bg-[#C9A227] rounded-full animate-bounce [animation-delay:0.4s]" />
               </div>
             )}
             <div ref={chatEndRef} />
           </div>
         </div>
 
-        <div className="p-4 md:p-6 bg-white border-t border-[#DAD8EE] flex-shrink-0">
+        <div className="p-4 md:p-6 border-t border-white/[0.06] flex-shrink-0" style={{ background: 'rgba(14,12,28,0.85)' }}>
           <div className="max-w-3xl mx-auto flex gap-3">
             <textarea value={input} onChange={e => setInput(e.target.value)}
               onKeyDown={e => { if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
               placeholder={lang === "traditional" ? "輸入您的行動..." : "输入你的行动..."}
-              className="flex-1 bg-[#F3F2FA] border border-[#DAD8EE] rounded-3xl px-6 py-4 text-base focus:ring-2 focus:ring-[#5B6BB0] resize-none h-14 custom-scrollbar outline-none text-[#2A2A3D]"
+              className="flex-1 bg-white/[0.04] border border-white/10 rounded-3xl px-6 py-4 text-base focus:ring-2 focus:ring-[#C9A227]/40 resize-none h-14 ink-scroll outline-none text-[#F1ECFF] placeholder:text-[#8B86B8]"
               disabled={isLoading} />
-            <button onClick={() => handleSend()} disabled={isLoading || !input.trim()} className="bg-[#5B6BB0] text-white px-5 rounded-3xl active:scale-95 disabled:opacity-50 flex-shrink-0 hover:bg-[#454F87] transition-all"><Send className="w-5 h-5" /></button>
+            <button onClick={() => handleSend()} disabled={isLoading || !input.trim()} className="text-white px-5 rounded-3xl active:scale-95 disabled:opacity-50 flex-shrink-0 transition-all" style={{ background: 'linear-gradient(135deg,#6C79C4,#454F87)' }}><Send className="w-5 h-5" /></button>
           </div>
         </div>
         </>
@@ -1695,9 +1700,11 @@ export default function App() {
         .markdown-container p { margin-bottom: 0.6rem; } .markdown-container p:last-child { margin-bottom: 0; }
         .markdown-container ul,.markdown-container ol { margin-left: 1.5rem; margin-bottom: 0.6rem; }
         .markdown-container ul { list-style-type: disc; } .markdown-container ol { list-style-type: decimal; }
-        .markdown-container blockquote { border-left: 3px solid #DAD8EE; padding-left: 0.75rem; color: #454F87; margin: 0.75rem 0; }
-        .markdown-container strong { font-weight: 900; color: #5B6BB0; }
-        .markdown-container hr { border: none; border-top: 1px solid #DAD8EE; margin: 1rem 0; }
+        .markdown-container blockquote { border-left: 3px solid rgba(201,162,39,0.35); padding-left: 0.75rem; color: #B7B2D9; margin: 0.75rem 0; }
+        .markdown-container strong { font-weight: 900; color: #B7A9E8; }
+        .markdown-container hr { border: none; border-top: 1px solid rgba(255,255,255,0.1); margin: 1rem 0; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(201,162,39,0.3) !important; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(201,162,39,0.55) !important; }
         @keyframes spin-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         .animate-spin-slow { animation: spin-slow 8s linear infinite; }
       `}</style>

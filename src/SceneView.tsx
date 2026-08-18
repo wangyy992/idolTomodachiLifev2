@@ -130,11 +130,11 @@ export default function SceneView({
         </AnimatePresence>
 
         {/* 剧情框 */}
-        <div onClick={onBox} className="relative max-w-3xl mx-auto rounded-[1.9rem] p-[1.5px] cursor-pointer shadow-[0_14px_48px_rgba(10,6,25,0.55)]" style={{ background: 'linear-gradient(135deg, rgba(123,133,201,0.9), rgba(255,122,147,0.5))' }}>
+        <div onClick={onBox} className="relative max-w-3xl mx-auto rounded-[1.9rem] p-[1.5px] cursor-pointer shadow-[0_14px_48px_rgba(10,6,25,0.55)]" style={{ background: 'linear-gradient(135deg, rgba(123,133,201,0.9), rgba(201,162,39,0.55))' }}>
           <div className="relative rounded-[1.8rem] bg-[#141127]/88 backdrop-blur-md px-7 sm:px-10 pt-5 pb-5 min-h-[120px] sm:min-h-[132px]">
             {/* 名牌 */}
             {entry?.kind === 'line' && (
-              <div className="inline-flex items-center mb-2.5 px-3.5 py-1 rounded-xl bg-gradient-to-r from-[#5B6BB0] to-[#6C79C4] text-white text-[12.5px] font-black shadow-[0_4px_12px_-3px_rgba(91,107,176,0.8)] border border-white/15">{entry.speaker}</div>
+              <div className="inline-flex items-center mb-2.5 px-3.5 py-1 rounded-xl text-white text-[12.5px] font-black shadow-[0_4px_12px_-3px_rgba(91,107,176,0.8)] border border-white/15" style={{ background: 'linear-gradient(90deg,#6C79C4,#6C79C4 60%,#C9A227)' }}>{entry.speaker}</div>
             )}
             {isLoading && atEnd ? (
               <div className="flex gap-1.5 items-center py-3 text-white/70"><span className="w-2 h-2 bg-white/70 rounded-full animate-bounce" /><span className="w-2 h-2 bg-white/70 rounded-full animate-bounce [animation-delay:0.15s]" /><span className="w-2 h-2 bg-white/70 rounded-full animate-bounce [animation-delay:0.3s]" /></div>
