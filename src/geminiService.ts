@@ -15,17 +15,36 @@ export async function callGeminiAPI(messages: ChatMessage[], gameState: GameStat
     .map(m => `${m.name}（${m.stageName}，${m.group}）`)
     .join('、') || '无';
 
-  const targetMembersDetail = gameState.members
-    .filter(m => gameState.targets.includes(m.id))
-    .map(m => `- ${m.name}：公开人设"${m.publicPersona}"，真实性格"${m.realPersonality}"`)
-    .join('\n');
+  // 人设注入：本场在场的人给完整性格，不在场的只给一行简介（既让 AI 聚焦，也省 token）
+  const fullPersona = (m: any) => [
+    `【${m.name}（${m.stageName}${m.role ? '·' + m.role : ''}，${m.group}）】`,
+    `公开人设：${m.publicPersona}`,
+    m.speechStyle ? `说话风格：${m.speechStyle}` : '',
+    `真实性格：\n${m.realPersonality}`,
+    m.secret ? `未公开的秘密（只在关系够深时才可揭示）：${m.secret}` : '',
+  ].filter(Boolean).join('\n');
+  const briefPersona = (m: any) => `- ${m.name}（${m.stageName}，${m.group}）：${m.publicPersona}`;
 
+  const focusIds: string[] = (gameState as any).sceneFocusIds || [];
+  const onStage = gameState.members.filter(m => focusIds.includes(m.id));
+  const targetsAll = gameState.members.filter(m => gameState.targets.includes(m.id));
+  const offStage = targetsAll.filter(m => !focusIds.includes(m.id));
+
+  const targetMembersDetail = onStage.length
+    ? [
+        `▼ 本场登场（严格按下面的性格演，台词要能听出是谁，不要写成通用角色）：`,
+        onStage.map(fullPersona).join('\n\n'),
+        offStage.length ? `\n▼ 其他爱豆（本场不在场，仅作背景参考，不要让她们突然出现）：\n${offStage.map(briefPersona).join('\n')}` : '',
+      ].filter(Boolean).join('\n')
+    : targetsAll.map(fullPersona).join('\n\n');
+
+  // 队友只给一行简介：够用于"阻碍/助攻"判断，不必倒完整性格
   const teammateInfo = gameState.members
     .filter(m => {
       const target = gameState.members.find(t => gameState.targets.includes(t.id));
       return target && m.group === target.group && !gameState.targets.includes(m.id);
     })
-    .map(m => `- ${m.name}（${m.stageName}）：${m.realPersonality}`)
+    .map(briefPersona)
     .join('\n');
 
   const playerIdentity = gameState.identity?.join(', ') || '普通人';

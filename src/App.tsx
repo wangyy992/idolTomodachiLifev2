@@ -1193,12 +1193,15 @@ export default function App() {
     });
   };
 
-  const handleSend = async (content?: any) => {
+  const handleSend = async (content?: any, focusIds?: string[]) => {
     const textToSend = typeof content === 'string' ? content : input;
     if (!textToSend || !textToSend.trim()) return;
     if (isLoading) return;
     setInput(''); setIsLoading(true);
     let nextState: GameState = { ...gameState };
+    // 本场登场的人：走近/围观时显式传入；同一场景内后续对话沿用当前 scene
+    const focus = focusIds ?? scene?.ids;
+    nextState.sceneFocusIds = focus && focus.length ? focus : undefined;
     nextState.history = [...nextState.history, { role: MessageRole.USER, content: textToSend, timestamp: Date.now() }];
     setGameState(nextState);
     await handleAIStep(textToSend, nextState);
@@ -1213,7 +1216,7 @@ export default function App() {
       ? `（我${where}走近${m.name}，和ta打個招呼）${doing}`
       : `（我${where}走近${m.name}，和ta打个招呼）${doing}`;
     setScene({ ids: [m.id], anchor: gameState.history.length });
-    handleSend(line);
+    handleSend(line, [m.id]);
   };
 
   // 推进时段：先结算"你不在场"的其它地点里同处一地的爱豆对（后台世界推进），再跳时间
@@ -1227,7 +1230,7 @@ export default function App() {
       ? `（我在${ctx.location.label}，看到 ${a.name} 和 ${b.name} 湊在一起，我在旁邊靜靜觀察她們的互動）${hint}`
       : `（我在${ctx.location.label}，看到 ${a.name} 和 ${b.name} 凑在一起，我在旁边静静观察她们的互动）${hint}`;
     setScene({ ids: [a.id, b.id], anchor: gameState.history.length });
-    handleSend(line);
+    handleSend(line, [a.id, b.id]);
   };
 
   // 捏脸：取当前外观（覆盖或默认）+ 应用

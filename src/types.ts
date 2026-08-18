@@ -69,6 +69,8 @@ export interface Member {
   role: string;
   publicPersona: string;
   realPersonality: string;
+  speechStyle?: string;   // 说话风格：口头禅/句子长短/语气词（可选，填了会喂给 AI）
+  secret?: string;        // 一个秘密/软肋，留给阶段突破时揭示（可选）
   affection: number;
   privacy?: number;
   careerPressure: number;
@@ -151,6 +153,7 @@ export interface GameState {
   worldSlot?: number;
   worldLocation?: string;
   worldFeed?: { id: string; text: string; kind: string; day: number; slot: number }[]; // 世界动态流
+  sceneFocusIds?: string[]; // 本场登场的爱豆（给 prompt 聚焦用；不在场的只给一行简介）
   // 捏脸：外观覆盖（不填则用默认/还原真人）
   playerAppearance?: import('./spriteUtils').Appearance;
   appearances?: Record<string, import('./spriteUtils').Appearance>;
