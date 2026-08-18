@@ -1,5 +1,5 @@
-import React from 'react';
-import { Heart, X, Users, Palette } from 'lucide-react';
+import React, { useState } from 'react';
+import { Heart, X, Users, Palette, Plus } from 'lucide-react';
 import { Member } from './types';
 import {
   PLAYER, pairKey, deriveType, hasFlag, type WorldRelation, type Intent,
@@ -23,6 +23,7 @@ export default function RelationPanel({
   onCustomize: (t: { kind: 'player' } | { kind: 'idol'; id: string }) => void;
 }) {
   const tw = lang === 'traditional';
+  const [showPicker, setShowPicker] = useState(false);
 
   // 爱豆两两之间已有关系的对
   const pairs: { a: Member; b: Member; rel: WorldRelation }[] = [];
@@ -32,6 +33,8 @@ export default function RelationPanel({
       if (rel) pairs.push({ a: members[i], b: members[j], rel });
     }
   }
+  // 主面板只展示"你选中要撮合"的那几对，其余收进选择器
+  const shownPairs = pairs.filter(p => matchmakes.includes(pairKey(p.a.id, p.b.id)));
 
   return (
     <div className="absolute inset-0 z-40 bg-black/70 backdrop-blur-md flex items-center justify-center p-4" onClick={onClose}>
@@ -94,13 +97,24 @@ export default function RelationPanel({
           })}
         </div>
 
-        {/* 爱豆之间 */}
-        <div className="gold-caption mb-2.5">{tw ? '愛豆之間' : '爱豆之间'}</div>
+        {/* 爱豆之间：只展示已选中要撮合的对，其余进选择器 */}
+        <div className="flex items-center justify-between mb-2.5">
+          <div className="gold-caption">{tw ? '愛豆之間' : '爱豆之间'}</div>
+          <button
+            onClick={() => setShowPicker(true)}
+            disabled={pairs.length === 0}
+            className="px-2.5 py-1 rounded-lg bg-white/[0.04] text-[#B7B2D9] border border-white/10 text-[10px] font-black flex items-center gap-1 hover:bg-white/[0.09] disabled:opacity-40 transition-colors"
+          >
+            <Plus className="w-3 h-3" /> {tw ? '撮合' : '撮合'}
+          </button>
+        </div>
         {pairs.length === 0 ? (
           <div className="text-[10px] text-[#8B86B8] py-2">{tw ? '所選愛豆之間暫無既有關係。' : '所选爱豆之间暂无既有关系。'}</div>
+        ) : shownPairs.length === 0 ? (
+          <div className="text-[10px] text-[#8B86B8] py-2 leading-relaxed">{tw ? '還沒有選擇要撮合的 CP —— 點右上「撮合」挑選。' : '还没有选择要撮合的 CP —— 点右上「撮合」挑选。'}</div>
         ) : (
           <div className="flex flex-col gap-2.5">
-            {pairs.map(({ a, b, rel }) => {
+            {shownPairs.map(({ a, b, rel }) => {
               const key = pairKey(a.id, b.id);
               const wantMatch = matchmakes.includes(key);
               const type = deriveType(rel.affinity, rel.tension, { romance: wantMatch, confessed: hasFlag(rel, 'confessed') });
@@ -119,11 +133,11 @@ export default function RelationPanel({
                   </div>
                   <button
                     onClick={() => onToggleMatchmake(key)}
-                    title={tw ? '撮合這一對' : '撮合这一对'}
-                    className={`flex-shrink-0 px-3 py-1.5 rounded-full text-[10px] font-black flex items-center gap-1 transition-all border ${wantMatch ? 'text-white border-transparent' : 'bg-transparent text-[#B7B2D9] border-white/15 hover:border-white/30'}`}
-                    style={wantMatch ? { background: 'linear-gradient(135deg,#FF7A93,#e35c78)' } : undefined}
+                    title={tw ? '取消撮合' : '取消撮合'}
+                    className="flex-shrink-0 px-3 py-1.5 rounded-full text-[10px] font-black flex items-center gap-1 transition-all border border-transparent text-white hover:opacity-80"
+                    style={{ background: 'linear-gradient(135deg,#FF7A93,#e35c78)' }}
                   >
-                    <Heart className={`w-3 h-3 ${wantMatch ? 'fill-current' : ''}`} /> {tw ? '撮合' : '撮合'}
+                    <Heart className="w-3 h-3 fill-current" /> {tw ? '撮合中' : '撮合中'}
                   </button>
                 </div>
               );
@@ -132,6 +146,52 @@ export default function RelationPanel({
         )}
         <p className="text-[10px] text-[#8B86B8] mt-4 leading-relaxed">{tw ? '設「攻略/朋友/隨緣」定你對每個愛豆的方向；「撮合」把兩個愛豆往一起推。這些意圖會影響劇情走向。' : '设「攻略/朋友/随缘」定你对每个爱豆的方向；「撮合」把两个爱豆往一起推。这些意图会影响剧情走向。'}</p>
       </div>
+
+      {/* 撮合选择器：从所有配对里挑要撮合的 */}
+      {showPicker && (
+        <div className="absolute inset-0 z-50 bg-black/70 backdrop-blur-md flex items-center justify-center p-4" onClick={e => { e.stopPropagation(); setShowPicker(false); }}>
+          <div className="ink-panel ink-scroll rounded-[20px] p-5 max-w-lg w-full max-h-[85%] overflow-auto" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-[14px] font-black text-[#F1ECFF] flex items-center gap-2"><Heart className="w-4 h-4 text-[#FF7A93]" /> {tw ? '挑選要撮合的 CP' : '挑选要撮合的 CP'}</h3>
+              <button onClick={() => setShowPicker(false)} className="w-7 h-7 rounded-lg bg-white/[0.06] hover:bg-white/[0.12] text-[#B7B2D9] flex items-center justify-center transition-colors"><X className="w-4 h-4" /></button>
+            </div>
+            <p className="text-[10px] text-[#8B86B8] mb-3.5 leading-relaxed">{tw ? '選中的會顯示在關係網主頁，並影響劇情推演。可多選。' : '选中的会显示在关系网主页，并影响剧情推演。可多选。'}</p>
+            <div className="flex flex-col gap-2">
+              {pairs.map(({ a, b, rel }) => {
+                const key = pairKey(a.id, b.id);
+                const on = matchmakes.includes(key);
+                return (
+                  <button
+                    key={key}
+                    onClick={() => onToggleMatchmake(key)}
+                    className="w-full text-left rounded-[12px] px-3.5 py-3 bg-white/[0.03] border flex items-center gap-3 transition-all hover:bg-white/[0.06]"
+                    style={{ borderColor: on ? 'rgba(255,122,147,0.5)' : 'rgba(255,255,255,0.1)' }}
+                  >
+                    <span
+                      className="w-4 h-4 rounded-[5px] flex items-center justify-center flex-shrink-0 border transition-all"
+                      style={on
+                        ? { background: 'linear-gradient(135deg,#FF7A93,#e35c78)', borderColor: 'transparent' }
+                        : { borderColor: 'rgba(255,255,255,0.25)' }}
+                    >
+                      {on && <Heart className="w-2.5 h-2.5 text-white fill-current" />}
+                    </span>
+                    <span className="flex-1 min-w-0">
+                      <span className="block text-[12.5px] font-black text-[#F1ECFF]">{a.name} <span className="text-[#6C79C4]">×</span> {b.name}</span>
+                      <span className="block text-[9.5px] text-[#8B86B8] mt-0.5">
+                        {tw ? '親密' : '亲密'} {rel.affinity} · {tw ? '張力' : '张力'} {rel.tension}
+                        {a.group === b.group ? ` · ${a.group}` : ` · ${a.group} / ${b.group}`}
+                      </span>
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+            <button onClick={() => setShowPicker(false)} className="w-full mt-4 py-3 rounded-xl text-white font-black text-[13px] transition-all" style={{ background: 'linear-gradient(135deg,#6C79C4,#454F87)', boxShadow: '0 8px 20px -6px rgba(91,107,176,0.7)' }}>
+              {tw ? '完成' : '完成'}（{matchmakes.length}）
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
