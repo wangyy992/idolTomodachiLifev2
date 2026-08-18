@@ -135,10 +135,16 @@ export default function WorldView({
   const [showCalendar, setShowCalendar] = useState(false);
   const [showFacePick, setShowFacePick] = useState(false);
   const [lockToast, setLockToast] = useState<string | null>(null);
-  // 主团（取在场成员里最常见的团）用于日历/打歌
+  // 涉及到的所有团（去重、保序，排除自建 OC —— OC 没有回归/打歌档期）
+  const involvedGroups = React.useMemo(() => {
+    const seen = new Set<string>(); const out: string[] = [];
+    members.forEach(m => { if (m.group && m.group !== '自建' && !seen.has(m.group)) { seen.add(m.group); out.push(m.group); } });
+    return out;
+  }, [members.map(m => m.group).join('|')]);
+  // 主团（取在场成员里最常见的团）用于顶部档期标签/应援
   const mainGroup = React.useMemo(() => {
     const c: Record<string, number> = {};
-    members.forEach(m => { c[m.group] = (c[m.group] || 0) + 1; });
+    members.forEach(m => { if (m.group && m.group !== '自建') c[m.group] = (c[m.group] || 0) + 1; });
     return Object.entries(c).sort((a, b) => b[1] - a[1])[0]?.[0] || '';
   }, [members.map(m => m.group).join('|')]);
   const curPhase = mainGroup ? phaseAt(mainGroup, day) : null;
@@ -567,49 +573,57 @@ export default function WorldView({
         <div className="absolute inset-0 z-40 bg-black/70 backdrop-blur-md flex items-center justify-center p-4" onClick={() => setShowCalendar(false)}>
           <div className="ink-panel ink-scroll rounded-[18px] p-5 max-w-2xl w-full max-h-[85%] overflow-auto" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-1">
-              <h3 className="text-[14px] font-black text-[#F1ECFF] flex items-center gap-2"><CalendarRange className="w-4 h-4 text-[#C9A227]" /> {mainGroup} {tw ? '年曆' : '年历'}</h3>
+              <h3 className="text-[14px] font-black text-[#F1ECFF] flex items-center gap-2"><CalendarRange className="w-4 h-4 text-[#C9A227]" /> {tw ? '年曆' : '年历'}</h3>
               <button onClick={() => setShowCalendar(false)} className="w-7 h-7 rounded-lg bg-white/[0.06] hover:bg-white/[0.12] text-[#B7B2D9] flex items-center justify-center transition-colors"><X className="w-4 h-4" /></button>
             </div>
             <p className="text-[10px] text-[#8B86B8] mb-4">{tw ? `第 ${weekOf(day)} 週 · 第 ${day} 天（第 ${dayInWeek(day)} 日）` : `第 ${weekOf(day)} 周 · 第 ${day} 天（周内第 ${dayInWeek(day)} 日）`}</p>
 
-            {/* 52 周条带 */}
-            <div className="grid gap-1 mb-4" style={{ gridTemplateColumns: 'repeat(13, minmax(0, 1fr))' }}>
-              {Array.from({ length: WEEKS_PER_YEAR }, (_, i) => i + 1).map(w => {
-                const p = mainGroup ? buildYearPhases(mainGroup).find(ph => w >= ph.startWeek && w <= ph.endWeek) : null;
-                const isNow = w === weekOf(day);
-                const bg = p?.kind === 'promo' ? 'rgba(201,162,39,0.55)'
-                  : p?.kind === 'comeback' ? 'rgba(201,162,39,0.28)'
-                  : p?.kind === 'tour' ? 'rgba(108,121,196,0.5)'
-                  : p?.kind === 'awards' ? 'rgba(255,122,147,0.5)'
-                  : 'rgba(255,255,255,0.06)';
-                return (
-                  <div key={w} title={`第${w}周${p ? ' · ' + p.label : ''}`}
-                    className="h-6 rounded flex items-center justify-center text-[8px] font-bold"
-                    style={{ background: bg, color: p ? '#F1ECFF' : '#6b6790', outline: isNow ? '2px solid #C9A227' : 'none' }}>
-                    {p ? p.icon : w % 4 === 1 ? w : ''}
+            {involvedGroups.length === 0 ? (
+              <div className="text-[11px] text-[#8B86B8] py-3">{tw ? '你關注的角色裡沒有需要打歌的團體。' : '你关注的角色里没有需要打歌的团体。'}</div>
+            ) : involvedGroups.map(g => {
+              const phases = buildYearPhases(g);
+              return (
+                <div key={g} className="mb-5">
+                  <div className="gold-caption mb-2">{g}</div>
+                  {/* 52 周条带 */}
+                  <div className="grid gap-1 mb-2.5" style={{ gridTemplateColumns: 'repeat(13, minmax(0, 1fr))' }}>
+                    {Array.from({ length: WEEKS_PER_YEAR }, (_, i) => i + 1).map(w => {
+                      const p = phases.find(ph => w >= ph.startWeek && w <= ph.endWeek);
+                      const isNow = w === weekOf(day);
+                      const bg = p?.kind === 'promo' ? 'rgba(201,162,39,0.55)'
+                        : p?.kind === 'comeback' ? 'rgba(201,162,39,0.28)'
+                        : p?.kind === 'tour' ? 'rgba(108,121,196,0.5)'
+                        : p?.kind === 'awards' ? 'rgba(255,122,147,0.5)'
+                        : 'rgba(255,255,255,0.06)';
+                      return (
+                        <div key={w} title={`第${w}周${p ? ' · ' + p.label : ''}`}
+                          className="h-6 rounded flex items-center justify-center text-[8px] font-bold"
+                          style={{ background: bg, color: p ? '#F1ECFF' : '#6b6790', outline: isNow ? '2px solid #C9A227' : 'none' }}>
+                          {p ? p.icon : w % 4 === 1 ? w : ''}
+                        </div>
+                      );
+                    })}
                   </div>
-                );
-              })}
-            </div>
-
-            {/* 档期清单 */}
-            <div className="gold-caption mb-2">{tw ? '今年的大事' : '今年的大事'}</div>
-            <div className="flex flex-col gap-1.5">
-              {(mainGroup ? buildYearPhases(mainGroup) : []).map((p, i) => {
-                const now = weekOf(day) >= p.startWeek && weekOf(day) <= p.endWeek;
-                const past = weekOf(day) > p.endWeek;
-                return (
-                  <div key={i} className="flex items-center gap-3 rounded-[10px] px-3 py-2 bg-white/[0.03]"
-                    style={{ border: now ? '1px solid rgba(201,162,39,0.5)' : '1px solid transparent', opacity: past ? 0.45 : 1 }}>
-                    <span className="text-base">{p.icon}</span>
-                    <span className="text-[12px] font-black text-[#F1ECFF] flex-1">{p.label}</span>
-                    <span className="text-[10px] text-[#8B86B8]">{tw ? `第 ${p.startWeek}-${p.endWeek} 週` : `第 ${p.startWeek}-${p.endWeek} 周`}</span>
-                    {now && <span className="text-[9px] font-black text-[#C9A227]">{tw ? '進行中' : '进行中'}</span>}
+                  {/* 档期清单 */}
+                  <div className="flex flex-col gap-1.5">
+                    {phases.map((p, i) => {
+                      const now = weekOf(day) >= p.startWeek && weekOf(day) <= p.endWeek;
+                      const past = weekOf(day) > p.endWeek;
+                      return (
+                        <div key={i} className="flex items-center gap-3 rounded-[10px] px-3 py-2 bg-white/[0.03]"
+                          style={{ border: now ? '1px solid rgba(201,162,39,0.5)' : '1px solid transparent', opacity: past ? 0.45 : 1 }}>
+                          <span className="text-base">{p.icon}</span>
+                          <span className="text-[12px] font-black text-[#F1ECFF] flex-1">{p.label}</span>
+                          <span className="text-[10px] text-[#8B86B8]">{tw ? `第 ${p.startWeek}-${p.endWeek} 週` : `第 ${p.startWeek}-${p.endWeek} 周`}</span>
+                          {now && <span className="text-[9px] font-black text-[#C9A227]">{tw ? '進行中' : '进行中'}</span>}
+                        </div>
+                      );
+                    })}
                   </div>
-                );
-              })}
-            </div>
-            <p className="text-[10px] text-[#8B86B8] mt-4 leading-relaxed">
+                </div>
+              );
+            })}
+            <p className="text-[10px] text-[#8B86B8] mt-1 leading-relaxed">
               {tw ? '打歌期每週第 4、7 天有打歌舞台，成績由你平時的應援與她的狀態決定。' : '打歌期每周第 4、7 天有打歌舞台，成绩由你平时的应援与她的状态决定。'}
             </p>
           </div>
