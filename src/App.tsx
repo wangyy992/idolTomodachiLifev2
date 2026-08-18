@@ -850,6 +850,28 @@ const MarkdownBlock = ({ content }: { content: string }) => (
   }}>{content}</Markdown>
 );
 
+// 闲聊：本地模板生成（不调 AI、不涨好感），用于本时段行动点已用完时
+const CHITCHAT = [
+  (n: string) => `${n}朝你点了下头，没停下手里的事。`,
+  (n: string) => `${n}：「等下还有事，回头聊。」`,
+  (n: string) => `你和${n}打了个招呼，她笑了一下就走开了。`,
+  (n: string) => `${n}：「嗯……先这样，我这边还没弄完。」`,
+  (n: string) => `${n}摆摆手，看起来今天没什么空。`,
+];
+const CHITCHAT_TW = [
+  (n: string) => `${n}朝你點了下頭，沒停下手裡的事。`,
+  (n: string) => `${n}：「等下還有事，回頭聊。」`,
+  (n: string) => `你和${n}打了個招呼，她笑了一下就走開了。`,
+  (n: string) => `${n}：「嗯……先這樣，我這邊還沒弄完。」`,
+  (n: string) => `${n}擺擺手，看起來今天沒什麼空。`,
+];
+function chitchatLine(m: Member, ctx: { activity?: Activity } | undefined, tw: boolean): string {
+  const pool = tw ? CHITCHAT_TW : CHITCHAT;
+  const pick = pool[Math.floor(Math.random() * pool.length)](m.name);
+  const mood = ctx?.activity ? (tw ? `（正${ctx.activity.label}）` : `（正${ctx.activity.label}）`) : '';
+  return pick + mood;
+}
+
 // 剧情回顾里的正文：旁白 + 台词分行呈现（与 VN 同一套解析）
 const StoryText = ({ content }: { content: string }) => {
   const script = parseScript(content);
@@ -893,6 +915,8 @@ export default function App() {
   const worldDay = gameState.worldDay ?? 1;
   const worldSlot = gameState.worldSlot ?? 0;
   const worldLocation = gameState.worldLocation ?? 'practice_room';
+  // 行动点：每时段全员共享一次深度互动，用掉后只能闲聊，推进时段自动恢复
+  const actionUsed = gameState.actionUsedAt === `${worldDay}-${worldSlot}`;
   const phoneFeed = gameState.phoneFeed || [];
   const phoneUnread = phoneFeed.filter(f => !f.read).length;
   const openPhone = () => setShowPhone(true);
@@ -1204,15 +1228,17 @@ export default function App() {
     });
   };
 
-  const handleSend = async (content?: any, focusIds?: string[]) => {
+  const handleSend = async (content?: any, opts?: { focusIds?: string[]; consumeAction?: boolean }) => {
     const textToSend = typeof content === 'string' ? content : input;
     if (!textToSend || !textToSend.trim()) return;
     if (isLoading) return;
     setInput(''); setIsLoading(true);
     let nextState: GameState = { ...gameState };
     // 本场登场的人：走近/围观时显式传入；同一场景内后续对话沿用当前 scene
-    const focus = focusIds ?? scene?.ids;
+    const focus = opts?.focusIds ?? scene?.ids;
     nextState.sceneFocusIds = focus && focus.length ? focus : undefined;
+    // 深度互动消耗本时段的行动点（每时段全员共享一次）
+    if (opts?.consumeAction) nextState.actionUsedAt = `${nextState.worldDay ?? 1}-${nextState.worldSlot ?? 0}`;
     nextState.history = [...nextState.history, { role: MessageRole.USER, content: textToSend, timestamp: Date.now() }];
     setGameState(nextState);
     await handleAIStep(textToSend, nextState);
@@ -1221,13 +1247,18 @@ export default function App() {
   // 从俯视世界点击爱豆 → 切回剧情，预填带场景/心情语境的“走近”动作交给 DeepSeek
   const handleTalkTo = (m: Member, ctx?: { location: WorldLocation; activity: Activity }) => {
     const isTw = (gameState as any).language === 'traditional';
+    // 本时段的行动点已用掉 → 只能闲聊：本地生成一句，不调 AI、不涨好感
+    if (actionUsed) {
+      pushToast(chitchatLine(m, ctx, isTw), 'friendly');
+      return;
+    }
     const where = ctx ? `在${ctx.location.label}` : '';
     const doing = ctx ? `（她正${ctx.activity.label}，${ctx.activity.mood}）` : '';
     const line = isTw
       ? `（我${where}走近${m.name}，和ta打個招呼）${doing}`
       : `（我${where}走近${m.name}，和ta打个招呼）${doing}`;
     setScene({ ids: [m.id], anchor: gameState.history.length });
-    handleSend(line, [m.id]);
+    handleSend(line, { focusIds: [m.id], consumeAction: true });
   };
 
   // 推进时段：先结算"你不在场"的其它地点里同处一地的爱豆对（后台世界推进），再跳时间
@@ -1236,12 +1267,16 @@ export default function App() {
     const k = pairKey(a.id, b.id);
     const isMatch = (gameState.matchmakes || []).includes(k);
     const isTw = (gameState as any).language === 'traditional';
+    if (actionUsed) {
+      pushToast(isTw ? '這個時段的精力用完了，先推進時段吧' : '这个时段的精力用完了，先推进时段吧', 'friendly');
+      return;
+    }
     const hint = isMatch ? '（我想撮合她们，留意有没有暧昧的火花）' : '';
     const line = isTw
       ? `（我在${ctx.location.label}，看到 ${a.name} 和 ${b.name} 湊在一起，我在旁邊靜靜觀察她們的互動）${hint}`
       : `（我在${ctx.location.label}，看到 ${a.name} 和 ${b.name} 凑在一起，我在旁边静静观察她们的互动）${hint}`;
     setScene({ ids: [a.id, b.id], anchor: gameState.history.length });
-    handleSend(line, [a.id, b.id]);
+    handleSend(line, { focusIds: [a.id, b.id], consumeAction: true });
   };
 
   // 捏脸：取当前外观（覆盖或默认）+ 应用
@@ -1361,6 +1396,12 @@ export default function App() {
   }
   const sceneMembers = scene ? gameState.members.filter(m => scene.ids.includes(m.id)) : [];
   const sceneLoc = getLocation(worldLocation);
+  // 强制脱出：一次相遇最多聊 MAX_SCENE_ROUNDS 轮，之后只给「结束本次互动」
+  const MAX_SCENE_ROUNDS = 3;
+  const sceneRounds = scene
+    ? gameState.history.slice(scene.anchor).filter(h => h.role === MessageRole.ASSISTANT).length
+    : 0;
+  const sceneCanContinue = sceneRounds < MAX_SCENE_ROUNDS;
 
   const lang = (gameState as any).language || 'simplified';
   const sidebarLabel = isMomMode ? '母女信任度' : isCPMode ? (lang === 'traditional' ? 'CP 羈絆值' : 'CP 羁绊值') : (lang === 'traditional' ? '角色狀態' : '角色状态');
@@ -1389,7 +1430,8 @@ export default function App() {
           sceneBg={getSceneConfig(sceneLoc?.id === 'hangang' ? (worldSlot === 2 ? 'hangang_night' : 'hangang_day') : (sceneLoc?.sceneKey || 'practice_room')).bg}
           sceneLabel={sceneLoc?.label || ''}
           script={sceneScript}
-          options={sceneOptions}
+          options={sceneCanContinue ? sceneOptions : []}
+          canContinue={sceneCanContinue}
           isLoading={isLoading}
           lang={lang}
           onChoose={(a) => handleSend(a)}
@@ -1623,6 +1665,7 @@ export default function App() {
             slot={worldSlot}
             locationId={worldLocation}
             identity={gameState.identity || []}
+            actionUsed={actionUsed}
             onTravel={setWorldLocation}
             onAdvanceTime={handleAdvanceTime}
             onTalk={handleTalkTo}

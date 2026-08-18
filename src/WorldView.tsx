@@ -78,7 +78,7 @@ function moveToward(e: Entity, speed: number, dt: number): boolean {
 }
 
 export default function WorldView({
-  members, playerName, day, slot, locationId, identity, onTravel, onAdvanceTime, onTalk, lang,
+  members, playerName, day, slot, locationId, identity, actionUsed, onTravel, onAdvanceTime, onTalk, lang,
   relations, intents, matchmakes, onSetIntent, onToggleMatchmake, onSetPairAffinity, onConfess, onIdolEncounter, worldFeed, onWatchEncounter,
   appearances, playerAppearance, onCustomize, phoneUnread, onOpenPhone,
 }: {
@@ -86,6 +86,7 @@ export default function WorldView({
   playerName: string;
   day: number; slot: number; locationId: string;
   identity: string[];
+  actionUsed: boolean;
   phoneUnread: number;
   onOpenPhone: () => void;
   onTravel: (locId: string) => void;
@@ -332,10 +333,15 @@ export default function WorldView({
             <span>{location.icon}</span> {location.label}
           </div>
         </div>
-        <div className="px-3 py-1 rounded-full bg-white/15 text-white/90 text-[10px] font-bold pointer-events-none">
-          {present.length > 0
-            ? (tw ? 'WASD/點地板移動 · 走近愛豆對話' : 'WASD/点地板移动 · 走近爱豆对话')
-            : (tw ? '這裡現在沒人 —— 看日程換個地點' : '这里现在没人 —— 看日程换个地点')}
+        <div
+          className="px-3 py-1 rounded-full text-[10px] font-bold pointer-events-none flex items-center gap-1.5"
+          style={actionUsed
+            ? { background: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.6)' }
+            : { background: 'rgba(201,162,39,0.18)', color: '#F1ECFF', border: '1px solid rgba(201,162,39,0.45)' }}
+        >
+          {actionUsed
+            ? (tw ? '本時段已用完 —— 只能閒聊，推進時段恢復' : '本时段已用完 —— 只能闲聊，推进时段恢复')
+            : <><span className="text-[#C9A227]">●</span>{tw ? '本時段還可深入互動 1 次' : '本时段还可深入互动 1 次'}</>}
         </div>
       </div>
 
@@ -358,7 +364,7 @@ export default function WorldView({
         <button onClick={() => setShowSchedule(true)} title={tw ? '日程' : '日程'} className="w-8 h-8 rounded-xl flex items-center justify-center text-[#F1ECFF] transition-all hover:bg-white/10" style={{ background: 'rgba(14,11,26,0.6)', backdropFilter: 'blur(6px)', border: '1px solid rgba(255,255,255,0.1)' }}>
           <CalendarDays className="w-4 h-4" />
         </button>
-        <button onClick={onAdvanceTime} className="px-3 py-1.5 rounded-xl text-white text-[11px] font-black flex items-center gap-1 transition-all border-none" style={{ background: 'linear-gradient(135deg,#6C79C4,#454F87)', boxShadow: '0 6px 16px -6px rgba(91,107,176,0.8)' }}>
+        <button onClick={onAdvanceTime} className={`px-3 py-1.5 rounded-xl text-white text-[11px] font-black flex items-center gap-1 transition-all border-none ${actionUsed ? 'animate-pulse' : ''}`} style={{ background: 'linear-gradient(135deg,#6C79C4,#454F87)', boxShadow: actionUsed ? '0 6px 20px -4px rgba(201,162,39,0.9)' : '0 6px 16px -6px rgba(91,107,176,0.8)' }}>
           {tw ? '推進時段' : '推进时段'} <ChevronRight className="w-3.5 h-3.5" />
         </button>
       </div>
@@ -378,8 +384,11 @@ export default function WorldView({
               <div className="absolute left-1/2 -translate-x-1/2" style={{ bottom: -4, width: SPRITE * 0.5, height: SPRITE * 0.16, borderRadius: '50%', background: 'rgba(0,0,0,0.35)', filter: 'blur(2px)' }} />
               <div className="absolute left-1/2 -translate-x-1/2 -top-6 flex flex-col items-center gap-0.5 whitespace-nowrap">
                 {isNear && (
-                  <div className="mb-0.5 px-2 py-0.5 rounded-full bg-[#5B6BB0] text-white text-[9px] font-black flex items-center gap-1 shadow-lg animate-bounce">
-                    <MessageCircle className="w-2.5 h-2.5" /> {tw ? '對話' : '对话'}
+                  <div
+                    className={`mb-0.5 px-2 py-0.5 rounded-full text-white text-[9px] font-black flex items-center gap-1 shadow-lg ${actionUsed ? '' : 'animate-bounce'}`}
+                    style={{ background: actionUsed ? 'rgba(8,6,16,0.7)' : '#5B6BB0' }}
+                  >
+                    <MessageCircle className="w-2.5 h-2.5" /> {actionUsed ? (tw ? '閒聊' : '闲聊') : (tw ? '對話' : '对话')}
                   </div>
                 )}
                 <div className={`px-1.5 py-0.5 rounded text-[9px] font-black ${e.isPlayer ? 'bg-white/90 text-[#2A2A3D]' : 'bg-black/45 text-white'}`}>

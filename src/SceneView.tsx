@@ -8,7 +8,7 @@ import type { ScriptEntry } from './App';
 
 export default function SceneView({
   members, playerName, appearances, playerAppearance, sceneBg, sceneLabel,
-  script, options, isLoading, lang, onChoose, onSend, onLeave,
+  script, options, isLoading, lang, onChoose, onSend, onLeave, canContinue = true,
 }: {
   members: Member[];
   playerName: string;
@@ -20,6 +20,7 @@ export default function SceneView({
   options: { text: string; action: string }[];
   isLoading: boolean;
   lang: string;
+  canContinue?: boolean;
   onChoose: (action: string) => void;
   onSend: (text: string) => void;
   onLeave: () => void;
@@ -107,8 +108,21 @@ export default function SceneView({
 
       {/* 底部：选项 + 剧情框 */}
       <div className="relative z-20 px-4 sm:px-6 pt-3 pb-5 sm:pb-7">
+        {/* 强制脱出：一次相遇聊够轮数后，只给「结束本次互动」 */}
+        {atEnd && !isLoading && !canContinue && (
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="max-w-3xl mx-auto mb-4 flex flex-col items-center gap-2">
+            <div className="text-[11px] text-white/60 font-bold">{tw ? '這次見面到這裡了' : '这次见面到这里了'}</div>
+            <button
+              onClick={onLeave}
+              className="px-7 py-3 rounded-2xl text-white text-[14px] font-black transition-all hover:-translate-y-0.5"
+              style={{ background: 'linear-gradient(135deg,#6C79C4,#454F87)', boxShadow: '0 10px 24px -8px rgba(91,107,176,0.8)' }}
+            >
+              {tw ? '結束本次互動' : '结束本次互动'}
+            </button>
+          </motion.div>
+        )}
         <AnimatePresence>
-          {atEnd && !isLoading && (showInput || options.length > 0) && (
+          {atEnd && !isLoading && canContinue && (showInput || options.length > 0) && (
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="max-w-3xl mx-auto mb-4 flex flex-col gap-2.5">
               {showInput ? (
                 <div className="flex gap-2.5">
@@ -145,7 +159,7 @@ export default function SceneView({
             <div className="flex items-center justify-between mt-5 pt-3 border-t border-white/10">
               <div className="text-[10px] text-white/35 font-mono tracking-widest">{script.length > 1 ? `${Math.min(idx + 1, script.length)} / ${script.length}` : ''}</div>
               {!atEnd && <div className="flex items-center gap-1.5 text-white/55 text-[11px]"><span>{tw ? '點擊繼續' : '点击继续'}</span><ChevronDown className="w-3.5 h-3.5 animate-bounce" /></div>}
-              {atEnd && !isLoading && (
+              {atEnd && !isLoading && canContinue && (
                 <button onClick={e => { e.stopPropagation(); setShowInput(v => !v); }} className="flex items-center gap-1.5 text-white/75 text-[11px] font-bold hover:text-white transition-colors"><MessageSquareText className="w-3.5 h-3.5" /> {tw ? '自由行動' : '自由行动'}</button>
               )}
             </div>

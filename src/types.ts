@@ -154,6 +154,7 @@ export interface GameState {
   worldLocation?: string;
   worldFeed?: { id: string; text: string; kind: string; day: number; slot: number }[]; // 世界动态流
   sceneFocusIds?: string[]; // 本场登场的爱豆（给 prompt 聚焦用；不在场的只给一行简介）
+  actionUsedAt?: string;    // 本时段的深度互动已用掉（值为 "day-slot"，推进时段自然失效）
   // 捏脸：外观覆盖（不填则用默认/还原真人）
   playerAppearance?: import('./spriteUtils').Appearance;
   appearances?: Record<string, import('./spriteUtils').Appearance>;
