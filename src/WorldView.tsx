@@ -79,7 +79,7 @@ function moveToward(e: Entity, speed: number, dt: number): boolean {
 }
 
 export default function WorldView({
-  members, playerName, day, slot, locationId, identity, actionUsed, onSupport, onTravel, onAdvanceTime, onTalk, lang,
+  members, playerName, day, slot, locationId, identity, actionUsed, onSupport, endingReady, onOpenEnding, onTravel, onAdvanceTime, onTalk, lang,
   relations, intents, matchmakes, onSetIntent, onToggleMatchmake, onSetPairAffinity, onConfess, onIdolEncounter, worldFeed, onWatchEncounter,
   appearances, playerAppearance, onCustomize, phoneUnread, onOpenPhone,
 }: {
@@ -89,6 +89,8 @@ export default function WorldView({
   identity: string[];
   actionUsed: boolean;
   onSupport: () => void;
+  endingReady?: boolean;
+  onOpenEnding?: () => void;
   phoneUnread: number;
   onOpenPhone: () => void;
   onTravel: (locId: string) => void;
@@ -390,6 +392,13 @@ export default function WorldView({
             className="px-3 py-1.5 rounded-xl text-white text-[11px] font-black flex items-center gap-1 transition-all disabled:opacity-40"
             style={{ background: 'linear-gradient(135deg,#FF7A93,#e35c78)', boxShadow: '0 6px 16px -6px rgba(255,122,147,0.8)' }}>
             <Megaphone className="w-3.5 h-3.5" /> {tw ? '應援' : '应援'}
+          </button>
+        )}
+        {endingReady && onOpenEnding && (
+          <button onClick={onOpenEnding} title={tw ? '可以收尾了' : '可以收尾了'}
+            className="px-3 py-1.5 rounded-xl text-white text-[11px] font-black flex items-center gap-1 transition-all animate-pulse"
+            style={{ background: 'linear-gradient(135deg,#C9A227,#9a7b1d)', boxShadow: '0 6px 16px -6px rgba(201,162,39,0.9)' }}>
+            ✦ {tw ? '結局' : '结局'}
           </button>
         )}
         <button onClick={onAdvanceTime} className={`px-3 py-1.5 rounded-xl text-white text-[11px] font-black flex items-center gap-1 transition-all border-none ${actionUsed ? 'animate-pulse' : ''}`} style={{ background: 'linear-gradient(135deg,#6C79C4,#454F87)', boxShadow: actionUsed ? '0 6px 20px -4px rgba(201,162,39,0.9)' : '0 6px 16px -6px rgba(91,107,176,0.8)' }}>

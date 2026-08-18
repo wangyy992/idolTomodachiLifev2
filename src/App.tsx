@@ -12,7 +12,9 @@ import WorldPanel from './WorldPanel';
 import { getPlayerAppearance, getDefaultAppearance, normalizeAppearance, type Appearance } from './spriteUtils';
 import { nextTime, idolsAt, getLocation, getActivity, getStartLocation, startingAffection, identitySummary, WORLD_LOCATIONS, type WorldLocation, type Activity } from './worldConfig';
 import { seedIdolRelations, pairKey, deriveType, hasFlag, PLAYER, type Intent } from './relations';
-import { computeMusicShow, isMusicShowDay, weekOf } from './calendar';
+import { computeMusicShow, isMusicShowDay, weekOf, DAYS_PER_YEAR } from './calendar';
+import { availableEnding, buildYearbook } from './endings';
+import EndingCard from './EndingCard';
 
 const LOCAL_STORAGE_KEY = 'star_reality_kpop_game_state';
 
@@ -942,6 +944,8 @@ export default function App() {
   const [showConfirmReset, setShowConfirmReset] = useState(false);
   const [showDrawer, setShowDrawer] = useState(false);
   const [showPhone, setShowPhone] = useState(false);
+  const [showEnding, setShowEnding] = useState(false);
+  const [endingDismissed, setEndingDismissed] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isTraditional, setIsTraditional] = useState(false);
   const [showSaveSlots, setShowSaveSlots] = useState(false);
@@ -1552,6 +1556,33 @@ export default function App() {
   // 俯视世界里出现的爱豆：优先玩家关注的对象，否则取前若干位
   const worldMembers = targetMembers.length > 0 ? targetMembers : gameState.members.slice(0, 6);
 
+  // ── 结局：条件触发，玩家自己决定何时收 ──
+  const confessedIds = worldMembers
+    .filter(m => hasFlag((gameState.worldRelations || {})[pairKey(PLAYER, m.id)], 'confessed'))
+    .map(m => m.id);
+  const pairedKeys = (gameState.matchmakes || []).filter(k => {
+    const r = (gameState.worldRelations || {})[k];
+    return r && (r.affinity || 0) >= 85;
+  });
+  const endingCtx = {
+    playerName: gameState.playerName, members: gameState.members, targets: gameState.targets || [],
+    relations: gameState.worldRelations || {}, matchmakes: gameState.matchmakes || [],
+    intents: (gameState.relationIntents || {}) as Record<string, string>,
+    exposure: gameState.exposureLevel || 0, day: worldDay, confessedIds, pairedKeys,
+  };
+  const ending = availableEnding(endingCtx);
+  const isYearEnd = worldDay >= DAYS_PER_YEAR;
+  const yearbook = isYearEnd || ending
+    ? buildYearbook(endingCtx, (gameState.musicShowHistory || []).filter(r => r.winner === worldMembers[0]?.group).length)
+    : null;
+  // BE 自动弹出（曝光爆表/脚踏多条船）—— 用派生状态而非 useEffect，
+  // 因为这段代码在建号向导的早退之后，加 hook 会破坏 hooks 顺序（React #310）
+  const beOpen = ending?.kind === 'be' && !endingDismissed;
+  const endingCast = (ending?.kind === 'romance' && confessedIds.length
+    ? gameState.members.filter(m => confessedIds.includes(m.id))
+    : worldMembers.slice(0, 3)
+  ).map(m => ({ name: m.name, appearance: normalizeAppearance(gameState.appearances?.[m.id], getDefaultAppearance(m.id)) }));
+
   // VN 场景数据：取本次相遇（anchor 之后）的最新一条 AI 回复
   let sceneScript: ScriptEntry[] = [];
   let sceneOptions: { text: string; action: string }[] = [];
@@ -1624,6 +1655,14 @@ export default function App() {
       )}
       {/* 手机 */}
       {showPhone && <PhoneModal feed={phoneFeed} onClose={closePhone} lang={lang} members={worldMembers} onSendDM={handleSendDM} dmLeft={dmLeft} />}
+      {/* 结局 / 年鉴 */}
+      {(showEnding || beOpen) && (ending || yearbook) && (
+        <EndingCard
+          ending={ending} yearbook={yearbook} cast={endingCast} lang={lang}
+          onClose={() => { setShowEnding(false); setEndingDismissed(true); }}
+          onContinue={ending?.kind === 'be' ? undefined : () => { setShowEnding(false); setEndingDismissed(true); }}
+        />
+      )}
       {/* 关系里程碑 toast */}
       {toasts.length > 0 && (
         <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[200] flex flex-col items-center gap-2 pointer-events-none">
@@ -1838,6 +1877,8 @@ export default function App() {
             identity={gameState.identity || []}
             actionUsed={actionUsed}
             onSupport={handleSupport}
+            endingReady={!!ending || isYearEnd}
+            onOpenEnding={() => setShowEnding(true)}
             onTravel={setWorldLocation}
             onAdvanceTime={handleAdvanceTime}
             onTalk={handleTalkTo}
