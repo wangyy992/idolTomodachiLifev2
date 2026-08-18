@@ -1120,6 +1120,13 @@ export default function App() {
     let relDeltas: any = null;
     const relBlock = extractBlock(remaining, 'RELDELTA_START', 'RELDELTA_END');
     if (relBlock) { remaining = relBlock.remaining; try { relDeltas = JSON.parse(relBlock.content); } catch(e) {} }
+    // RISK：曝光度增量
+    let riskDelta: any = null;
+    const riskBlock = extractBlock(remaining, 'RISK_START', 'RISK_END');
+    if (riskBlock) { remaining = riskBlock.remaining; try { riskDelta = JSON.parse(riskBlock.content); } catch(e) {} }
+    // MILESTONE_ID=xxx：阶段突破已演出，记录下来避免重复触发
+    const firedMilestones: string[] = [];
+    remaining = remaining.replace(/^\s*MILESTONE_ID\s*=\s*(\S+)\s*$/gm, (_s, id) => { firedMilestones.push(String(id)); return ''; });
 
     const options = parseOptions(remaining);
     const contentBlocks = parseContentBlocks(remaining);
@@ -1182,6 +1189,27 @@ export default function App() {
           };
         }
         next.worldRelations = rels;
+      }
+
+      // 曝光度：AI 报告的风险增量（低调的一轮可以是负值）
+      if (riskDelta && Number.isFinite(Number(riskDelta.delta))) {
+        const d = Math.max(-20, Math.min(20, Number(riskDelta.delta)));
+        next.exposureLevel = Math.max(0, Math.min(100, (prev.exposureLevel || 0) + d));
+      }
+      // 阶段突破：记录已触发，避免重复
+      if (firedMilestones.length) {
+        next.milestones = Array.from(new Set([...(prev.milestones || []), ...firedMilestones]));
+      }
+      // 长期记忆：把本轮摘要写进在场爱豆的档案（每人最多留 12 条）
+      const focus = (stateAtCall as any).sceneFocusIds as string[] | undefined;
+      const summary = snapshot?.hiddenSummary;
+      if (focus?.length && summary) {
+        const mem = { ...(prev.memories || {}) };
+        const day = prev.worldDay ?? 1, slot = prev.worldSlot ?? 0;
+        for (const id of focus) {
+          mem[id] = [...(mem[id] || []), { day, slot, text: String(summary).slice(0, 140) }].slice(-12);
+        }
+        next.memories = mem;
       }
 
       next.turnCount = (prev.turnCount || 0) + 1;

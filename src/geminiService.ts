@@ -1,6 +1,8 @@
 import { ChatMessage, MessageRole, GameState, SetupStep } from './types';
 import { PLAYER } from './relations';
 
+const TIME_SLOT_CN = ['上午', '下午', '晚上'];
+
 export async function callGeminiAPI(messages: ChatMessage[], gameState: GameState) {
   const playerApiKey = (gameState as any).playerApiKey || '';
   const playerModel = (gameState as any).playerModel || 'deepseek-v4-flash';
@@ -814,10 +816,89 @@ ${romanceOutputFormat}`;
     idolPairLines.push(`${nameOf(a)}×${nameOf(b)}：亲密${r.affinity} 张力${r.tension}${r.note ? ' —— ' + r.note : ''}`);
   });
 
+  // ==== 意图锁定：单人在场=攻略/朋友模式；两人在场=撮合上帝视角 ====
+  // 目的：避免 AI 一边和玩家暧昧、一边又接受玩家把她撮合给别人的逻辑崩溃。
+  const stageIds = onStage.map(m => m.id);
+  const isMatchScene = stageIds.length === 2;
+  const soloTargetId = stageIds.length === 1 ? stageIds[0] : null;
+  const soloIntent = soloTargetId ? (relIntents[soloTargetId] || 'none') : null;
+
+  const intentLock = isMatchScene
+    ? `
+【本场模式：撮合／上帝视角】在场的是 ${nameOf(stageIds[0])} 和 ${nameOf(stageIds[1])} 两位爱豆。
+- 你要推演的是**这两个人之间**的关系，玩家是旁观者/助攻者，不是感情对象。
+- 严禁把玩家写成她们的暧昧对象，也严禁让她们对玩家告白或产生恋爱情绪。
+- 玩家的三个选项必须是"助攻动作"：起哄／打圆场／制造独处机会／识趣走开／传话，
+  而不是玩家自己去撩谁。
+- 本场的关系变化写进 RELDELTA（这两人之间），玩家好感基本不变（最多 ±1）。`
+    : soloTargetId
+      ? `
+【本场模式：${soloIntent === 'romance' ? '攻略（恋爱意图：高）' : soloIntent === 'friend' ? '朋友（明确不要恋爱线）' : '日常（顺其自然）'}】在场的是 ${nameOf(soloTargetId)}。
+${soloIntent === 'romance'
+  ? `- 玩家对她有明确的恋爱意图。三个选项要带攻略性质（试探／靠近／制造独处／表达在意），但必须符合当前关系阶段，禁止跳级。
+- 她对玩家的态度按她自己的性格来，可以回避、可以心动，但不能无来由地热情。`
+  : soloIntent === 'friend'
+  ? `- 玩家明确只想做朋友。禁止写暧昧、心动、告白向的内容；选项偏向陪伴／帮忙／聊正事。`
+  : `- 玩家没有明确意图，写成自然的日常接触；选项保持中性，不要强行推恋爱。`}
+- 本场不要让其他爱豆抢戏，她们不在场。`
+      : '';
+
+  // ==== 长期记忆：每人一份滚动档案，只注入最近几条，不重发全历史 ====
+  const memories: Record<string, { day: number; slot: number; text: string }[]> = (gameState as any).memories || {};
+  const memoryLines = onStage.map(m => {
+    const list = (memories[m.id] || []).slice(-4);
+    if (!list.length) return `- ${m.name}：你们之间还没有共同回忆（这是第一次真正接触）`;
+    return `- ${m.name}：\n` + list.map(e => `    · D${e.day}·${TIME_SLOT_CN[e.slot] || ''} ${e.text}`).join('\n');
+  });
+
+  // ==== 阶段突破：好感阈值 + 情境条件 → 强插一条特殊事件指令 ====
+  const wday = (gameState as any).worldDay ?? 1;
+  const wslot = (gameState as any).worldSlot ?? 0;
+  const wloc = (gameState as any).worldLocation ?? '';
+  const doneMilestones: string[] = (gameState as any).milestones || [];
+  const milestoneHints: string[] = [];
+  for (const m of onStage) {
+    const aff = m.affection || 0;
+    const fire = (id: string, cond: boolean, text: string) => {
+      if (cond && !doneMilestones.includes(`${m.id}:${id}`)) milestoneHints.push(`[特殊事件·${m.name}] ${text}\nMILESTONE_ID=${m.id}:${id}`);
+    };
+    fire('vulnerable', aff >= 30 && (wslot === 2 || wloc === 'hangang' || wloc === 'rooftop'),
+      `本轮她要吐露最近最大的职业压力，露出脆弱的一面，关系推进到"朋友"。写得克制、具体，不要煽情。`);
+    fire('boundary', aff >= 55 && soloIntent === 'romance',
+      `本轮出现一次两人都察觉到的越界瞬间（不是告白），事后两人都装作没发生。`);
+    fire('confess_ready', aff >= 75 && soloIntent === 'romance',
+      `她已经明白玩家的心意，本轮要给出一个明确的"可以更进一步"的信号，但由玩家来捅破。`);
+  }
+
+  // ==== 曝光度：偷偷来往的代价 ====
+  const exposure = (gameState as any).exposureLevel ?? 0;
+  const exposureTierText =
+    exposure >= 80 ? '私生／狗仔已经盯上：小区门口的陌生人、被跟的车牌、咖啡店偷拍、旧账号被翻出'
+    : exposure >= 60 ? '粉圈开始起疑：韩网论坛热帖、站姐预览图里的可疑身影、脱粉小作文'
+    : exposure >= 40 ? '公司开始干预：经纪人约谈、要求减少私人联系、"回归期不要出问题"'
+    : exposure >= 20 ? '队友察觉：待机室里有人开玩笑试探、有人帮忙打掩护'
+    : '';
+  const exposureModule = exposure > 0 ? `
+【曝光度】当前 ${exposure}/100${exposureTierText ? ` —— ${exposureTierText}` : ''}
+- 曝光度越高，周围的眼睛越多。请在剧情里体现相应的压力，但不要每轮都提。
+- 若本轮玩家做了高风险动作（对视太久／同框被拍／私下递东西／同时出现在机场／被认出），
+  在 RISK 块里输出增量；低调、克制的一轮可以输出负值。
+RISK_START
+{"delta":本轮曝光度增量整数-5到10,"reason":"一句话原因"}
+RISK_END
+没有值得记的风险变化就不要输出这个块。` : `
+【曝光度】当前 0/100。玩家和爱豆的来往还没被任何人注意到。
+若本轮出现高风险动作（对视太久／同框被拍／私下递东西／被粉丝认出），输出：
+RISK_START
+{"delta":整数1到10,"reason":"一句话原因"}
+RISK_END`;
+
   const relationModule = isMomMode ? '' : `
 
 ════════════════════════
 【关系系统】
+${intentLock}
+${memoryLines.length ? `\n【你们的共同回忆】（严格延续，禁止当作初次见面）\n${memoryLines.join('\n')}\n` : ''}${milestoneHints.length ? `\n【本轮必须演的关键剧情】\n${milestoneHints.join('\n')}\n（演完后在正文之外原样输出一行 MILESTONE_ID=... 以便记录）\n` : ''}${exposureModule}
 ${intentLines.length ? '玩家的意图：\n- ' + intentLines.join('\n- ') + '\n' : ''}${matchLines.length ? '玩家想撮合的CP（在剧情里为这些CP自然制造靠近/暧昧的机会，但须符合两人性格，不强行）：\n- ' + matchLines.join('\n- ') + '\n' : ''}${idolPairLines.length ? '爱豆之间当前关系：\n- ' + idolPairLines.join('\n- ') + '\n' : ''}
 【呈现格式·重要】正文请逐行输出，便于做成对话演出：
 - 旁白/环境/动作描写写成一行：\`旁白：文本\`
