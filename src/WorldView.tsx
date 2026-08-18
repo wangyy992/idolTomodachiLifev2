@@ -79,7 +79,7 @@ function moveToward(e: Entity, speed: number, dt: number): boolean {
 
 export default function WorldView({
   members, playerName, day, slot, locationId, identity, onTravel, onAdvanceTime, onTalk, lang,
-  relations, intents, matchmakes, onSetIntent, onToggleMatchmake, onConfess, onIdolEncounter, worldFeed, onWatchEncounter,
+  relations, intents, matchmakes, onSetIntent, onToggleMatchmake, onSetPairAffinity, onConfess, onIdolEncounter, worldFeed, onWatchEncounter,
   appearances, playerAppearance, onCustomize, phoneUnread, onOpenPhone,
 }: {
   members: Member[];
@@ -97,6 +97,7 @@ export default function WorldView({
   matchmakes: string[];
   onSetIntent: (id: string, intent: Intent) => void;
   onToggleMatchmake: (key: string) => void;
+  onSetPairAffinity: (key: string, value: number) => void;
   onConfess: (id: string) => void;
   onIdolEncounter: (aId: string, bId: string, kind: 'romance' | 'tension' | 'friendly') => void;
   worldFeed: { id: string; text: string; kind: string; day: number; slot: number }[];
@@ -479,7 +480,7 @@ export default function WorldView({
       {showRelations && (
         <RelationPanel
           members={members} relations={relations} intents={intents} matchmakes={matchmakes}
-          onSetIntent={onSetIntent} onToggleMatchmake={onToggleMatchmake} onConfess={onConfess}
+          onSetIntent={onSetIntent} onToggleMatchmake={onToggleMatchmake} onSetPairAffinity={onSetPairAffinity} onConfess={onConfess}
           onClose={() => setShowRelations(false)} lang={lang} onCustomize={onCustomize}
         />
       )}

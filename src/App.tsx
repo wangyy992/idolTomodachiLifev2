@@ -1281,6 +1281,16 @@ export default function App() {
       return { ...prev, matchmakes: cur.includes(key) ? cur.filter(k => k !== key) : [...cur, key] };
     });
   };
+  // 玩家自定义两个爱豆的亲密度（有些私下关系游戏无从得知，交给玩家设定）
+  const handleSetPairAffinity = (key: string, value: number) => {
+    const v = Math.max(0, Math.min(100, Math.round(Number(value) || 0)));
+    setGameState(prev => {
+      const rels = { ...(prev.worldRelations || {}) };
+      const cur = rels[key] || { affinity: 0, tension: 0 };
+      rels[key] = { ...cur, affinity: v };
+      return { ...prev, worldRelations: rels };
+    });
+  };
   // 爱豆两两相遇 → 按撮合意图/既有张力结算关系
   const handleIdolEncounter = (aId: string, bId: string, kind: 'romance' | 'tension' | 'friendly') => {
     setGameState(prev => {
@@ -1608,6 +1618,7 @@ export default function App() {
             matchmakes={gameState.matchmakes || []}
             onSetIntent={handleSetIntent}
             onToggleMatchmake={handleToggleMatchmake}
+            onSetPairAffinity={handleSetPairAffinity}
             onConfess={handleConfess}
             onIdolEncounter={handleIdolEncounter}
             worldFeed={gameState.worldFeed || []}
