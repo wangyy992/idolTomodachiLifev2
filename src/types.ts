@@ -162,6 +162,9 @@ export interface GameState {
   // 曝光度 0-100：偷偷来往的风险累积；低调会缓慢回落
   exposureLevel?: number;
   exposureTier?: number;    // 已播报到第几档，避免同一档重复触发
+  recentEvents?: Record<string, number>; // 事件id → 上次触发的 day（冷却用）
+  dmSentAt?: string;        // 私信计数所属的那一天（"d{day}"）
+  dmCount?: number;         // 当天已发条数
   // 捏脸：外观覆盖（不填则用默认/还原真人）
   playerAppearance?: import('./spriteUtils').Appearance;
   appearances?: Record<string, import('./spriteUtils').Appearance>;

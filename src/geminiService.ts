@@ -1,6 +1,9 @@
 import { ChatMessage, MessageRole, GameState, SetupStep } from './types';
 import { PLAYER } from './relations';
 
+import { pickEvent, MATCHMAKE_VERBS } from './events';
+import { phaseAt } from './calendar';
+
 const TIME_SLOT_CN = ['上午', '下午', '晚上'];
 
 export async function callGeminiAPI(messages: ChatMessage[], gameState: GameState) {
@@ -828,7 +831,8 @@ ${romanceOutputFormat}`;
 【本场模式：撮合／上帝视角】在场的是 ${nameOf(stageIds[0])} 和 ${nameOf(stageIds[1])} 两位爱豆。
 - 你要推演的是**这两个人之间**的关系，玩家是旁观者/助攻者，不是感情对象。
 - 严禁把玩家写成她们的暧昧对象，也严禁让她们对玩家告白或产生恋爱情绪。
-- 玩家的三个选项必须是"助攻动作"：起哄／打圆场／制造独处机会／识趣走开／传话，
+- 玩家的三个选项必须从这几个"助攻动作"里取（用具体情境化的说法，不要照抄标签）：
+${MATCHMAKE_VERBS.map(v => `  · ${v.label}：${v.hint}`).join('\n')}
   而不是玩家自己去撩谁。
 - 本场的关系变化写进 RELDELTA（这两人之间），玩家好感基本不变（最多 ±1）。`
     : soloTargetId
@@ -893,11 +897,23 @@ RISK_START
 {"delta":整数1到10,"reason":"一句话原因"}
 RISK_END`;
 
+  // ==== 事件表：按档期 / 曝光度 / 好感 roll 出本轮的调味事件 ====
+  const evPhase = onStage[0]?.group ? phaseAt(onStage[0].group, wday)?.kind ?? 'off' : 'off';
+  const picked = onStage.length ? pickEvent({
+    day: wday, slot: wslot, phase: evPhase, exposure,
+    affection: Math.max(0, ...onStage.map(m => m.affection || 0)),
+    recent: (gameState as any).recentEvents || {},
+  }) : null;
+  const eventModule = picked ? `
+【本轮事件：${picked.label}】${picked.directive}
+（把它自然融进这场戏，不要生硬宣布"发生了一个事件"。演完后原样输出一行 EVENT_ID=${picked.id}）` : '';
+
   const relationModule = isMomMode ? '' : `
 
 ════════════════════════
 【关系系统】
 ${intentLock}
+${eventModule}
 ${memoryLines.length ? `\n【你们的共同回忆】（严格延续，禁止当作初次见面）\n${memoryLines.join('\n')}\n` : ''}${milestoneHints.length ? `\n【本轮必须演的关键剧情】\n${milestoneHints.join('\n')}\n（演完后在正文之外原样输出一行 MILESTONE_ID=... 以便记录）\n` : ''}${exposureModule}
 ${intentLines.length ? '玩家的意图：\n- ' + intentLines.join('\n- ') + '\n' : ''}${matchLines.length ? '玩家想撮合的CP（在剧情里为这些CP自然制造靠近/暧昧的机会，但须符合两人性格，不强行）：\n- ' + matchLines.join('\n- ') + '\n' : ''}${idolPairLines.length ? '爱豆之间当前关系：\n- ' + idolPairLines.join('\n- ') + '\n' : ''}
 【呈现格式·重要】正文请逐行输出，便于做成对话演出：

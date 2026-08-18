@@ -10,7 +10,7 @@ import FaceCustomizer, { SpritePreview } from './FaceCustomizer';
 import SceneView from './SceneView';
 import WorldPanel from './WorldPanel';
 import { getPlayerAppearance, getDefaultAppearance, normalizeAppearance, type Appearance } from './spriteUtils';
-import { nextTime, idolsAt, getLocation, getStartLocation, startingAffection, identitySummary, WORLD_LOCATIONS, type WorldLocation, type Activity } from './worldConfig';
+import { nextTime, idolsAt, getLocation, getActivity, getStartLocation, startingAffection, identitySummary, WORLD_LOCATIONS, type WorldLocation, type Activity } from './worldConfig';
 import { seedIdolRelations, pairKey, deriveType, hasFlag, PLAYER, type Intent } from './relations';
 import { computeMusicShow, isMusicShowDay, weekOf } from './calendar';
 
@@ -368,14 +368,24 @@ const PHONE_APPS: { key: 'kkt' | 'weverse' | 'bubble' | 'theqoo'; label: string;
   { key: 'theqoo', label: 'theqoo', icon: '🔥', color: '#3b5998' },
 ];
 
-const PhoneModal = ({ feed, onClose, lang }: {
+const PhoneModal = ({ feed, onClose, lang, members, onSendDM, dmLeft }: {
   feed: NonNullable<GameState['phoneFeed']>; onClose: () => void; lang?: string;
+  members: Member[]; onSendDM: (memberId: string, text: string) => void; dmLeft: number;
 }) => {
   const tw = lang === 'traditional';
   const [tab, setTab] = useState<'kkt' | 'weverse' | 'bubble' | 'theqoo'>(
     () => [...feed].reverse().find(f => !f.read)?.type || 'kkt'
   );
   const items = feed.filter(f => f.type === tab).slice().reverse();
+  const [dmTo, setDmTo] = useState<string>(() => members[0]?.id || '');
+  const [dmText, setDmText] = useState('');
+  const canDM = tab === 'kkt' || tab === 'bubble';
+  const sendDM = () => {
+    const t = dmText.trim();
+    if (!t || dmLeft <= 0 || !dmTo) return;
+    setDmText('');
+    onSendDM(dmTo, t);
+  };
   return (
     <div className="fixed inset-0 z-[70] bg-black/60 backdrop-blur-sm flex items-center justify-center p-3" onClick={onClose}>
       <motion.div
@@ -425,6 +435,32 @@ const PhoneModal = ({ feed, onClose, lang }: {
               </div>
             ))}
           </div>
+          {/* 主动发消息：不占行动点，但每天有条数上限，发太勤会涨曝光度 */}
+          {canDM && (
+            <div className="flex-shrink-0 border-t border-black/10 bg-white px-2.5 py-2 flex flex-col gap-1.5">
+              <div className="flex items-center gap-1.5 overflow-x-auto">
+                {members.map(m => (
+                  <button key={m.id} onClick={() => setDmTo(m.id)}
+                    className={`flex-shrink-0 px-2 py-0.5 rounded-full text-[10px] font-black transition-all ${dmTo === m.id ? 'bg-[#5B6BB0] text-white' : 'bg-[#E7E6F6] text-[#454F87]'}`}>
+                    {m.name}
+                  </button>
+                ))}
+              </div>
+              <div className="flex gap-1.5">
+                <input
+                  value={dmText} onChange={e => setDmText(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter') sendDM(); }}
+                  placeholder={dmLeft > 0 ? (tw ? `發條消息…（今天還能發 ${dmLeft} 條）` : `发条消息…（今天还能发 ${dmLeft} 条）`) : (tw ? '今天發太多了，明天再說' : '今天发太多了，明天再说')}
+                  disabled={dmLeft <= 0}
+                  className="flex-1 min-w-0 bg-[#F1EFF7] border border-[#DAD8EE] rounded-full px-3 py-2 text-[12px] outline-none text-[#2A2A3D] disabled:opacity-50"
+                />
+                <button onClick={sendDM} disabled={dmLeft <= 0 || !dmText.trim()}
+                  className="px-3 rounded-full bg-[#5B6BB0] text-white disabled:opacity-40 flex items-center justify-center">
+                  <Send className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </motion.div>
     </div>
@@ -1128,6 +1164,9 @@ export default function App() {
     // MILESTONE_ID=xxx：阶段突破已演出，记录下来避免重复触发
     const firedMilestones: string[] = [];
     remaining = remaining.replace(/^\s*MILESTONE_ID\s*=\s*(\S+)\s*$/gm, (_s, id) => { firedMilestones.push(String(id)); return ''; });
+    // EVENT_ID=xxx：本轮演过的事件，记下来做冷却
+    const firedEvents: string[] = [];
+    remaining = remaining.replace(/^\s*EVENT_ID\s*=\s*(\S+)\s*$/gm, (_s, id) => { firedEvents.push(String(id)); return ''; });
 
     const options = parseOptions(remaining);
     const contentBlocks = parseContentBlocks(remaining);
@@ -1196,6 +1235,13 @@ export default function App() {
       if (riskDelta && Number.isFinite(Number(riskDelta.delta))) {
         const d = Math.max(-20, Math.min(20, Number(riskDelta.delta)));
         next.exposureLevel = Math.max(0, Math.min(100, (prev.exposureLevel || 0) + d));
+      }
+      // 事件冷却：记录本轮演过的事件
+      if (firedEvents.length) {
+        const re = { ...(prev.recentEvents || {}) };
+        const d = prev.worldDay ?? 1;
+        firedEvents.forEach(id => { re[id] = d; });
+        next.recentEvents = re;
       }
       // 阶段突破：记录已触发，避免重复
       if (firedMilestones.length) {
@@ -1288,6 +1334,49 @@ export default function App() {
       : `（我${where}走近${m.name}，和ta打个招呼）${doing}`;
     setScene({ ids: [m.id], anchor: gameState.history.length });
     handleSend(line, { focusIds: [m.id], consumeAction: true });
+  };
+
+  // 手机私信：不占行动点，但每天有条数上限；发太勤会涨曝光度（"他手机被工作人员关注"）
+  const DM_PER_DAY = 3;
+  const dmSentToday = (gameState as any).dmSentAt === `d${worldDay}` ? ((gameState as any).dmCount || 0) : 0;
+  const dmLeft = Math.max(0, DM_PER_DAY - dmSentToday);
+  const handleSendDM = (memberId: string, text: string) => {
+    const m = gameState.members.find(x => x.id === memberId);
+    if (!m || dmLeft <= 0) return;
+    const isTw = (gameState as any).language === 'traditional';
+    const activity = getActivity(m.id, worldDay, worldSlot, m.group);
+    const busy = !activity.available;
+    const n = dmSentToday + 1;
+    setGameState(prev => ({
+      ...prev,
+      dmSentAt: `d${worldDay}`, dmCount: n,
+      // 发得越勤，越容易被工作人员注意到
+      exposureLevel: Math.min(100, (prev.exposureLevel || 0) + (n >= 3 ? 3 : 1)),
+      phoneFeed: [...(prev.phoneFeed || []), {
+        id: `dm-${Date.now()}`, type: 'kkt' as const, ts: Date.now(), read: true,
+        data: { sender: m.name, avatar: '👤', messages: [{ text, time: '방금', isRead: true, translation: '' }] },
+      }],
+    }));
+    // 她不一定秒回：忙的时候更慢，回复用本地模板（不烧 token）
+    const delay = busy ? 2600 : 1200 + Math.random() * 1200;
+    setTimeout(() => {
+      const aff = m.affection || 0;
+      const pool = busy
+        ? (isTw ? ['現在在外地，回頭說', '在忙…晚點回你'] : ['现在在外地，回头说', '在忙…晚点回你'])
+        : aff >= 60
+          ? (isTw ? ['剛看到，今天好累', '嗯，我在', '想你了（打錯了）'] : ['刚看到，今天好累', '嗯，我在', '想你了（打错了）'])
+          : aff >= 30
+            ? (isTw ? ['嗯嗯', '剛結束，怎麼了', '哈哈好'] : ['嗯嗯', '刚结束，怎么了', '哈哈好'])
+            : (isTw ? ['嗯', '好的', '收到'] : ['嗯', '好的', '收到']);
+      const reply = pool[Math.floor(Math.random() * pool.length)];
+      setGameState(prev => ({
+        ...prev,
+        phoneFeed: [...(prev.phoneFeed || []), {
+          id: `dmr-${Date.now()}`, type: 'kkt' as const, ts: Date.now(), read: false,
+          data: { sender: m.name, avatar: '👤', messages: [{ text: reply, time: '방금', isRead: false, translation: '' }] },
+        }],
+      }));
+    }, delay);
   };
 
   // 应援打投：占用本时段行动点，累积到打歌成绩（回归期才有）
@@ -1534,7 +1623,7 @@ export default function App() {
         />
       )}
       {/* 手机 */}
-      {showPhone && <PhoneModal feed={phoneFeed} onClose={closePhone} lang={lang} />}
+      {showPhone && <PhoneModal feed={phoneFeed} onClose={closePhone} lang={lang} members={worldMembers} onSendDM={handleSendDM} dmLeft={dmLeft} />}
       {/* 关系里程碑 toast */}
       {toasts.length > 0 && (
         <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[200] flex flex-col items-center gap-2 pointer-events-none">
