@@ -459,7 +459,15 @@ const CharacterCreationWizard = ({ onComplete, members }: { onComplete: (data: a
     }
   }, [data.language]);
 
-  const ids = ["韩国留学生","便利店/咖啡厅打工人","娱乐公司实习生","音乐节目工作人员","妆造师/发型助理","翻译/海外商务助理","娱乐记者/博主","普通粉丝","资深粉丝","公寓同栋住户","现任女友","前任","青梅竹马","发小","暗恋对象（单向）"];
+  // 身份精简为 5 个开局差异明显的原型（从哪开场 / 起始好感 / 能进哪些私密场所 / AI 怎么定位你）
+  const ids = ["圈内工作人员","普通粉丝","公寓同栋住户","青梅竹马","现任女友"];
+  const idDesc: Record<string, string> = {
+    "圈内工作人员": "妆造/助理/实习生 · 后台开场 · 能进练习室与宿舍 · 近水楼台但要守规矩",
+    "普通粉丝": "演唱会开场 · 只能在公开场合遇到她们 · 从零开始追",
+    "公寓同栋住户": "宿舍开场 · 进得去宿舍 · 生活流的日常暧昧",
+    "青梅竹马": "咖啡厅开场 · 从小认识，起始好感 40 · 一开始就有底子",
+    "现任女友": "宿舍开场 · 已在恋爱，起始好感 62 · 玩「维持」而不是「攻略」",
+  };
   const cpIds = ["娱乐公司实习生","音乐节目工作人员","妆造师/发型助理","翻译/海外商务助理","娱乐记者/博主","普通粉丝","资深粉丝","韩国留学生","便利店/咖啡厅打工人","公寓同栋住户"];
   const currentIds = ids;
 
@@ -636,8 +644,11 @@ const CharacterCreationWizard = ({ onComplete, members }: { onComplete: (data: a
 
               {cur === 'identity' && (<>
                 <label className="gold-caption">{T('选择你的身份（可多选）','選擇您的身份（可複選）')}</label>
-                <div className="grid grid-cols-2 gap-2">{currentIds.map(i => (
-                  <button key={i} onClick={() => setData({...data, identity: data.identity.includes(i) ? data.identity.filter(x => x !== i) : [...data.identity, i]})} className={`p-3 rounded-xl border text-[11px] transition-all ${data.identity.includes(i) ? 'bg-[rgba(201,162,39,0.1)] border-[rgba(201,162,39,0.5)] text-[#F1ECFF] font-bold' : 'bg-white/[0.03] border-white/10 text-[#B7B2D9]'}`}>{i}</button>
+                <div className="flex flex-col gap-2">{currentIds.map(i => (
+                  <button key={i} onClick={() => setData({...data, identity: data.identity.includes(i) ? data.identity.filter(x => x !== i) : [...data.identity, i]})} className={`p-3 rounded-xl border text-left transition-all ${data.identity.includes(i) ? 'bg-[rgba(201,162,39,0.1)] border-[rgba(201,162,39,0.5)]' : 'bg-white/[0.03] border-white/10 hover:border-white/25'}`}>
+                    <div className={`text-[12.5px] font-black ${data.identity.includes(i) ? 'text-[#F1ECFF]' : 'text-[#D8D4EE]'}`}>{i}</div>
+                    {idDesc[i] && <div className="text-[10px] text-[#8B86B8] mt-1 leading-relaxed">{idDesc[i]}</div>}
+                  </button>
                 ))}</div>
                 <input type="text" value={customIdentity} onChange={e => setCustomIdentity(e.target.value)} placeholder={T('或手动输入自定义身份...','或手動輸入自訂身份...')} className="w-full bg-white/[0.04] border border-white/10 rounded-xl p-3 text-base focus:ring-1 focus:ring-[#C9A227] outline-none text-[#F1ECFF] placeholder:text-[#8B86B8]" onKeyDown={(e) => { if (e.key === 'Enter') { const val = customIdentity.trim(); if (val && !data.identity.includes(val)) { setData({...data, identity: [...data.identity, val]}); setCustomIdentity(''); } e.preventDefault(); } }} />
                 {(() => {

@@ -104,6 +104,8 @@ export function getLocation(id: string): WorldLocation | undefined {
 }
 
 // 身份 → 初始切入点：让"你是谁"决定你从世界的哪个角落出场
+// 注：建号只提供 5 个原型身份（圈内工作人员/普通粉丝/公寓同栋住户/青梅竹马/现任女友），
+// 但这里的规则保持宽松，兼容旧存档与玩家自定义输入的身份。
 const IDENTITY_START: { test: RegExp; loc: string }[] = [
   { test: /实习|工作人员|妆造|发型|助理|翻译|商务|经纪|staff/i, loc: 'backstage' },   // 圈内人：后台
   { test: /记者|博主|媒体|采访/, loc: 'concert' },                                  // 媒体：打歌舞台边
@@ -128,6 +130,7 @@ const IDENTITY_AFFECTION: { test: RegExp; floor: number }[] = [
   { test: /青梅|发小/, floor: 40 },               // 从小认识
   { test: /前任/, floor: 34 },                    // 旧情复杂
   { test: /暗恋/, floor: 18 },                    // 单向，略有接触
+  { test: /同栋|住户|邻居/, floor: 12 },          // 抬头不见低头见的脸熟
 ];
 
 export function startingAffection(identity?: string[]): number {
