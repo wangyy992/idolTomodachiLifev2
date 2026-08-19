@@ -1,11 +1,15 @@
 import { ChatMessage, MessageRole, GameState, SetupStep } from './types';
+import { PLAYER } from './relations';
+
+import { pickEvent, MATCHMAKE_VERBS } from './events';
+import { phaseAt } from './calendar';
+
+const TIME_SLOT_CN = ['上午', '下午', '晚上'];
 
 export async function callGeminiAPI(messages: ChatMessage[], gameState: GameState) {
   const playerApiKey = (gameState as any).playerApiKey || '';
   const playerModel = (gameState as any).playerModel || 'deepseek-v4-flash';
-  const deepseekKey = playerApiKey || import.meta.env.VITE_DEEPSEEK_API_KEY || '';
-  if (!deepseekKey) throw new Error('API Key missing.');
-  // 玩家自填key时使用玩家选择的模型，否则用默认flash
+  // 密钥不在前端保存：玩家自填则随请求带上，否则由服务端 /api/chat 用环境变量补上
   const modelToUse = playerApiKey ? playerModel : 'deepseek-v4-flash';
 
   const isCPMode = gameState.gameMode === 'CPCP';
@@ -16,17 +20,36 @@ export async function callGeminiAPI(messages: ChatMessage[], gameState: GameStat
     .map(m => `${m.name}（${m.stageName}，${m.group}）`)
     .join('、') || '无';
 
-  const targetMembersDetail = gameState.members
-    .filter(m => gameState.targets.includes(m.id))
-    .map(m => `- ${m.name}：公开人设"${m.publicPersona}"，真实性格"${m.realPersonality}"`)
-    .join('\n');
+  // 人设注入：本场在场的人给完整性格，不在场的只给一行简介（既让 AI 聚焦，也省 token）
+  const fullPersona = (m: any) => [
+    `【${m.name}（${m.stageName}${m.role ? '·' + m.role : ''}，${m.group}）】`,
+    `公开人设：${m.publicPersona}`,
+    m.speechStyle ? `说话风格：${m.speechStyle}` : '',
+    `真实性格：\n${m.realPersonality}`,
+    m.secret ? `未公开的秘密（只在关系够深时才可揭示）：${m.secret}` : '',
+  ].filter(Boolean).join('\n');
+  const briefPersona = (m: any) => `- ${m.name}（${m.stageName}，${m.group}）：${m.publicPersona}`;
 
+  const focusIds: string[] = (gameState as any).sceneFocusIds || [];
+  const onStage = gameState.members.filter(m => focusIds.includes(m.id));
+  const targetsAll = gameState.members.filter(m => gameState.targets.includes(m.id));
+  const offStage = targetsAll.filter(m => !focusIds.includes(m.id));
+
+  const targetMembersDetail = onStage.length
+    ? [
+        `▼ 本场登场（严格按下面的性格演，台词要能听出是谁，不要写成通用角色）：`,
+        onStage.map(fullPersona).join('\n\n'),
+        offStage.length ? `\n▼ 其他爱豆（本场不在场，仅作背景参考，不要让她们突然出现）：\n${offStage.map(briefPersona).join('\n')}` : '',
+      ].filter(Boolean).join('\n')
+    : targetsAll.map(fullPersona).join('\n\n');
+
+  // 队友只给一行简介：够用于"阻碍/助攻"判断，不必倒完整性格
   const teammateInfo = gameState.members
     .filter(m => {
       const target = gameState.members.find(t => gameState.targets.includes(t.id));
       return target && m.group === target.group && !gameState.targets.includes(m.id);
     })
-    .map(m => `- ${m.name}（${m.stageName}）：${m.realPersonality}`)
+    .map(briefPersona)
     .join('\n');
 
   const playerIdentity = gameState.identity?.join(', ') || '普通人';
@@ -151,7 +174,44 @@ SNAPSHOT_END`;
 禁止的写法：
 "你感受到了她的温度，心跳不由自主地加速了。"
 "她深情地望着你，眼神里满是爱意。"
-"那我也真心地说一句——"`;
+"那我也真心地说一句——"
+
+────────────────────
+【去掉 AI 腔 —— 重要】
+现在的输出经常"太 AI 了"。以下是 AI 写作的典型毛病，逐条避开：
+- 禁止排比句和三连："不是…而是…"、"是A，是B，也是C"、成对的对仗句。人说话不对称。
+- 禁止每段都升华、点题、总结感悟。大多数时刻就是普通的、没有意义的。把话说完就停，不要拔高。
+- 禁止堆砌比喻和"仿佛/像是/宛如"。一个场景最多一个比喻，宁可白描。
+- 禁止情绪副词连用（轻轻地/缓缓地/淡淡地/静静地）。删掉副词，只写动作本身。
+- 禁止陈词滥调："空气仿佛凝固""时间静止""心跳漏了一拍""嘴角勾起一抹弧度""眸子""薄唇""不易察觉的"。
+- 禁止用括号补充人物内心（"她笑了笑（其实心里很慌）"）。内心只能靠行为泄露。
+- 禁止过度流畅、每句都完整漂亮。真人说话有停顿、有废话、有说一半、有答非所问、有"嗯""啊""那个"。
+- 少用形容词，多用具体名词和动作。不是"她很累"，而是"她把头靠在墙上，没接话"。
+- 句子长短不一，允许很短的单句成段。允许留白和沉默。
+
+要像"人"写的：观察具体、克制、有生活质感、偶尔笨拙、不完美。像在写一个真实认识的人，不是在写小说范文。`;
+
+  // DM 硬性禁止事项：防玛丽苏、防失真、防脸谱化
+  const dmForbidden = `
+════════════════════════
+DM 禁止事项（硬性，违反即算失败）
+════════════════════════
+- 禁止声称游戏剧情是真实事件；这是虚构平行世界。
+- 禁止写入现实艺人的真实私生活、婚恋、家庭、争议或未经确认的信息。
+- 禁止让爱豆无缘无故爱上玩家。好感必须靠具体的事、时间、代价一点点积累。
+- 禁止跳过暧昧过程直接确定关系。
+- 禁止把粉丝整体写成恶毒群体；粉丝有各种人。
+- 禁止把其他成员写成无脑助攻或无脑恶毒阻碍者；她们有自己的立场和分寸。
+- 禁止把圈内女艺人写成纯恶毒的雌竞角色。
+- 禁止让经纪人 / 公司无脑反派化；他们的干预是出于利益和制度，不是坏。
+- 禁止让玩家没有代价地进入顶流的生活。靠近是有风险和成本的。
+- 禁止过度玛丽苏：全网祝福、公司秒同意、粉丝全员支持、所有人都围着玩家转——一律禁止。
+- 禁止泄露 NPC 的暗线，只能让玩家从自己视角逐渐察觉。
+- 禁止每回合都甜。必须保留现实压力、事业优先级和情绪张力，允许冷场、拒绝、误会。
+- 禁止把恋爱写成唯一目标。爱豆有事业，玩家也有自己的生活 / 职业 / 学业 / 成长线。
+
+【核心心态】她首先是个有事业、有压力、有防备心的人，其次才可能对谁动心。
+不要写成"等着被玩家攻略的对象"。她可以不理你、可以敷衍、可以今天没心情。`;
 
   const koreanDetails = `
 ════════════════════════
@@ -444,6 +504,7 @@ ${cardMemory}
 注意：必须严格从上一轮记忆继续推进，禁止重置或无故跳跃时间线。hiddenSummary必须写明本轮CP关系核心进展。
 ${writingStyle}
 ${koreanDetails}
+${dmForbidden}
 
 ════════════════════════
 核心基调
@@ -637,11 +698,15 @@ ${cpSnapshotHint}
 
 玩家：${gameState.playerName}，${gameState.playerAge}岁，${playerIdentity}。
 【玩家性别】默认为女性，全程用"她"称呼玩家，除非玩家明确说明。
-【特殊关系行为规则】
-- 青梅竹马/发小：两人从小认识，默认已有联系方式，禁止出现"要不要加联系方式"，互动更随意自然
-- 现任女友：已在恋爱中，剧情从日常相处推进，不是追求阶段
-- 前任：曾经在一起，同场时有复杂情绪，禁止当成陌生人处理
-- 暗恋对象（单向）：爱豆不知道玩家感情，正常相处，玩家单方面压抑
+【特殊关系行为规则】——身份决定你们的默认熟悉度和玩家能出现的场合，务必据此开场，禁止把有关系的两人当陌生人：
+- 青梅竹马/发小：从小认识、早有联系方式和共同回忆，可直接约在咖啡厅/宿舍，互动随意自然，禁止出现"要不要加联系方式"
+- 现任女友：已在恋爱中、彼此极熟，进出她的宿舍是常事，剧情从同居感/日常相处推进而非追求阶段，称呼亲密、有肢体亲近的默契
+- 前任：曾经在一起，同场时有旧账和复杂情绪，禁止当成陌生人处理
+- 暗恋对象（单向）：爱豆不知道玩家的感情，正常相处，玩家单方面压抑
+- 工作人员/实习/妆造/助理/翻译/经纪：能进后台、练习室、待机室，但受职业约束，选项偏"职务之便制造偶遇/传递信息/打掩护"，不能随便逾矩
+- 记者/博主：靠职业渠道接触，选项偏"采访/蹲点/发通稿"，进不了私人领域
+- 粉丝（普通/资深）：只能在演唱会、咖啡厅、便利店等公开场合接触，选项偏"应援/递应援物/在公开互动里被记住/粉圈信息"，禁止凭空出现在后台或宿舍
+【出场地点】玩家所在场景（见下方"场景"）已经是符合其身份能进入的地方，直接顺着这个场合展开，不要质疑玩家"怎么进来的"。
 攻略目标：${targetMembersInfo}
 目标爱豆性格：
 ${targetMembersDetail}
@@ -659,13 +724,14 @@ ${cardMemory}
 注意：必须严格从上一轮记忆继续推进，禁止重置或无故跳跃时间线。hiddenSummary必须写明本轮好感度变化原因和关键事件。
 ${writingStyle}
 ${koreanDetails}
+${dmForbidden}
 
 ════════════════════════
 核心基调
 ════════════════════════
 写实向韩娱恋爱模拟，非爽文。
 强调普通人闯入韩娱世界的真实感、落差感、公司制度、粉圈压力与舆论风险。
-整体氛围：七分甜三分虐。爱豆有事业压力，玩家关系推进有代价。
+整体氛围：五分甜五分现实压力。爱豆有事业压力，玩家关系推进有代价，不要一味甜宠。
 
 ════════════════════════
 语言规则
@@ -770,7 +836,138 @@ ${romanceOutputFormat}`;
   const languageInstruction = (gameState as any).language === 'traditional'
     ? '請使用繁體中文（台灣用語）進行所有輸出，包括劇情正文、對話、選項和所有文字。禁止輸出簡體中文。\n\n'
     : '';
-  const systemPrompt = languageInstruction + (isCPMode ? cpPrompt : isMomMode ? momPrompt : romancePrompt);
+
+  // ==== 关系系统模块（M3b）：意图/撮合/爱豆间关系 + RELDELTA 输出要求 ====
+  const relIntents: Record<string, string> = (gameState as any).relationIntents || {};
+  const matchmakes: string[] = (gameState as any).matchmakes || [];
+  const worldRelations: Record<string, any> = (gameState as any).worldRelations || {};
+  const nameOf = (id: string) => gameState.members.find(m => m.id === id)?.name || id;
+  const tset = new Set(gameState.targets || []);
+
+  const intentLines = (gameState.targets || [])
+    .map(id => { const it = relIntents[id]; if (it === 'romance') return `想攻略 ${nameOf(id)}（往恋爱方向发展）`; if (it === 'friend') return `只想和 ${nameOf(id)} 做朋友，不要恋爱线`; return null; })
+    .filter(Boolean);
+  const matchLines = matchmakes.map(k => {
+    const [a, b] = k.split('|'); const r = worldRelations[k];
+    return `撮合 ${nameOf(a)} × ${nameOf(b)}${r ? `（当前亲密${r.affinity}/张力${r.tension}）` : ''}`;
+  });
+  const idolPairLines: string[] = [];
+  Object.entries(worldRelations).forEach(([k, r]: any) => {
+    const [a, b] = k.split('|');
+    if (a === PLAYER || b === PLAYER || !tset.has(a) || !tset.has(b)) return;
+    idolPairLines.push(`${nameOf(a)}×${nameOf(b)}：亲密${r.affinity} 张力${r.tension}${r.note ? ' —— ' + r.note : ''}`);
+  });
+
+  // ==== 意图锁定：单人在场=攻略/朋友模式；两人在场=撮合上帝视角 ====
+  // 目的：避免 AI 一边和玩家暧昧、一边又接受玩家把她撮合给别人的逻辑崩溃。
+  const stageIds = onStage.map(m => m.id);
+  const isMatchScene = stageIds.length === 2;
+  const soloTargetId = stageIds.length === 1 ? stageIds[0] : null;
+  const soloIntent = soloTargetId ? (relIntents[soloTargetId] || 'none') : null;
+
+  const intentLock = isMatchScene
+    ? `
+【本场模式：撮合／上帝视角】在场的是 ${nameOf(stageIds[0])} 和 ${nameOf(stageIds[1])} 两位爱豆。
+- 你要推演的是**这两个人之间**的关系，玩家是旁观者/助攻者，不是感情对象。
+- 严禁把玩家写成她们的暧昧对象，也严禁让她们对玩家告白或产生恋爱情绪。
+- 玩家的三个选项必须从这几个"助攻动作"里取（用具体情境化的说法，不要照抄标签）：
+${MATCHMAKE_VERBS.map(v => `  · ${v.label}：${v.hint}`).join('\n')}
+  而不是玩家自己去撩谁。
+- 本场的关系变化写进 RELDELTA（这两人之间），玩家好感基本不变（最多 ±1）。`
+    : soloTargetId
+      ? `
+【本场模式：${soloIntent === 'romance' ? '攻略（恋爱意图：高）' : soloIntent === 'friend' ? '朋友（明确不要恋爱线）' : '日常（顺其自然）'}】在场的是 ${nameOf(soloTargetId)}。
+${soloIntent === 'romance'
+  ? `- 玩家对她有明确的恋爱意图。三个选项要带攻略性质（试探／靠近／制造独处／表达在意），但必须符合当前关系阶段，禁止跳级。
+- 她对玩家的态度按她自己的性格来，可以回避、可以心动，但不能无来由地热情。`
+  : soloIntent === 'friend'
+  ? `- 玩家明确只想做朋友。禁止写暧昧、心动、告白向的内容；选项偏向陪伴／帮忙／聊正事。`
+  : `- 玩家没有明确意图，写成自然的日常接触；选项保持中性，不要强行推恋爱。`}
+- 本场不要让其他爱豆抢戏，她们不在场。`
+      : '';
+
+  // ==== 长期记忆：每人一份滚动档案，只注入最近几条，不重发全历史 ====
+  const memories: Record<string, { day: number; slot: number; text: string }[]> = (gameState as any).memories || {};
+  const memoryLines = onStage.map(m => {
+    const list = (memories[m.id] || []).slice(-4);
+    if (!list.length) return `- ${m.name}：你们之间还没有共同回忆（这是第一次真正接触）`;
+    return `- ${m.name}：\n` + list.map(e => `    · D${e.day}·${TIME_SLOT_CN[e.slot] || ''} ${e.text}`).join('\n');
+  });
+
+  // ==== 阶段突破：好感阈值 + 情境条件 → 强插一条特殊事件指令 ====
+  const wday = (gameState as any).worldDay ?? 1;
+  const wslot = (gameState as any).worldSlot ?? 0;
+  const wloc = (gameState as any).worldLocation ?? '';
+  const doneMilestones: string[] = (gameState as any).milestones || [];
+  const milestoneHints: string[] = [];
+  for (const m of onStage) {
+    const aff = m.affection || 0;
+    const fire = (id: string, cond: boolean, text: string) => {
+      if (cond && !doneMilestones.includes(`${m.id}:${id}`)) milestoneHints.push(`[特殊事件·${m.name}] ${text}\nMILESTONE_ID=${m.id}:${id}`);
+    };
+    fire('vulnerable', aff >= 30 && (wslot === 2 || wloc === 'hangang' || wloc === 'rooftop'),
+      `本轮她要吐露最近最大的职业压力，露出脆弱的一面，关系推进到"朋友"。写得克制、具体，不要煽情。`);
+    fire('boundary', aff >= 55 && soloIntent === 'romance',
+      `本轮出现一次两人都察觉到的越界瞬间（不是告白），事后两人都装作没发生。`);
+    fire('confess_ready', aff >= 75 && soloIntent === 'romance',
+      `她已经明白玩家的心意，本轮要给出一个明确的"可以更进一步"的信号，但由玩家来捅破。`);
+  }
+
+  // ==== 曝光度：偷偷来往的代价 ====
+  const exposure = (gameState as any).exposureLevel ?? 0;
+  const exposureTierText =
+    exposure >= 80 ? '私生／狗仔已经盯上：小区门口的陌生人、被跟的车牌、咖啡店偷拍、旧账号被翻出'
+    : exposure >= 60 ? '粉圈开始起疑：韩网论坛热帖、站姐预览图里的可疑身影、脱粉小作文'
+    : exposure >= 40 ? '公司开始干预：经纪人约谈、要求减少私人联系、"回归期不要出问题"'
+    : exposure >= 20 ? '队友察觉：待机室里有人开玩笑试探、有人帮忙打掩护'
+    : '';
+  const exposureModule = exposure > 0 ? `
+【曝光度】当前 ${exposure}/100${exposureTierText ? ` —— ${exposureTierText}` : ''}
+- 曝光度越高，周围的眼睛越多。请在剧情里体现相应的压力，但不要每轮都提。
+- 若本轮玩家做了高风险动作（对视太久／同框被拍／私下递东西／同时出现在机场／被认出），
+  在 RISK 块里输出增量；低调、克制的一轮可以输出负值。
+RISK_START
+{"delta":本轮曝光度增量整数-5到10,"reason":"一句话原因"}
+RISK_END
+没有值得记的风险变化就不要输出这个块。` : `
+【曝光度】当前 0/100。玩家和爱豆的来往还没被任何人注意到。
+若本轮出现高风险动作（对视太久／同框被拍／私下递东西／被粉丝认出），输出：
+RISK_START
+{"delta":整数1到10,"reason":"一句话原因"}
+RISK_END`;
+
+  // ==== 事件表：按档期 / 曝光度 / 好感 roll 出本轮的调味事件 ====
+  const evPhase = onStage[0]?.group ? phaseAt(onStage[0].group, wday)?.kind ?? 'off' : 'off';
+  const picked = onStage.length ? pickEvent({
+    day: wday, slot: wslot, phase: evPhase, exposure,
+    affection: Math.max(0, ...onStage.map(m => m.affection || 0)),
+    recent: (gameState as any).recentEvents || {},
+  }) : null;
+  const eventModule = picked ? `
+【本轮事件：${picked.label}】${picked.directive}
+（把它自然融进这场戏，不要生硬宣布"发生了一个事件"。演完后原样输出一行 EVENT_ID=${picked.id}）` : '';
+
+  const relationModule = isMomMode ? '' : `
+
+════════════════════════
+【关系系统】
+${intentLock}
+${eventModule}
+${memoryLines.length ? `\n【你们的共同回忆】（严格延续，禁止当作初次见面）\n${memoryLines.join('\n')}\n` : ''}${milestoneHints.length ? `\n【本轮必须演的关键剧情】\n${milestoneHints.join('\n')}\n（演完后在正文之外原样输出一行 MILESTONE_ID=... 以便记录）\n` : ''}${exposureModule}
+${intentLines.length ? '玩家的意图：\n- ' + intentLines.join('\n- ') + '\n' : ''}${matchLines.length ? '玩家想撮合的CP（在剧情里为这些CP自然制造靠近/暧昧的机会，但须符合两人性格，不强行）：\n- ' + matchLines.join('\n- ') + '\n' : ''}${idolPairLines.length ? '爱豆之间当前关系：\n- ' + idolPairLines.join('\n- ') + '\n' : ''}
+【呈现格式·重要】正文请逐行输出，便于做成对话演出：
+- 旁白/环境/动作描写写成一行：\`旁白：文本\`
+- 角色说的话写成一行：\`角色中文名：「台词」\`（角色名用上方的中文名，如"黄礼志：「…」"）
+- 一句一行，不要把多句挤成一段；不要用引号以外的方式混排台词与旁白。
+选项仍用 A. / B. / C. 三行。
+
+【爱豆间关系变化输出】本轮若有爱豆之间（不含玩家）的互动导致关系变化，在最后追加一个块（没有变化就不要输出）：
+RELDELTA_START
+{"pairs":[{"a":"英文id","b":"英文id","affinity":本轮增量整数-5到5,"tension":本轮增量整数-5到5,"memory":"一句话本轮记忆"}]}
+RELDELTA_END
+a/b 必须用成员英文id，只写真正发生了互动的爱豆对。`;
+
+  const systemPrompt = languageInstruction + (isCPMode ? cpPrompt : isMomMode ? momPrompt : romancePrompt) + relationModule;
 
   try {
     const cleanHistory = messages.slice(-10).map(msg => ({
@@ -862,34 +1059,49 @@ ${romanceOutputFormat}`;
       chatMessages[lastUserIdx].content += extraPrompt + modeHint + '\n[格式强制要求：①回复末尾必须有严格如下三行：\nA. xxxx\nB. xxxx\nC. xxxx\n不能写"你可以选择"，不能用数字编号，必须是A/B/C开头每行一个选项。②必须有SNAPSHOT_START...SNAPSHOT_END，这是强制要求禁止省略。affection必须根据本轮互动变化更新，哪怕只是普通接触也要+1或+2，禁止连续两轮数值完全不变。③如有消息/帖子必须用对应标签：KKTMSG_START/END、THEQOO_START/END、BUBBLE_START/END、WEVERSE_START/END，标签单独成行]';
     }
 
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 180000);
+    const payload = JSON.stringify({
+      model: modelToUse,
+      messages: [{ role: 'system', content: systemPrompt }, ...chatMessages],
+      temperature: 0.75,
+      top_p: 0.95,
+      max_tokens: 4096,
+      apiKey: playerApiKey || undefined,
+    });
+
+    // 单次请求（60 秒超时，与服务端对齐）
+    const once = async (): Promise<string> => {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 60000);
+      try {
+        const resp = await fetch('/api/chat', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: payload, signal: controller.signal,
+        });
+        if (!resp.ok) {
+          const msg = resp.status === 401 ? 'API Key 无效。'
+            : resp.status === 429 ? '请求过于频繁，请稍后再试。'
+            : resp.status === 402 ? 'DeepSeek 余额不足，请充值。'
+            : `DeepSeek API 错误 (${resp.status})`;
+          const err: any = new Error(msg);
+          err.status = resp.status;
+          throw err;
+        }
+        const ddata = await resp.json();
+        return ddata?.choices?.[0]?.message?.content || '';
+      } finally {
+        clearTimeout(timeoutId);
+      }
+    };
+
+    // 超时 / 网络错误 / 5xx → 自动重试一次；401/402/429 等业务错误不重试
+    const retriable = (e: any) => e?.name === 'AbortError' || e?.name === 'TypeError' || (typeof e?.status === 'number' && e.status >= 500);
     let text = '';
     try {
-      const resp = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: modelToUse,
-          messages: [{ role: 'system', content: systemPrompt }, ...chatMessages],
-          temperature: 0.75,
-          top_p: 0.95,
-          max_tokens: 4096,
-          apiKey: playerApiKey || undefined,
-        }),
-        signal: controller.signal,
-      });
-      if (!resp.ok) {
-        const errData = await resp.json().catch(() => ({}));
-        if (resp.status === 401) throw new Error('API Key 无效。');
-        if (resp.status === 429) throw new Error('请求过于频繁，请稍后再试。');
-        if (resp.status === 402) throw new Error('DeepSeek 余额不足，请充值。');
-        throw new Error(`DeepSeek API 错误 (${resp.status})`);
-      }
-      const ddata = await resp.json();
-      text = ddata?.choices?.[0]?.message?.content || '';
-    } finally {
-      clearTimeout(timeoutId);
+      text = await once();
+    } catch (e: any) {
+      if (!retriable(e)) throw e;
+      await new Promise(r => setTimeout(r, 800));
+      text = await once();
     }
 
     if (!text || text.trim() === '') throw new Error('AI 返回内容为空。');

@@ -69,6 +69,8 @@ export interface Member {
   role: string;
   publicPersona: string;
   realPersonality: string;
+  speechStyle?: string;   // 说话风格：口头禅/句子长短/语气词（可选，填了会喂给 AI）
+  secret?: string;        // 一个秘密/软肋，留给阶段突破时揭示（可选）
   affection: number;
   privacy?: number;
   careerPressure: number;
@@ -133,6 +135,8 @@ export interface GameState {
   hasContributedThisWeek?: boolean;
   hiddenSummary?: string;
   collectedCards?: any[];
+  // 手机：theqoo/KKT/Weverse/bubble 内容不进对话流，收进手机应用
+  phoneFeed?: { id: string; type: 'kkt' | 'weverse' | 'bubble' | 'theqoo'; data: any; ts: number; read: boolean }[];
   daughterProfile?: {
     name: string;
     nationality: string;
@@ -140,6 +144,30 @@ export interface GameState {
     background: string;
   };
   momTrustLevel?: number;
+  // 自由世界关系系统
+  worldRelations?: Record<string, { affinity: number; tension: number; note?: string; flags?: string[] }>;
+  relationIntents?: Record<string, 'romance' | 'friend' | 'none'>; // 玩家对某爱豆的意图（key=成员id）
+  matchmakes?: string[]; // 玩家想撮合的爱豆对（pairKey）
+  // 自由世界运行状态（持久化）
+  worldDay?: number;
+  worldSlot?: number;
+  worldLocation?: string;
+  worldFeed?: { id: string; text: string; kind: string; day: number; slot: number }[]; // 世界动态流
+  sceneFocusIds?: string[]; // 本场登场的爱豆（给 prompt 聚焦用；不在场的只给一行简介）
+  actionUsedAt?: string;    // 本时段的深度互动已用掉（值为 "day-slot"，推进时段自然失效）
+  // 长期记忆：每个爱豆一份滚动档案（只注入摘要，不注入全历史）
+  memories?: Record<string, { day: number; slot: number; text: string }[]>;
+  // 已触发过的阶段突破（key = `${memberId}:${milestoneId}`），避免重复触发
+  milestones?: string[];
+  // 曝光度 0-100：偷偷来往的风险累积；低调会缓慢回落
+  exposureLevel?: number;
+  exposureTier?: number;    // 已播报到第几档，避免同一档重复触发
+  recentEvents?: Record<string, number>; // 事件id → 上次触发的 day（冷却用）
+  dmSentAt?: string;        // 私信计数所属的那一天（"d{day}"）
+  dmCount?: number;         // 当天已发条数
+  // 捏脸：外观覆盖（不填则用默认/还原真人）
+  playerAppearance?: import('./spriteUtils').Appearance;
+  appearances?: Record<string, import('./spriteUtils').Appearance>;
 }
 
 export const INITIAL_MEMBERS: Member[] = [
