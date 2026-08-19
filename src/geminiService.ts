@@ -1020,34 +1020,49 @@ a/b 必须用成员英文id，只写真正发生了互动的爱豆对。`;
       chatMessages[lastUserIdx].content += extraPrompt + modeHint + '\n[格式强制要求：①回复末尾必须有严格如下三行：\nA. xxxx\nB. xxxx\nC. xxxx\n不能写"你可以选择"，不能用数字编号，必须是A/B/C开头每行一个选项。②必须有SNAPSHOT_START...SNAPSHOT_END，这是强制要求禁止省略。affection必须根据本轮互动变化更新，哪怕只是普通接触也要+1或+2，禁止连续两轮数值完全不变。③如有消息/帖子必须用对应标签：KKTMSG_START/END、THEQOO_START/END、BUBBLE_START/END、WEVERSE_START/END，标签单独成行]';
     }
 
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 180000);
+    const payload = JSON.stringify({
+      model: modelToUse,
+      messages: [{ role: 'system', content: systemPrompt }, ...chatMessages],
+      temperature: 0.75,
+      top_p: 0.95,
+      max_tokens: 4096,
+      apiKey: playerApiKey || undefined,
+    });
+
+    // 单次请求（60 秒超时，与服务端对齐）
+    const once = async (): Promise<string> => {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 60000);
+      try {
+        const resp = await fetch('/api/chat', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: payload, signal: controller.signal,
+        });
+        if (!resp.ok) {
+          const msg = resp.status === 401 ? 'API Key 无效。'
+            : resp.status === 429 ? '请求过于频繁，请稍后再试。'
+            : resp.status === 402 ? 'DeepSeek 余额不足，请充值。'
+            : `DeepSeek API 错误 (${resp.status})`;
+          const err: any = new Error(msg);
+          err.status = resp.status;
+          throw err;
+        }
+        const ddata = await resp.json();
+        return ddata?.choices?.[0]?.message?.content || '';
+      } finally {
+        clearTimeout(timeoutId);
+      }
+    };
+
+    // 超时 / 网络错误 / 5xx → 自动重试一次；401/402/429 等业务错误不重试
+    const retriable = (e: any) => e?.name === 'AbortError' || e?.name === 'TypeError' || (typeof e?.status === 'number' && e.status >= 500);
     let text = '';
     try {
-      const resp = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: modelToUse,
-          messages: [{ role: 'system', content: systemPrompt }, ...chatMessages],
-          temperature: 0.75,
-          top_p: 0.95,
-          max_tokens: 4096,
-          apiKey: playerApiKey || undefined,
-        }),
-        signal: controller.signal,
-      });
-      if (!resp.ok) {
-        const errData = await resp.json().catch(() => ({}));
-        if (resp.status === 401) throw new Error('API Key 无效。');
-        if (resp.status === 429) throw new Error('请求过于频繁，请稍后再试。');
-        if (resp.status === 402) throw new Error('DeepSeek 余额不足，请充值。');
-        throw new Error(`DeepSeek API 错误 (${resp.status})`);
-      }
-      const ddata = await resp.json();
-      text = ddata?.choices?.[0]?.message?.content || '';
-    } finally {
-      clearTimeout(timeoutId);
+      text = await once();
+    } catch (e: any) {
+      if (!retriable(e)) throw e;
+      await new Promise(r => setTimeout(r, 800));
+      text = await once();
     }
 
     if (!text || text.trim() === '') throw new Error('AI 返回内容为空。');
