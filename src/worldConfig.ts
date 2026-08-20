@@ -89,13 +89,12 @@ function hash(s: string): number {
   return h >>> 0;
 }
 
-// 团体行程按"团"确定：同团成员在团体日必须同进同出（打歌/综艺/演唱会/巡演/练习）。
-// 只有休息日/自由日才回落到个人随机，各自散开 —— 这也是玩家能单独约到人的时候。
-// 少数情况给个人 solo 通告：全团在跑行程时，只有她一个人在别处（珍贵的独处机会）。
+// 团体行程按"团"确定：同团成员在团体日严格同进同出（打歌/综艺/演唱会/巡演/练习）。
+// 只有休息日/自由日才回落到个人随机、各自散开 —— 这也是玩家单独约人的时候。
+// （想单独跟某个成员对话，团体日里走近她本人就是 1v1，不需要她一个人跑掉。）
 export function getActivity(memberId: string, day: number, slot: number, group?: string): Activity {
   const teamKey = group || memberId;               // 没给团名就退化成旧的个人行为
   const dayTheme = hash(`${teamKey}|day${day}`) % 100;
-  const solo = !!group && hash(`${memberId}|solo${day}-${slot}`) % 100 < 8; // 8% 个人通告
 
   // 巡演/大行程：整团在外地
   if (dayTheme < 10) return ACT.tour;
@@ -103,26 +102,22 @@ export function getActivity(memberId: string, day: number, slot: number, group?:
 
   // 演唱会日：上午彩排，下午+晚上在演唱会现场
   if (dayTheme < 27) {
-    if (solo) return ACT.roof;
     if (slot === 0) return ACT.practice;
     return ACT.concert;
   }
   // 回归打歌日：上午后台彩排，下午上打歌舞台，晚上各自回宿舍/咖啡厅
   if (dayTheme < 48) {
-    if (solo && slot < 2) return ACT.roof;
     if (slot === 0) return ACT.stage;
     if (slot === 1) return ACT.perform;
     return hash(`${memberId}|e${day}`) % 2 ? ACT.rest : ACT.cafe;
   }
   // 录综艺日：白天录制，晚上各自宿舍/便利店
   if (dayTheme < 63) {
-    if (solo && slot < 2) return ACT.cafe;
     if (slot < 2) return ACT.variety;
     return hash(`${memberId}|e${day}`) % 2 ? ACT.rest : ACT.conv;
   }
   // 练习日：白天全团练习，晚上各自汉江/便利店
   if (dayTheme < 78) {
-    if (solo && slot < 2) return ACT.roof;
     if (slot < 2) return ACT.practice;
     return hash(`${memberId}|e${day}`) % 2 ? ACT.hangang : ACT.conv;
   }

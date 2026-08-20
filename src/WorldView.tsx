@@ -692,7 +692,7 @@ export default function WorldView({
                     <td colSpan={TIME_SLOTS.length + 1} className="pt-3 pb-1 px-2">
                       <span className="gold-caption">{g}</span>
                       <span className="ml-2 text-[9px] font-bold" style={{ color: isGroupDay(g, day) ? '#C9A227' : '#8B86B8' }}>
-                        {isGroupDay(g, day) ? (tw ? '· 團體行程日（全團同進同出）' : '· 团体行程日（全团同进同出）') : (tw ? '· 休息日（各自散開，好約）' : '· 休息日（各自散开，好约）')}
+                        {isGroupDay(g, day) ? (tw ? '· 團體行程日（白天同行，晚上各自休息）' : '· 团体行程日（白天同行，晚上各自休息）') : (tw ? '· 休息日（各自散開，好約）' : '· 休息日（各自散开，好约）')}
                       </span>
                     </td>
                   </tr>,
