@@ -1241,10 +1241,10 @@ export default function App() {
 
   const handleAIStep = async (userContent: string, stateToUse: GameState) => {
     try {
-      const response = await Promise.race([
-        callGeminiAPI(stateToUse.history.slice(-10), stateToUse),
-        new Promise((_, reject) => setTimeout(() => reject(new Error("通讯超时，请重试。")), 60000))
-      ]) as string;
+      // 超时与重试已在 callGeminiAPI 内部处理（60s + abort + 自动重试）；
+      // 不要在外层再套一个 Promise.race —— 它会在慢生成/重试完成前先判超时，
+      // 底层请求随后又成功，就出现"AI 明明返回了、界面却报错"。
+      const response = await callGeminiAPI(stateToUse.history.slice(-10), stateToUse);
       processAIResponse(response, stateToUse);
     } catch(e) {
       setGameState(prev => ({ ...prev, history: [...prev.history, { role: MessageRole.ASSISTANT, content: `抱歉，出现错误。\n错误信息: ${e instanceof Error ? e.message : String(e)}`, timestamp: Date.now() }] }));
