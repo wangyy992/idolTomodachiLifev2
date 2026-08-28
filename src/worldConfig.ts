@@ -14,7 +14,7 @@ export const WORLD_LOCATIONS: WorldLocation[] = [
   { id: 'backstage', label: '待机室', sceneKey: 'backstage_hall', icon: '🎤' },
   { id: 'variety_studio', label: '综艺棚', sceneKey: 'recording_studio', icon: '🎬' },
   { id: 'concert', label: '演唱会现场', sceneKey: 'concert', icon: '🎆' },
-  { id: 'music_stage', label: '打歌舞台', sceneKey: 'stage_wing', icon: '🏆' },
+  { id: 'music_stage', label: '打歌舞台', sceneKey: 'music_stage', icon: '🏆' },
   { id: 'dorm', label: '宿舍', sceneKey: 'dorm', icon: '🛋️' },
   { id: 'cafe', label: '咖啡厅', sceneKey: 'cafe', icon: '☕' },
   { id: 'convenience', label: '便利店', sceneKey: 'convenience_store', icon: '🏪' },

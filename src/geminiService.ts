@@ -260,10 +260,6 @@ BUBBLE_END
 
 ${theqooFormat}
 
-MUSICSHOW_START
-{"winner":"团体名","scores":[{"group":"团体名","digital":3200,"physical":1100,"sns":2400,"preVote":1600,"broadcast":700,"total":9000}]}
-MUSICSHOW_END
-
 第三部分：选项（直接写，不加标题）
 A. [具体行动]
 B. [具体行动]
@@ -717,12 +713,12 @@ ${cardMemory}
 【当前状态】
 好感度：${currentAffection}
 当前关系阶段：${relationStages}
-当前轮数：第${gameState.turnCount || 1}轮（唯一时间锚点，禁止无视）
-场景：${gameState.currentScene || '首尔'}
-回归期：${gameState.isComebackSetting ? '是' : '否'}
-上一轮剧情记忆：${gameState.hiddenSummary || '无（第一轮，从头开始）'}
+当前时间：第${(gameState as any).worldDay ?? 1}天·${TIME_SLOT_CN[(gameState as any).worldSlot ?? 0] || ''}（唯一时间锚点。时间由玩家在世界地图上「推进时段」来走，你不许在正文里跳时间或换到别的时段）
+你所在的场景：${gameState.currentScene || '首尔'}（这一刻就发生在这里，不要自行换场）
+回归期：${(() => { const g = targetsAll[0]?.group; const p = g ? phaseAt(g, (gameState as any).worldDay ?? 1) : null; return (p && (p.kind === 'comeback' || p.kind === 'promo')) ? `是（${p.label}）` : '否'; })()}
+上一段记忆：${gameState.hiddenSummary || '无（第一次接触，从头开始）'}
 
-注意：必须严格从上一轮记忆继续推进，禁止重置或无故跳跃时间线。hiddenSummary必须写明本轮好感度变化原因和关键事件。
+注意：从上一段记忆自然接续。这一段对话就发生在"当下这一刻"，禁止跳时间、禁止换场、禁止替玩家补演之后的事，直到玩家离开或推进时段。hiddenSummary 必须写清本段好感变化原因和关键事件。
 ${writingStyle}
 ${koreanDetails}
 ${dmForbidden}
@@ -818,7 +814,7 @@ UI触发规则
 - 爱豆发Weverse → WEVERSE_START...WEVERSE_END
 - 爱豆发Bubble → BUBBLE_START...BUBBLE_END
 - 有热帖 → THEQOO_START...THEQOO_END
-- 打歌节目一位 → MUSICSHOW_START...MUSICSHOW_END
+（打歌名次由游戏系统结算，不要在这里输出打歌成绩）
 
 ════════════════════════
 禁止事项
@@ -903,7 +899,7 @@ ${soloIntent === 'romance'
   const wloc = (gameState as any).worldLocation ?? '';
   const doneMilestones: string[] = (gameState as any).milestones || [];
   const milestoneHints: string[] = [];
-  const quiet = quietPlaceNow(wslot, wloc);
+  const quiet = quietPlaceNow(wslot, wloc.split('@')[0]);
   for (const m of onStage) {
     const md = pendingMilestone(m.id, {
       affection: m.affection || 0,

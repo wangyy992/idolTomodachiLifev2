@@ -83,7 +83,7 @@ function moveToward(e: Entity, speed: number, dt: number): boolean {
 }
 
 export default function WorldView({
-  members, playerName, day, slot, locationId, identity, actionUsed, onSupport, endingReady, onOpenEnding, onTravel, onAdvanceTime, onTalk, lang,
+  members, playerName, day, slot, locationId, identity, usedActionIds, supportUsed, onSupport, endingReady, onOpenEnding, onTravel, onAdvanceTime, onTalk, lang,
   relations, intents, matchmakes, onSetIntent, onToggleMatchmake, onSetPairAffinity, onConfess, onIdolEncounter, worldFeed, onWatchEncounter,
   appearances, playerAppearance, onCustomize, phoneUnread, onOpenPhone, pendingMilestones,
 }: {
@@ -91,7 +91,8 @@ export default function WorldView({
   playerName: string;
   day: number; slot: number; locationId: string;
   identity: string[];
-  actionUsed: boolean;
+  usedActionIds: string[];   // 本时段已深入互动过的爱豆 id（每人每时段 1 次）
+  supportUsed: boolean;      // 本时段应援打投是否已用
   onSupport: () => void;
   endingReady?: boolean;
   onOpenEnding?: () => void;
@@ -134,6 +135,8 @@ export default function WorldView({
   }
   const present = effUnit ? rawPresent.filter(m => unitKeyOf(baseLoc, m) === effUnit) : rawPresent;
   const presentKey = present.map(m => m.id).join(',') + `@${locationId}#${day}-${slot}`;
+  // 本时段这里的人是否都已深入互动过（都聊过 → 提示推进时段）
+  const allHereUsed = present.length > 0 && present.every(m => (usedActionIds || []).includes(m.id));
   // 私密地点：本时段在场的各"单位"（公司/团），给顶部切换抽屉用
   const localUnits: { unit: string; label: string; count: number }[] = (() => {
     if (scope === 'shared') return [];
@@ -391,13 +394,13 @@ export default function WorldView({
         </div>
         <div
           className="px-3 py-1 rounded-full text-[10px] font-bold pointer-events-none flex items-center gap-1.5"
-          style={actionUsed
+          style={allHereUsed
             ? { background: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.6)' }
             : { background: 'rgba(201,162,39,0.18)', color: '#F1ECFF', border: '1px solid rgba(201,162,39,0.45)' }}
         >
-          {actionUsed
-            ? (tw ? '本時段已用完 —— 只能閒聊，推進時段恢復' : '本时段已用完 —— 只能闲聊，推进时段恢复')
-            : <><span className="text-[#C9A227]">●</span>{tw ? '本時段還可深入互動 1 次' : '本时段还可深入互动 1 次'}</>}
+          {allHereUsed
+            ? (tw ? '這裡的人都聊過了 —— 推進時段或去別處' : '这里的人都聊过了 —— 推进时段或去别处')
+            : <><span className="text-[#C9A227]">●</span>{tw ? '走近愛豆互動（每人每時段 1 次）' : '走近爱豆互动（每人每时段 1 次）'}</>}
         </div>
         {/* 私密地点：选团/选公司抽屉（跨公司/跨团不同屏，各用各的房间）*/}
         {scope !== 'shared' && localUnits.length > 1 && (
@@ -452,7 +455,7 @@ export default function WorldView({
           <CalendarRange className="w-4 h-4" />
         </button>
         {isPromo && (
-          <button onClick={onSupport} disabled={actionUsed} title={tw ? '應援打投' : '应援打投'}
+          <button onClick={onSupport} disabled={supportUsed} title={tw ? '應援打投' : '应援打投'}
             className="px-3 py-1.5 rounded-xl text-white text-[11px] font-black flex items-center gap-1 transition-all disabled:opacity-40"
             style={{ background: 'linear-gradient(135deg,#FF7A93,#e35c78)', boxShadow: '0 6px 16px -6px rgba(255,122,147,0.8)' }}>
             <Megaphone className="w-3.5 h-3.5" /> {tw ? '應援' : '应援'}
@@ -465,7 +468,7 @@ export default function WorldView({
             ✦ {tw ? '結局' : '结局'}
           </button>
         )}
-        <button onClick={onAdvanceTime} className={`px-3 py-1.5 rounded-xl text-white text-[11px] font-black flex items-center gap-1 transition-all border-none ${actionUsed ? 'animate-pulse' : ''}`} style={{ background: 'linear-gradient(135deg,#6C79C4,#454F87)', boxShadow: actionUsed ? '0 6px 20px -4px rgba(201,162,39,0.9)' : '0 6px 16px -6px rgba(91,107,176,0.8)' }}>
+        <button onClick={onAdvanceTime} className={`px-3 py-1.5 rounded-xl text-white text-[11px] font-black flex items-center gap-1 transition-all border-none ${allHereUsed ? 'animate-pulse' : ''}`} style={{ background: 'linear-gradient(135deg,#6C79C4,#454F87)', boxShadow: allHereUsed ? '0 6px 20px -4px rgba(201,162,39,0.9)' : '0 6px 16px -6px rgba(91,107,176,0.8)' }}>
           {tw ? '推進時段' : '推进时段'} <ChevronRight className="w-3.5 h-3.5" />
         </button>
       </div>
@@ -511,10 +514,10 @@ export default function WorldView({
                 )}
                 {isNear && (
                   <div
-                    className={`mb-0.5 px-2 py-0.5 rounded-full text-white text-[9px] font-black flex items-center gap-1 shadow-lg ${actionUsed ? '' : 'animate-bounce'}`}
-                    style={{ background: actionUsed ? 'rgba(8,6,16,0.7)' : '#5B6BB0' }}
+                    className={`mb-0.5 px-2 py-0.5 rounded-full text-white text-[9px] font-black flex items-center gap-1 shadow-lg ${(usedActionIds || []).includes(e.member!.id) ? '' : 'animate-bounce'}`}
+                    style={{ background: (usedActionIds || []).includes(e.member!.id) ? 'rgba(8,6,16,0.7)' : '#5B6BB0' }}
                   >
-                    <MessageCircle className="w-2.5 h-2.5" /> {actionUsed ? (tw ? '閒聊' : '闲聊') : (tw ? '對話' : '对话')}
+                    <MessageCircle className="w-2.5 h-2.5" /> {(usedActionIds || []).includes(e.member!.id) ? (tw ? '閒聊' : '闲聊') : (tw ? '對話' : '对话')}
                   </div>
                 )}
                 <div className={`px-1.5 py-0.5 rounded text-[9px] font-black ${e.isPlayer ? 'bg-white/90 text-[#2A2A3D]' : 'bg-black/45 text-white'}`}>

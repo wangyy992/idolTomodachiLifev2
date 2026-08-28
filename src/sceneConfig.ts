@@ -128,6 +128,13 @@ export const SCENE_CONFIG: Record<string, {
     ratio: 1.791044776119403,
     overlay: 'rgba(0,0,0,0.04)',
   },
+  'music_stage': {
+    label: '打歌舞台',
+    bg: "#0e0a1a url('/scenes/showstage.png') center/cover no-repeat",
+    sceneBase: '#0e0a1a',
+    ratio: 1.777777777777778,
+    overlay: 'rgba(0,0,0,0.04)',
+  },
 };
 
 // 场景名映射（AI输出的中文场景名 → 场景ID）
@@ -157,7 +164,11 @@ export const SCENE_NAME_MAP: Record<string, string> = {
   '打歌后台': 'backstage_hall',
   '后台': 'backstage_hall',
   '舞台侧幕': 'stage_wing',
-  '舞台': 'stage_wing',
+  '打歌舞台': 'music_stage',
+  '打歌': 'music_stage',
+  '打歌节目': 'music_stage',
+  '音乐节目': 'music_stage',
+  '舞台': 'music_stage',
 };
 
 export const DEFAULT_SCENE = 'seoul_street';
