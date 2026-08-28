@@ -1046,7 +1046,11 @@ export default function App() {
   const worldSlot = gameState.worldSlot ?? 0;
   const worldLocation = gameState.worldLocation ?? 'practice_room';
   // 行动点：每时段全员共享一次深度互动，用掉后只能闲聊，推进时段自动恢复
-  const actionUsed = gameState.actionUsedAt === `${worldDay}-${worldSlot}`;
+  // 每人每时段一次深度互动（F6）：usedActions 存 "day-slot:id"；推进时段后自然作废
+  const slotPrefix = `${worldDay}-${worldSlot}:`;
+  const usedThisSlot = (gameState.usedActions || []).filter(k => k.startsWith(slotPrefix)).map(k => k.slice(slotPrefix.length));
+  const isActionUsed = (id: string) => usedThisSlot.includes(id);
+  const supportUsed = isActionUsed('__support__');
   const phoneFeed = gameState.phoneFeed || [];
   const phoneUnread = phoneFeed.filter(f => !f.read).length;
   const openPhone = () => setShowPhone(true);
@@ -1237,15 +1241,17 @@ export default function App() {
     handleAIStep(summary, newState);
   };
 
-  const handleAIStep = async (userContent: string, stateToUse: GameState) => {
+  const handleAIStep = async (userContent: string, stateToUse: GameState): Promise<boolean> => {
     try {
       // 超时与重试已在 callGeminiAPI 内部处理（60s + abort + 自动重试）；
       // 不要在外层再套一个 Promise.race —— 它会在慢生成/重试完成前先判超时，
       // 底层请求随后又成功，就出现"AI 明明返回了、界面却报错"。
       const response = await callGeminiAPI(stateToUse.history.slice(-10), stateToUse);
       processAIResponse(response, stateToUse);
+      return true;
     } catch(e) {
       setGameState(prev => ({ ...prev, history: [...prev.history, { role: MessageRole.ASSISTANT, content: `抱歉，出现错误。\n错误信息: ${e instanceof Error ? e.message : String(e)}`, timestamp: Date.now() }] }));
+      return false;
     } finally { setIsLoading(false); }
   };
 
@@ -1480,7 +1486,7 @@ export default function App() {
     });
   };
 
-  const handleSend = async (content?: any, opts?: { focusIds?: string[]; consumeAction?: boolean; vignette?: any }) => {
+  const handleSend = async (content?: any, opts?: { focusIds?: string[]; consumeFor?: string[]; vignette?: any }) => {
     const textToSend = typeof content === 'string' ? content : input;
     if (!textToSend || !textToSend.trim()) return;
     if (isLoading) return;
@@ -1493,18 +1499,21 @@ export default function App() {
     // 续聊/主输入（无 focusIds）沿用当前 scene 的需求不动。
     if (opts?.vignette !== undefined) nextState.vignetteNeed = opts.vignette;
     else if (opts?.focusIds) nextState.vignetteNeed = null;
-    // 深度互动消耗本时段的行动点（每时段全员共享一次）
-    if (opts?.consumeAction) nextState.actionUsedAt = `${nextState.worldDay ?? 1}-${nextState.worldSlot ?? 0}`;
     nextState.history = [...nextState.history, { role: MessageRole.USER, content: textToSend, timestamp: Date.now() }];
     setGameState(nextState);
-    await handleAIStep(textToSend, nextState);
+    const ok = await handleAIStep(textToSend, nextState);
+    // F7：行动点只在 AI 成功返回后才扣（每人每时段一次）；失败不烧机会
+    if (ok && opts?.consumeFor?.length) {
+      const pfx = `${nextState.worldDay ?? 1}-${nextState.worldSlot ?? 0}:`;
+      setGameState(prev => ({ ...prev, usedActions: [...(prev.usedActions || []), ...opts.consumeFor!.map(id => pfx + id)] }));
+    }
   };
 
   // 从俯视世界点击爱豆 → 切回剧情，预填带场景/心情语境的“走近”动作交给 DeepSeek
   const handleTalkTo = (m: Member, ctx?: { location: WorldLocation; activity: Activity; need?: Need }) => {
     const isTw = (gameState as any).language === 'traditional';
-    // 本时段的行动点已用掉 → 只能闲聊：本地生成一句，不调 AI、不涨好感
-    if (actionUsed) {
+    // 这一时段已深入互动过“这个人” → 只能闲聊（其他爱豆仍可正常互动，F6 每人每时段一次）
+    if (isActionUsed(m.id)) {
       pushToast(chitchatLine(m, ctx, isTw), 'friendly');
       return;
     }
@@ -1517,7 +1526,7 @@ export default function App() {
         : `（我${where}走近${m.name}——看她${need.label}的样子）`;
       setScene({ ids: [m.id], anchor: gameState.history.length });
       handleSend(seedLine, {
-        focusIds: [m.id], consumeAction: true,
+        focusIds: [m.id], consumeFor: [m.id],
         vignette: { kind: need.kind, label: need.label, seed: need.seed, quickHints: need.quickHints, targetName: need.targetName },
       });
       return;
@@ -1527,7 +1536,7 @@ export default function App() {
       ? `（我${where}走近${m.name}，和ta打個招呼）${doing}`
       : `（我${where}走近${m.name}，和ta打个招呼）${doing}`;
     setScene({ ids: [m.id], anchor: gameState.history.length });
-    handleSend(line, { focusIds: [m.id], consumeAction: true });
+    handleSend(line, { focusIds: [m.id], consumeFor: [m.id] });
   };
 
   // 手机私信：不占行动点，但每天有条数上限；发太勤会涨曝光度（"他手机被工作人员关注"）
@@ -1576,13 +1585,13 @@ export default function App() {
   // 应援打投：占用本时段行动点，累积到打歌成绩（回归期才有）
   const handleSupport = () => {
     const isTw = (gameState as any).language === 'traditional';
-    if (actionUsed) { pushToast(isTw ? '這個時段的精力用完了' : '这个时段的精力用完了', 'friendly'); return; }
+    if (supportUsed) { pushToast(isTw ? '這個時段已經應援過了' : '这个时段已经应援过了', 'friendly'); return; }
     setGameState(prev => {
       const p = prev.playerImpact || { albumImpact: 0, voteImpact: 0 };
       return {
         ...prev,
         playerImpact: { albumImpact: Math.min(60, p.albumImpact + 6), voteImpact: Math.min(60, p.voteImpact + 8) },
-        actionUsedAt: `${prev.worldDay ?? 1}-${prev.worldSlot ?? 0}`,
+        usedActions: [...(prev.usedActions || []), `${prev.worldDay ?? 1}-${prev.worldSlot ?? 0}:__support__`],
       };
     });
     pushToast(isTw ? '你做了一輪打投與控評 —— 會反映在打歌成績上' : '你做了一轮打投与控评 —— 会反映在打歌成绩上', 'romance');
@@ -1594,8 +1603,8 @@ export default function App() {
     const k = pairKey(a.id, b.id);
     const isMatch = (gameState.matchmakes || []).includes(k);
     const isTw = (gameState as any).language === 'traditional';
-    if (actionUsed) {
-      pushToast(isTw ? '這個時段的精力用完了，先推進時段吧' : '这个时段的精力用完了，先推进时段吧', 'friendly');
+    if (isActionUsed(a.id) && isActionUsed(b.id)) {
+      pushToast(isTw ? '她們這個時段都聊過了，先推進時段吧' : '她们这个时段都聊过了，先推进时段吧', 'friendly');
       return;
     }
     const hint = isMatch ? '（我想撮合她们，留意有没有暧昧的火花）' : '';
@@ -1603,7 +1612,7 @@ export default function App() {
       ? `（我在${ctx.location.label}，看到 ${a.name} 和 ${b.name} 湊在一起，我在旁邊靜靜觀察她們的互動）${hint}`
       : `（我在${ctx.location.label}，看到 ${a.name} 和 ${b.name} 凑在一起，我在旁边静静观察她们的互动）${hint}`;
     setScene({ ids: [a.id, b.id], anchor: gameState.history.length });
-    handleSend(line, { focusIds: [a.id, b.id], consumeAction: true });
+    handleSend(line, { focusIds: [a.id, b.id], consumeFor: [a.id, b.id] });
   };
 
   // 捏脸：取当前外观（覆盖或默认）+ 应用
@@ -2107,7 +2116,8 @@ export default function App() {
             slot={worldSlot}
             locationId={worldLocation}
             identity={gameState.identity || []}
-            actionUsed={actionUsed}
+            usedActionIds={usedThisSlot}
+            supportUsed={supportUsed}
             onSupport={handleSupport}
             endingReady={!!ending || isYearEnd}
             onOpenEnding={() => setShowEnding(true)}
