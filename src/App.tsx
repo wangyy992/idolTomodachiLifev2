@@ -14,6 +14,7 @@ import { nextTime, idolsAt, getLocation, getActivity, unitKeyOf, getStartLocatio
 import { seedIdolRelations, pairKey, deriveType, hasFlag, PLAYER, type Intent } from './relations';
 import { computeMusicShow, isMusicShowDay, weekOf, DAYS_PER_YEAR } from './calendar';
 import { availableEnding, buildYearbook } from './endings';
+import { pendingMilestone, quietPlaceNow, milestoneTitle } from './milestones';
 import EndingCard from './EndingCard';
 
 const LOCAL_STORAGE_KEY = 'star_reality_kpop_game_state';
@@ -1317,6 +1318,11 @@ export default function App() {
     // MILESTONE_ID=xxx：阶段突破已演出，记录下来避免重复触发
     const firedMilestones: string[] = [];
     remaining = remaining.replace(/^\s*MILESTONE_ID\s*=\s*(\S+)\s*$/gm, (_s, id) => { firedMilestones.push(String(id)); return ''; });
+    // 大节点触发 → 醒目 toast（和普通小事件区分开）
+    firedMilestones.filter(id => !(stateAtCall.milestones || []).includes(id)).forEach(id => {
+      const nm = gameState.members.find(m => m.id === (id.includes(':') ? id.split(':')[0] : ''))?.name || '';
+      pushToast(`⚡ ${nm ? nm + '：' : ''}${milestoneTitle(id)}`, 'romance');
+    });
     // EVENT_ID=xxx：本轮演过的事件，记下来做冷却
     const firedEvents: string[] = [];
     remaining = remaining.replace(/^\s*EVENT_ID\s*=\s*(\S+)\s*$/gm, (_s, id) => { firedEvents.push(String(id)); return ''; });
@@ -1398,9 +1404,23 @@ export default function App() {
         firedEvents.forEach(id => { re[id] = d; });
         next.recentEvents = re;
       }
-      // 阶段突破：记录已触发，避免重复
+      // 阶段突破：记录已触发，避免重复；并写进"大事记"喂给年鉴/结局
       if (firedMilestones.length) {
+        const already = new Set(prev.milestones || []);
+        const fresh = firedMilestones.filter(id => !already.has(id));
         next.milestones = Array.from(new Set([...(prev.milestones || []), ...firedMilestones]));
+        if (fresh.length) {
+          const day = prev.worldDay ?? 1;
+          const mem = snapshot?.hiddenSummary ? String(snapshot.hiddenSummary).slice(0, 80) : '';
+          next.milestoneLog = [
+            ...(prev.milestoneLog || []),
+            ...fresh.map(id => {
+              const memberId = id.includes(':') ? id.split(':')[0] : '';
+              const name = prev.members.find((m: Member) => m.id === memberId)?.name || '';
+              return { id, memberId, name, title: milestoneTitle(id), day, memory: mem };
+            }),
+          ].slice(-40);
+        }
       }
       // 长期记忆：把本轮摘要写进在场爱豆的档案（每人最多留 12 条）
       const focus = (stateAtCall as any).sceneFocusIds as string[] | undefined;
@@ -1710,6 +1730,19 @@ export default function App() {
   // 俯视世界里出现的爱豆：优先玩家关注的对象，否则取前若干位
   const worldMembers = targetMembers.length > 0 ? targetMembers : gameState.members.slice(0, 6);
 
+  // 大节点预兆：当前世界里哪些爱豆此刻有"待触发"的重头戏 → 头顶亮 ⚡
+  const worldPendingMilestones: Record<string, { title: string; omen: string }> = {};
+  const quietNow = quietPlaceNow(worldSlot, worldLocation);
+  worldMembers.forEach(m => {
+    const md = pendingMilestone(m.id, {
+      affection: m.affection || 0,
+      intentRomance: (gameState.relationIntents || {})[m.id] === 'romance',
+      quietPlace: quietNow,
+      done: gameState.milestones || [],
+    });
+    if (md) worldPendingMilestones[m.id] = { title: md.title, omen: md.omen };
+  });
+
   // ── 结局：条件触发，玩家自己决定何时收 ──
   const confessedIds = worldMembers
     .filter(m => hasFlag((gameState.worldRelations || {})[pairKey(PLAYER, m.id)], 'confessed'))
@@ -1813,6 +1846,7 @@ export default function App() {
       {(showEnding || beOpen) && (ending || yearbook) && (
         <EndingCard
           ending={ending} yearbook={yearbook} cast={endingCast} lang={lang}
+          milestoneLog={(gameState.milestoneLog || []).filter(e => worldMembers.some(m => m.id === e.memberId))}
           onClose={() => { setShowEnding(false); setEndingDismissed(true); }}
           onContinue={ending?.kind === 'be' ? undefined : () => { setShowEnding(false); setEndingDismissed(true); }}
         />
@@ -2054,6 +2088,7 @@ export default function App() {
             onCustomize={setCustomizing}
             phoneUnread={phoneUnread}
             onOpenPhone={openPhone}
+            pendingMilestones={worldPendingMilestones}
           />
         </div>
         ) : (

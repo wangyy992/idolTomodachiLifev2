@@ -3,6 +3,7 @@ import { PLAYER } from './relations';
 
 import { pickEvent, MATCHMAKE_VERBS } from './events';
 import { phaseAt } from './calendar';
+import { pendingMilestone, quietPlaceNow } from './milestones';
 
 const TIME_SLOT_CN = ['上午', '下午', '晚上'];
 
@@ -895,23 +896,26 @@ ${soloIntent === 'romance'
     return `- ${m.name}：\n` + list.map(e => `    · D${e.day}·${TIME_SLOT_CN[e.slot] || ''} ${e.text}`).join('\n');
   });
 
-  // ==== 阶段突破：好感阈值 + 情境条件 → 强插一条特殊事件指令 ====
+  // ==== 阶段突破（里程碑）：暗线攒够 → 强插一场"重头戏"大节点（更长、更正式、authored）====
   const wday = (gameState as any).worldDay ?? 1;
   const wslot = (gameState as any).worldSlot ?? 0;
   const wloc = (gameState as any).worldLocation ?? '';
   const doneMilestones: string[] = (gameState as any).milestones || [];
   const milestoneHints: string[] = [];
+  const quiet = quietPlaceNow(wslot, wloc);
   for (const m of onStage) {
-    const aff = m.affection || 0;
-    const fire = (id: string, cond: boolean, text: string) => {
-      if (cond && !doneMilestones.includes(`${m.id}:${id}`)) milestoneHints.push(`[特殊事件·${m.name}] ${text}\nMILESTONE_ID=${m.id}:${id}`);
-    };
-    fire('vulnerable', aff >= 30 && (wslot === 2 || wloc === 'hangang' || wloc === 'rooftop'),
-      `本轮她要吐露最近最大的职业压力，露出脆弱的一面，关系推进到"朋友"。写得克制、具体，不要煽情。`);
-    fire('boundary', aff >= 55 && soloIntent === 'romance',
-      `本轮出现一次两人都察觉到的越界瞬间（不是告白），事后两人都装作没发生。`);
-    fire('confess_ready', aff >= 75 && soloIntent === 'romance',
-      `她已经明白玩家的心意，本轮要给出一个明确的"可以更进一步"的信号，但由玩家来捅破。`);
+    const md = pendingMilestone(m.id, {
+      affection: m.affection || 0,
+      intentRomance: soloIntent === 'romance',
+      quietPlace: quiet,
+      done: doneMilestones,
+    });
+    if (md) {
+      milestoneHints.push(
+        `[⚡ 重头戏·${m.name}：${md.title}] ${md.directive}\n` +
+        `——这是一场大节点，不是日常闲聊：慢下来，写 250-450 字，郑重、完整、有起承转合；不要一句带过，也不要塞进无关的日常琐碎。演完后原样输出一行 MILESTONE_ID=${m.id}:${md.id}`
+      );
+    }
   }
 
   // ==== 曝光度：偷偷来往的代价 ====

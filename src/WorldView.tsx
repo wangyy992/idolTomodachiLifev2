@@ -84,7 +84,7 @@ function moveToward(e: Entity, speed: number, dt: number): boolean {
 export default function WorldView({
   members, playerName, day, slot, locationId, identity, actionUsed, onSupport, endingReady, onOpenEnding, onTravel, onAdvanceTime, onTalk, lang,
   relations, intents, matchmakes, onSetIntent, onToggleMatchmake, onSetPairAffinity, onConfess, onIdolEncounter, worldFeed, onWatchEncounter,
-  appearances, playerAppearance, onCustomize, phoneUnread, onOpenPhone,
+  appearances, playerAppearance, onCustomize, phoneUnread, onOpenPhone, pendingMilestones,
 }: {
   members: Member[];
   playerName: string;
@@ -113,8 +113,10 @@ export default function WorldView({
   appearances: Record<string, Appearance>;
   playerAppearance?: Appearance;
   onCustomize: (t: { kind: 'player' } | { kind: 'idol'; id: string }) => void;
+  pendingMilestones?: Record<string, { title: string; omen: string }>;
 }) {
   const tw = lang === 'traditional';
+  const pendMs = pendingMilestones || {};
   // 地点 key 可能带单位后缀（如 dorm@ITZY / practice_room@JYP）；取 base 找场景，用 unit 过滤在场
   const { base: baseLoc, unit: locUnit } = parseLocKey(locationId);
   const location = getLocation(baseLoc) || WORLD_LOCATIONS[0];
@@ -459,6 +461,7 @@ export default function WorldView({
         {sorted.map(e => {
           const isNear = !e.isPlayer && e.id === nearId;
           const activity = e.member ? getActivity(e.member.id, day, slot, e.member.group) : null;
+          const ms = !e.isPlayer && e.member ? pendMs[e.member.id] : undefined;
           return (
             <div
               key={e.id}
@@ -468,6 +471,12 @@ export default function WorldView({
             >
               <div className="absolute left-1/2 -translate-x-1/2" style={{ bottom: -4, width: SPRITE * 0.5, height: SPRITE * 0.16, borderRadius: '50%', background: 'rgba(0,0,0,0.35)', filter: 'blur(2px)' }} />
               <div className="absolute left-1/2 -translate-x-1/2 -top-6 flex flex-col items-center gap-0.5 whitespace-nowrap">
+                {ms && (
+                  <div className="mb-0.5 px-2 py-0.5 rounded-full text-[9px] font-black flex items-center gap-1 shadow-lg animate-pulse"
+                    style={{ background: 'linear-gradient(135deg,#C9A227,#E6C34A)', color: '#1a1408' }}>
+                    ⚡ {ms.omen}
+                  </div>
+                )}
                 {isNear && (
                   <div
                     className={`mb-0.5 px-2 py-0.5 rounded-full text-white text-[9px] font-black flex items-center gap-1 shadow-lg ${actionUsed ? '' : 'animate-bounce'}`}
@@ -481,7 +490,7 @@ export default function WorldView({
                 </div>
                 {!e.isPlayer && activity && <div className="px-1 rounded text-[8px] text-white/80 bg-black/30">{activity.mood.split('、')[0]}</div>}
               </div>
-              <div className={!e.isPlayer ? 'cursor-pointer' : ''} style={{ filter: isNear ? 'drop-shadow(0 0 9px rgba(201,162,39,0.85)) drop-shadow(0 3px 4px rgba(0,0,0,0.5))' : 'drop-shadow(0 3px 4px rgba(0,0,0,0.45))' }}>
+              <div className={!e.isPlayer ? 'cursor-pointer' : ''} style={{ filter: ms ? 'drop-shadow(0 0 12px rgba(230,195,74,0.95)) drop-shadow(0 0 4px rgba(255,230,150,0.9))' : isNear ? 'drop-shadow(0 0 9px rgba(201,162,39,0.85)) drop-shadow(0 3px 4px rgba(0,0,0,0.5))' : 'drop-shadow(0 3px 4px rgba(0,0,0,0.45))' }}>
                 <PixelSprite sheet={stripsRef.current[e.id] ?? null} facing={e.facing} frame={e.frame} size={SPRITE} />
               </div>
             </div>

@@ -160,6 +160,8 @@ export interface GameState {
   memories?: Record<string, { day: number; slot: number; text: string }[]>;
   // 已触发过的阶段突破（key = `${memberId}:${milestoneId}`），避免重复触发
   milestones?: string[];
+  // 大事记：每次里程碑触发记一条，喂给年鉴/结局，让"发展"看得见
+  milestoneLog?: { id: string; memberId: string; name: string; title: string; day: number; memory: string }[];
   // 曝光度 0-100：偷偷来往的风险累积；低调会缓慢回落
   exposureLevel?: number;
   exposureTier?: number;    // 已播报到第几档，避免同一档重复触发
