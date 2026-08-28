@@ -12,7 +12,7 @@ import WorldPanel from './WorldPanel';
 import { getPlayerAppearance, getDefaultAppearance, getAppearance, normalizeAppearance, type Appearance } from './spriteUtils';
 import { nextTime, idolsAt, getLocation, getActivity, unitKeyOf, parseLocKey, getStartLocation, startingAffection, identitySummary, WORLD_LOCATIONS, type WorldLocation, type Activity } from './worldConfig';
 import { seedIdolRelations, pairKey, deriveType, hasFlag, PLAYER, type Intent } from './relations';
-import { computeMusicShow, isMusicShowDay, weekOf, DAYS_PER_YEAR } from './calendar';
+import { computeMusicShow, isMusicShowDay, weekOf, phaseAt, DAYS_PER_YEAR } from './calendar';
 import { availableEnding, buildYearbook } from './endings';
 import { pendingMilestone, quietPlaceNow, milestoneTitle } from './milestones';
 import type { Need } from './needs';
@@ -916,6 +916,13 @@ function extractBlock(text: string, startTag: string, endTag: string): { content
   return { content, remaining };
 }
 
+// 回归期由日历决定（不由 AI 说了算）：攻略目标所在团在当天是否处于回归/打歌期
+function comebackOnDay(members: Member[], targets: string[] | undefined, day: number): boolean {
+  const g = members.find(m => (targets || []).includes(m.id))?.group;
+  const p = g ? phaseAt(g, day) : null;
+  return !!p && (p.kind === 'comeback' || p.kind === 'promo');
+}
+
 function parseOptions(text: string): { text: string; action: string }[] {
   const abcdPattern = /^\*{0,2}([A-C])[\.、。\s]\*{0,2}\s*(.+)$/gm;
   const options: { text: string; action: string }[] = [];
@@ -1048,7 +1055,8 @@ export default function App() {
     // 关掉手机时全部标记已读，红点熄灭
     setGameState(prev => ({ ...prev, phoneFeed: (prev.phoneFeed || []).map(f => (f.read ? f : { ...f, read: true })) }));
   };
-  const setWorldLocation = (loc: string) => setGameState(p => ({ ...p, worldLocation: loc }));
+  // 地点由世界掌管：切地点时同步顶栏场景名（不再让 AI 覆盖）
+  const setWorldLocation = (loc: string) => setGameState(p => ({ ...p, worldLocation: loc, currentScene: getLocation(parseLocKey(loc).base)?.label ?? p.currentScene }));
   const pushToast = (text: string, kind: string) => {
     const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
     setToasts(t => [...t, { id, text, kind }]);
@@ -1216,7 +1224,7 @@ export default function App() {
     const newState: GameState = {
       ...gameState, ...data, members: allMembers, targets: allTargets,
       setupStep: SetupStep.CARDS, history: [], turnCount: 0,
-      ...(startLoc ? { worldLocation: startLoc, worldDay: 1, worldSlot: 0, currentScene: startScene } : {}),
+      ...(startLoc ? { worldLocation: startLoc, worldDay: 1, worldSlot: 0, currentScene: startScene, isComebackSetting: comebackOnDay(allMembers, allTargets, 1) } : {}),
       ...(daughterProfile ? { daughterProfile, momTrustLevel: 50 } : {}),
       ...(data.playerApiKey ? { playerApiKey: data.playerApiKey, playerModel: data.playerModel } : {}),
       language: data.language,
@@ -1309,13 +1317,15 @@ export default function App() {
           next.momTrustLevel = snapshot.members[0].affection ?? next.momTrustLevel;
         }
 
+        // 沙盒（世界模式）里，时间/地点/回归期/打歌名次都归游戏管，AI 的 SNAPSHOT 不许覆盖它们
+        const inWorld = !!prev.worldLocation;
         next = {
           ...next,
-          currentScene: snapshot.currentScene ?? next.currentScene,
+          currentScene: inWorld ? next.currentScene : (snapshot.currentScene ?? next.currentScene),
           hiddenSummary: snapshot.hiddenSummary ?? next.hiddenSummary,
-          isComebackSetting: snapshot.isComebackSetting ?? false,
+          isComebackSetting: inWorld ? next.isComebackSetting : (snapshot.isComebackSetting ?? false),
           groupHeats: snapshot.groupHeats ?? next.groupHeats,
-          currentMusicShow: musicResult || next.currentMusicShow,
+          currentMusicShow: inWorld ? next.currentMusicShow : (musicResult || next.currentMusicShow),
           members: next.members.map((m: Member) => {
             if (prev.gameMode === 'CPCP' && prev.targets.includes(m.id) && cpNewAffection !== null) {
               return { ...m, affection: cpNewAffection };
@@ -1325,7 +1335,8 @@ export default function App() {
           })
         };
       }
-      if (musicResult) next.musicShowHistory = [...(next.musicShowHistory || []), musicResult];
+      // 打歌名次只由系统结算（handleAdvanceTime）；世界模式下忽略 AI 自报的打歌结果
+      if (musicResult && !prev.worldLocation) next.musicShowHistory = [...(next.musicShowHistory || []), musicResult];
       if (newCards.length > 0) next.collectedCards = [...(next.collectedCards || []), ...newCards];
       if (newCards.length > 0 && prev.setupStep === SetupStep.CARDS) next.setupStep = SetupStep.STARTED;
 
@@ -1612,6 +1623,8 @@ export default function App() {
       }
       const nt = nextTime(day, slot);
       let next: any = { ...prev, worldRelations: rels, worldFeed: feed.slice(0, 30), worldDay: nt.day, worldSlot: nt.slot };
+      // 回归期由日历决定（推进到新的一天时刷新）
+      next.isComebackSetting = comebackOnDay(prev.members, prev.targets, nt.day);
 
       // 关系跨门槛的大新闻 → 进手机 + 弹 toast，让"她们自己处出感情"被你看见
       if (bigNews.length) {
