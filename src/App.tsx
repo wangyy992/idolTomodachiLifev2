@@ -480,6 +480,7 @@ const CharacterCreationWizard = ({ onComplete, members }: { onComplete: (data: a
     playerApiKey: '', playerModel: 'deepseek-v4-flash', language: 'simplified',
     playerAppearance: getPlayerAppearance('you') as Appearance,
     customMembers: [] as any[],
+    storyPremise: '',
   });
   // 自建角色（像 Tomodachi Life 那样把自己想要的人放进来）
   const [ocDraft, setOcDraft] = useState<any | null>(null);
@@ -516,8 +517,8 @@ const CharacterCreationWizard = ({ onComplete, members }: { onComplete: (data: a
   const currentIds = ids;
 
   const modes = [
-    { id: 'romance', name: '自由世界', desc: '在地图上认识爱豆，恋爱和拉郎都在里面' },
-    { id: 'mom', name: '宝妈模式', desc: '养一个出道女儿（旧版剧情）' }
+    { id: 'romance', name: '自由世界', desc: '在俯视地图上认识爱豆：作息、走动、恋爱、拉郎、曝光度都在里面。系统化玩法。' },
+    { id: 'story', name: '自由剧情 · 实验', desc: '选个爱豆 + 自己写开局设定，AI 顺着你写剧情，你想怎么走就怎么走。纯剧情共创，没有分数和固定选项。' },
   ];
   const nationalities = ['韩国', '中国', '日本', '其他'];
   const personalities = [
@@ -586,7 +587,9 @@ const CharacterCreationWizard = ({ onComplete, members }: { onComplete: (data: a
     </div>
   );
 
-  const flow: string[] = ['basics', 'face', 'identity', 'idols'];
+  const flow: string[] = data.gameMode === 'story'
+    ? ['mode', 'basics', 'face', 'identity', 'idols', 'premise']
+    : ['mode', 'basics', 'face', 'identity', 'idols'];
   const cur = flow[Math.min(stepIdx, flow.length - 1)];
   const isLast = stepIdx >= flow.length - 1;
   const go = (d: number) => setStepIdx(i => Math.max(0, Math.min(flow.length - 1, i + d)));
@@ -596,6 +599,8 @@ const CharacterCreationWizard = ({ onComplete, members }: { onComplete: (data: a
     <label className="flex items-center gap-2 text-[13px] font-bold text-[#B7B2D9] mb-2.5"><Icon className="w-4 h-4 text-[#C9A227]" /> {children}</label>
   );
   const canNext = () => {
+    if (cur === 'mode') return !!data.gameMode;
+    if (cur === 'premise') return true; // 开局设定选填
     if (cur === 'basics') return !!data.playerName.trim();
     if (cur === 'identity') return data.identity.length > 0 || !!customIdentity.trim();
     if (cur === 'idols') return data.targets.length >= 1 || data.customMembers.length >= 1;
@@ -719,12 +724,37 @@ const CharacterCreationWizard = ({ onComplete, members }: { onComplete: (data: a
               </>)}
 
               {cur === 'mode' && (<>
-                <label className="text-xs font-black text-[#454F87] uppercase">{T('选择模式','選擇模式')}</label>
-                <div className="flex flex-col gap-3">{modes.map(m => (
-                  <button key={m.id} onClick={() => { setData({...data, gameMode: m.id, targets: [], daughterNationality: '', daughterPersonality: '', daughterBackground: '', daughterName: ''}); setSelectedGroup(null); }} className={`w-full p-4 rounded-2xl border text-left transition-all ${data.gameMode === m.id ? 'bg-[#E7E6F6] border-[#5B6BB0] text-[#454F87]' : 'bg-white border-[#DAD8EE] text-[#2A2A3D]'}`}>
-                    <div className="font-black text-sm">{m.name}</div><div className="text-[10px] opacity-60 mt-1">{m.desc}</div>
+                <label className="gold-caption">{T('选择玩法','選擇玩法')}</label>
+                <div className="flex flex-col gap-3">{modes.map(m => {
+                  const on = data.gameMode === m.id;
+                  return (
+                  <button key={m.id} onClick={() => { setData({...data, gameMode: m.id, targets: []}); setSelectedGroup(null); }} className={`w-full p-4 rounded-2xl border text-left transition-all ${on ? 'bg-[rgba(201,162,39,0.1)] border-[rgba(201,162,39,0.5)]' : 'bg-white/[0.03] border-white/10 hover:border-white/25'}`}>
+                    <div className="flex items-center gap-2">
+                      {m.id === 'story' ? <Sparkles className="w-4 h-4 text-[#C9A227]" /> : <Zap className="w-4 h-4 text-[#5B6BB0]" />}
+                      <div className={`font-black text-sm ${on ? 'text-[#F1ECFF]' : 'text-[#D8D4EE]'}`}>{m.name}</div>
+                      {on && <Check className="w-4 h-4 text-[#C9A227] ml-auto" />}
+                    </div>
+                    <div className="text-[10px] text-[#8B86B8] mt-1.5 leading-relaxed">{m.desc}</div>
                   </button>
-                ))}</div>
+                  );
+                })}</div>
+              </>)}
+
+              {cur === 'premise' && (<>
+                <label className="gold-caption">{T('开局设定 · 你想要的故事','開局設定 · 你想要的故事')}</label>
+                <p className="text-[11px] text-[#8B86B8] leading-relaxed -mt-1">
+                  {T('把你脑子里那个故事写下来——背景、你和她的关系、想发生什么、想要的氛围都行。AI 会当成"扔进来的文档"照着起头，然后你一句一句自由推动，没有固定选项。',
+                     '把你腦子裡那個故事寫下來——背景、你和她的關係、想發生什麼、想要的氛圍都行。AI 會當成「扔進來的文檔」照著起頭，然後你一句一句自由推動，沒有固定選項。')}
+                </p>
+                <textarea value={data.storyPremise} onChange={e => setData({...data, storyPremise: e.target.value})}
+                  className={inputCls + ' h-44 resize-none leading-relaxed'}
+                  placeholder={T('例：我是她出道前打工咖啡店的常客，她还没红的时候我们很熟。三年后她成了顶流，某天深夜她戴着口罩又推开了那家店的门…我想慢慢重新靠近，但这次两个人的处境都变了。',
+                                 '例：我是她出道前打工咖啡店的常客，她還沒紅的時候我們很熟。三年後她成了頂流，某天深夜她戴著口罩又推開了那家店的門…我想慢慢重新靠近，但這次兩個人的處境都變了。')} />
+                <div className="rounded-2xl bg-white/[0.03] border border-[rgba(201,162,39,0.2)] p-3.5 text-[11px] text-[#B7B2D9] leading-relaxed flex items-start gap-2">
+                  <Sparkles className="w-3.5 h-3.5 text-[#C9A227] mt-0.5 flex-shrink-0" />
+                  <span>{T('留空也可以，AI 会从一个自然的日常场景开始。写得越具体，开局越贴你想要的。',
+                            '留空也可以，AI 會從一個自然的日常場景開始。寫得越具體，開局越貼你想要的。')}</span>
+                </div>
               </>)}
 
               {cur === 'face' && (
@@ -1128,6 +1158,11 @@ export default function App() {
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [gameState.history]);
   // 密钥现由服务端持有，前端不再探测（真缺失时由 /api/chat 报错提示）
 
+  // 自由剧情模式：没有俯视世界，直接进纯剧情视图
+  useEffect(() => {
+    if (gameState.gameMode === 'story') setWorldMode(false);
+  }, [gameState.gameMode]);
+
   // 首次进入世界时，用各成员的 initialRelationships 播种爱豆↔爱豆关系
   useEffect(() => {
     if (gameState.setupStep !== SetupStep.CREATION && !gameState.worldRelations) {
@@ -1176,10 +1211,14 @@ export default function App() {
   const handleCreationComplete = (data: any) => {
     const isCPMode = data.gameMode === 'CPCP';
     const isMomMode = data.gameMode === 'mom';
+    const isStoryMode = data.gameMode === 'story';
     const targetNames = INITIAL_MEMBERS.filter(m => data.targets.includes(m.id)).map(m => m.name);
+    const storyNames = [...targetNames, ...(data.customMembers || []).map((o: any) => o.name)].filter(Boolean);
 
     let summary = `我的名字是 ${data.playerName}，`;
-    if (isMomMode) {
+    if (isStoryMode) {
+      summary += `身份是 ${(data.identity || []).join(', ') || '普通人'}。${storyNames.length ? `这次的故事围绕 ${storyNames.join('、')}。` : ''}${data.storyPremise?.trim() ? `\n\n我写的开局设定：\n${data.storyPremise.trim()}\n\n请照着这个设定，写一个真实、有代入感的开场，停在我可以接话的地方。` : '请从一个真实、具体的日常场景自然开场，停在我可以接话的地方。'}`;
+    } else if (isMomMode) {
       summary += `我是一位妈妈。女儿设定：国籍${data.daughterNationality}，性格${data.daughterPersonality}，家庭背景${data.daughterBackground}${data.daughterName ? `，名字${data.daughterName}` : ''}。请根据这些设定生成女儿的虚构角色，然后从她8岁那年开始故事。`;
     } else {
       const startLabel = getLocation(getStartLocation(data.identity))?.label;
@@ -1221,12 +1260,13 @@ export default function App() {
       trustLevel: 50,
     } : null;
 
-    const startLoc = isMomMode ? undefined : getStartLocation(data.identity);
-    const startScene = startLoc ? getLocation(startLoc)?.label : undefined;
+    const startLoc = (isMomMode || isStoryMode) ? undefined : getStartLocation(data.identity);
+    const startScene = startLoc ? getLocation(startLoc)?.label : (isStoryMode ? '自由剧情' : undefined);
     const newState: GameState = {
       ...gameState, ...data, members: allMembers, targets: allTargets,
       setupStep: SetupStep.CARDS, history: [], turnCount: 0,
       ...(startLoc ? { worldLocation: startLoc, worldDay: 1, worldSlot: 0, currentScene: startScene } : {}),
+      ...(isStoryMode ? { currentScene: startScene, storyPremise: data.storyPremise || '' } : {}),
       ...(daughterProfile ? { daughterProfile, momTrustLevel: 50 } : {}),
       ...(data.playerApiKey ? { playerApiKey: data.playerApiKey, playerModel: data.playerModel } : {}),
       language: data.language,
@@ -1323,6 +1363,8 @@ export default function App() {
       if (musicResult) next.musicShowHistory = [...(next.musicShowHistory || []), musicResult];
       if (newCards.length > 0) next.collectedCards = [...(next.collectedCards || []), ...newCards];
       if (newCards.length > 0 && prev.setupStep === SetupStep.CARDS) next.setupStep = SetupStep.STARTED;
+      // 自由剧情模式不强制生成角色卡，首轮回复后就进入正式游玩
+      if (prev.gameMode === 'story' && prev.setupStep === SetupStep.CARDS) next.setupStep = SetupStep.STARTED;
 
       // RELDELTA：把 DeepSeek 输出的爱豆间关系增量应用到关系网
       if (relDeltas?.pairs && Array.isArray(relDeltas.pairs)) {
@@ -1657,6 +1699,7 @@ export default function App() {
 
   const isCPMode = gameState.gameMode === 'CPCP';
   const isMomMode = gameState.gameMode === 'mom';
+  const isStoryMode = gameState.gameMode === 'story';
   const targetMembers = gameState.members.filter(m => gameState.targets.includes(m.id));
   const primaryTarget = targetMembers[0];
   const cpAffection = primaryTarget?.affection || 0;
@@ -1939,6 +1982,7 @@ export default function App() {
                 {phoneUnread > 0 && <span className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 px-1 rounded-full bg-[#FF3B30] text-white text-[9px] font-black flex items-center justify-center animate-pulse">{phoneUnread}</span>}
               </button>
             )}
+            {!isStoryMode && (
             <button
               onClick={() => setWorldMode(v => !v)}
               className={`flex items-center gap-1.5 text-[11px] font-black px-3 py-1.5 rounded-xl border transition-all ${worldMode ? 'text-white border-transparent' : 'bg-white/[0.06] text-[#B7B2D9] border-white/10 hover:bg-white/[0.12]'}`}
@@ -1948,6 +1992,7 @@ export default function App() {
               {worldMode ? <Zap className="w-3.5 h-3.5" /> : <Users className="w-3.5 h-3.5" />}
               {worldMode ? (lang === 'traditional' ? '劇情' : '剧情') : (lang === 'traditional' ? '世界' : '世界')}
             </button>
+            )}
             <button
               onClick={() => {
                 const newVal = !isTraditional;
