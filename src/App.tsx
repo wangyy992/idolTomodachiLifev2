@@ -251,17 +251,31 @@ const MusicShowUI = ({ result }: { result: any }) => (
   </div>
 );
 
-const OptionsUI = ({ options, isLatest, lang }: { options: any[], isLatest: boolean, lang?: string }) => {
-  if (!isLatest || !options?.length) return null;
+const OptionsUI = ({ options, isLatest, lang, onPick, disabled }: { options: any[], isLatest: boolean, lang?: string, onPick?: (action: string) => void, disabled?: boolean }) => {
+  if (!options?.length) return null;
   const l = lang || 'simplified';
+  // 最新一条 + 有回调 → 可点选（点了等于把这个行动发出去）；历史消息只读回顾
+  const clickable = isLatest && !!onPick;
   return (
     <div className="mt-4 rounded-2xl bg-white/[0.03] border border-white/10 p-4">
-      <div className="gold-caption mb-3 flex items-center gap-1.5"><span className="w-1 h-1 rounded-full bg-[#FF7A93]" />{l === "traditional" ? "當時的選擇" : "当时的选择"}</div>
+      <div className="gold-caption mb-3 flex items-center gap-1.5"><span className="w-1 h-1 rounded-full bg-[#FF7A93]" />{clickable ? (l === "traditional" ? "選一個行動" : "选一个行动") : (l === "traditional" ? "當時的選擇" : "当时的选择")}</div>
       <div className="flex flex-col gap-2">
         {options.map((opt: any, i) => {
-          const text = (typeof opt === 'string' ? opt : opt.text).replace(/^[A-Da-d][\.、。\)]\s*/, '');
+          const raw = (typeof opt === 'string' ? opt : opt.text);
+          const action = (typeof opt === 'string' ? opt : (opt.action || opt.text));
+          const text = raw.replace(/^[A-Da-d][\.、。\)]\s*/, '');
+          const cls = "flex items-start gap-2.5 rounded-xl px-3 py-2.5 border text-left w-full transition-all";
+          if (clickable) {
+            return (
+              <button key={i} disabled={disabled} onClick={() => onPick!(action)}
+                className={cls + " bg-white/[0.03] border-white/[0.06] hover:border-[rgba(255,122,147,0.5)] hover:bg-white/[0.06] active:scale-[0.99] disabled:opacity-50"}>
+                <span className="mt-0.5 w-5 h-5 rounded-lg bg-[#E7E6F6] text-[#5B6BB0] text-[10px] font-black flex items-center justify-center flex-shrink-0">{'ABCD'[i] || '·'}</span>
+                <span className="text-[13px] text-[#F1ECFF] font-semibold leading-relaxed">{text}</span>
+              </button>
+            );
+          }
           return (
-            <div key={i} className="flex items-start gap-2.5 bg-white/[0.03] rounded-xl px-3 py-2.5 border border-white/[0.06]">
+            <div key={i} className={cls + " bg-white/[0.03] border-white/[0.06]"}>
               <span className="mt-0.5 w-5 h-5 rounded-lg bg-[#E7E6F6] text-[#5B6BB0] text-[10px] font-black flex items-center justify-center flex-shrink-0">{'ABCD'[i] || '·'}</span>
               <span className="text-[13px] text-[#D8D4EE] font-semibold leading-relaxed">{text}</span>
             </div>
@@ -273,11 +287,7 @@ const OptionsUI = ({ options, isLatest, lang }: { options: any[], isLatest: bool
 };
 
 const MobileDrawer = ({ gameState, onClose, onSave, onLoad, onDelete, saveSlots, wallpaper, onWallpaperUpload, onClearWallpaper }: { gameState: GameState, onClose: () => void, onSave: () => void, onLoad: (id: string) => void, onDelete: (id: string) => void, saveSlots: any[], wallpaper: string, onWallpaperUpload: (e: React.ChangeEvent<HTMLInputElement>) => void, onClearWallpaper: () => void }) => {
-  const isCPMode = gameState.gameMode === 'CPCP';
-  const isMomMode = gameState.gameMode === 'mom';
   const targetMembers = gameState.members.filter(m => gameState.targets.includes(m.id));
-  const cpAffection = targetMembers[0]?.affection || 0;
-  const daughterProfile = (gameState as any).daughterProfile;
   const roundCount = gameState.history.filter(h => h.role === MessageRole.ASSISTANT).length;
   const lang = (gameState as any).language || 'simplified';
 
@@ -287,34 +297,11 @@ const MobileDrawer = ({ gameState, onClose, onSave, onLoad, onDelete, saveSlots,
       className="fixed inset-x-0 bottom-0 z-50 rounded-t-[2rem] shadow-2xl border-t border-[rgba(201,162,39,0.25)] max-h-[70vh] overflow-y-auto ink-scroll" style={{ background: 'linear-gradient(180deg, #1C1830, #0E0C1C)' }}>
       <div className="flex justify-center pt-3 pb-2"><div className="w-10 h-1 bg-white/15 rounded-full"></div></div>
       <div className="flex items-center justify-between px-6 pb-4 border-b border-white/[0.06]">
-        <h3 className="gold-caption text-sm">
-          {isMomMode ? '母女信任度' : isCPMode ? (lang === 'traditional' ? 'CP 羈絆值' : 'CP 羁绊值') : (lang === 'traditional' ? '角色狀態' : '角色状态')}
-        </h3>
+        <h3 className="gold-caption text-sm">{lang === 'traditional' ? '角色狀態' : '角色状态'}</h3>
         <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-all"><X className="w-4 h-4 text-[#B7B2D9]" /></button>
       </div>
       <div className="p-5 flex flex-col gap-5">
-        {isCPMode ? (
-          <div className="bg-white/[0.03] p-4 rounded-2xl border border-[rgba(201,162,39,0.3)]">
-            <div className="flex justify-between items-center mb-2">
-              <span className="text-sm font-bold text-[#F1ECFF]">{targetMembers.map(m => m.name).join(' ♡ ')}</span>
-              <span className="text-[11px] text-[#C9A227] font-black">{cpAffection}/100</span>
-            </div>
-            <div className="h-[3px] bg-white/[0.08] rounded-full overflow-hidden">
-              <motion.div animate={{ width: `${cpAffection}%` }} className="h-full rounded-full" style={{ background: 'linear-gradient(90deg,#6C79C4,#C9A227)' }} />
-            </div>
-          </div>
-        ) : isMomMode ? (
-          <div className="bg-white/[0.03] p-4 rounded-2xl border border-white/10">
-            <div className="flex justify-between items-center mb-2">
-              <span className="text-sm font-bold text-[#F1ECFF]">{daughterProfile?.name || '女儿'}</span>
-              <span className="text-[11px] text-[#C9A227] font-mono font-bold">{(gameState as any).momTrustLevel || 50}/100</span>
-            </div>
-            <div className="h-[3px] bg-white/[0.08] rounded-full overflow-hidden">
-              <motion.div animate={{ width: `${(gameState as any).momTrustLevel || 50}%` }} className="h-full rounded-full" style={{ background: 'linear-gradient(90deg,#6C79C4,#C9A227)' }} />
-            </div>
-            {daughterProfile && <div className="text-[10px] text-[#8B86B8] mt-2">{daughterProfile.nationality} · {daughterProfile.personality}</div>}
-          </div>
-        ) : (
+        {(
           <div className="flex flex-col gap-3">
             {targetMembers.map(member => (
               <div key={member.id} className="bg-white/[0.03] p-4 rounded-2xl border border-white/10">
@@ -478,8 +465,7 @@ const CharacterCreationWizard = ({ onComplete, members }: { onComplete: (data: a
   const [showFace, setShowFace] = useState(false);
   const [data, setData] = useState({
     playerName: '', playerAge: 19, identity: [] as string[],
-    gameMode: 'romance' as string, targets: [] as string[], selectedCPs: [] as string[],
-    daughterNationality: '', daughterPersonality: '', daughterBackground: '', daughterName: '',
+    gameMode: 'romance' as string, targets: [] as string[],
     playerApiKey: '', playerModel: 'deepseek-v4-flash', language: 'simplified',
     playerAppearance: getPlayerAppearance('you') as Appearance,
     customMembers: [] as any[],
@@ -517,17 +503,6 @@ const CharacterCreationWizard = ({ onComplete, members }: { onComplete: (data: a
   };
   const cpIds = ["娱乐公司实习生","音乐节目工作人员","妆造师/发型助理","翻译/海外商务助理","娱乐记者/博主","普通粉丝","资深粉丝","韩国留学生","便利店/咖啡厅打工人","公寓同栋住户"];
   const currentIds = ids;
-
-  const nationalities = ['韩国', '中国', '日本', '其他'];
-  const personalities = [
-    { id: '完美主义型', desc: '对自己要求极高，进步快但容易崩' },
-    { id: '野心勃勃型', desc: '目标明确，为出道可以牺牲一切' },
-    { id: '敏感共情型', desc: '感知力极强，很容易被周围情绪影响' },
-    { id: '隐忍内敛型', desc: '什么都藏着，积累到一定程度会爆发' },
-    { id: '乐天抗压型', desc: '天生抗打击，但有时候不够专注' },
-    { id: '讨好型', desc: '把所有人放在自己前面，内心积压很多' },
-  ];
-  const backgrounds = ['贫困', '小资', '富裕'];
 
   const groups = Array.from(new Set(members.map(m => m.group)));
   const groupedMembers: Record<string, Member[]> = {};
@@ -598,7 +573,6 @@ const CharacterCreationWizard = ({ onComplete, members }: { onComplete: (data: a
     if (cur === 'basics') return !!data.playerName.trim();
     if (cur === 'identity') return data.identity.length > 0 || !!customIdentity.trim();
     if (cur === 'idols') return data.targets.length >= 1 || data.customMembers.length >= 1;
-    if (cur === 'daughter') return !!(data.daughterNationality && data.daughterPersonality && data.daughterBackground);
     return true;
   };
   const finish = () => {
@@ -803,33 +777,6 @@ const CharacterCreationWizard = ({ onComplete, members }: { onComplete: (data: a
                   </div>
                 )}
               </>)}
-
-              {cur === 'daughter' && (
-                <div className="flex flex-col gap-5">
-                  <div className="flex flex-col gap-2">
-                    <label className="text-xs font-black text-[#454F87] uppercase">{T('女儿国籍','女兒國籍')}</label>
-                    <div className="grid grid-cols-2 gap-2">{nationalities.map(n => (
-                      <button key={n} onClick={() => setData({...data, daughterNationality: n})} className={`p-3 rounded-xl border text-[11px] transition-all ${data.daughterNationality === n ? 'bg-[#E7E6F6] border-[#5B6BB0] text-[#454F87] font-bold' : 'bg-white border-[#DAD8EE] text-[#2A2A3D]'}`}>{n}</button>
-                    ))}</div>
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    <label className="text-xs font-black text-[#454F87] uppercase">{T('女儿性格','女兒性格')}</label>
-                    <div className="flex flex-col gap-2">{personalities.map(p => (
-                      <button key={p.id} onClick={() => setData({...data, daughterPersonality: p.id})} className={`w-full p-3 rounded-xl border text-left transition-all ${data.daughterPersonality === p.id ? 'bg-[#E7E6F6] border-[#5B6BB0] text-[#454F87]' : 'bg-white border-[#DAD8EE] text-[#2A2A3D]'}`}><div className="font-bold text-[11px]">{p.id}</div><div className="text-[10px] opacity-60 mt-0.5">{p.desc}</div></button>
-                    ))}</div>
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    <label className="text-xs font-black text-[#454F87] uppercase">{T('女儿的名字（选填，不填由AI生成）','女兒的名字（選填，不填由AI生成）')}</label>
-                    <input type="text" value={data.daughterName} onChange={e => setData({...data, daughterName: e.target.value})} className="w-full bg-white border border-[#DAD8EE] rounded-2xl p-4 text-base focus:ring-2 focus:ring-[#5B6BB0] outline-none text-[#2A2A3D]" placeholder={T('给女儿起个名字...','給女兒起個名字...')} />
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    <label className="text-xs font-black text-[#454F87] uppercase">{T('家庭背景','家庭背景')}</label>
-                    <div className="grid grid-cols-3 gap-2">{backgrounds.map(b => (
-                      <button key={b} onClick={() => setData({...data, daughterBackground: b})} className={`p-3 rounded-xl border text-[11px] transition-all ${data.daughterBackground === b ? 'bg-[#E7E6F6] border-[#5B6BB0] text-[#454F87] font-bold' : 'bg-white border-[#DAD8EE] text-[#2A2A3D]'}`}>{b}</button>
-                    ))}</div>
-                  </div>
-                </div>
-              )}
             </motion.div>
           </AnimatePresence>
         </div>
@@ -1091,11 +1038,8 @@ export default function App() {
   const saveGame = () => {
     const id = Date.now().toString();
     const time = new Date().toLocaleString('zh-TW', {month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
-    const isCPSave = gameState.gameMode === 'CPCP';
-    const isMomSave = gameState.gameMode === 'mom';
     const targetNames = gameState.members.filter(m => gameState.targets.includes(m.id)).map(m => m.name);
-    const daughterName = (gameState as any).daughterProfile?.name || '';
-    const subject = isMomSave ? (daughterName || '女儿') : isCPSave ? targetNames.join(' ♡ ') : targetNames.join(', ');
+    const subject = targetNames.join(', ');
     const slot = { id, name: `存档 ${time}`, time, scene: gameState.currentScene, round: gameState.turnCount || 0, subject };
     const newSlots = [slot, ...saveSlots].slice(0, 10);
     setSaveSlots(newSlots);
@@ -1176,25 +1120,16 @@ export default function App() {
   }, [gameState.worldRelations, gameState.members, gameState.relationIntents, gameState.matchmakes, gameState.setupStep]);
 
   const handleCreationComplete = (data: any) => {
-    const isCPMode = data.gameMode === 'CPCP';
-    const isMomMode = data.gameMode === 'mom';
     const targetNames = INITIAL_MEMBERS.filter(m => data.targets.includes(m.id)).map(m => m.name);
 
     let summary = `我的名字是 ${data.playerName}，`;
-    if (isMomMode) {
-      summary += `我是一位妈妈。女儿设定：国籍${data.daughterNationality}，性格${data.daughterPersonality}，家庭背景${data.daughterBackground}${data.daughterName ? `，名字${data.daughterName}` : ''}。请根据这些设定生成女儿的虚构角色，然后从她8岁那年开始故事。`;
-    } else {
+    {
       const startLabel = getLocation(getStartLocation(data.identity))?.label;
-      summary += `身份是 ${(data.identity || []).join(', ') || '普通人'}。${isCPMode ? `我想撮合 ${targetNames.join(' 和 ')}。` : `我想关注 ${targetNames.join(', ')}。`}游戏模式：${data.gameMode}。${startLabel ? `故事从我以这个身份自然会出现的地方——${startLabel}——开始，开场地点要符合我的身份。` : ''}故事开始。`;
+      summary += `身份是 ${(data.identity || []).join(', ') || '普通人'}。我想关注 ${targetNames.join(', ')}。${startLabel ? `故事从我以这个身份自然会出现的地方——${startLabel}——开始，开场地点要符合我的身份。` : ''}故事开始。`;
     }
 
-    const affFloor = isCPMode || isMomMode ? 0 : startingAffection(data.identity);
+    const affFloor = startingAffection(data.identity);
     const initializedMembers = INITIAL_MEMBERS.map(m => {
-      if (isCPMode && data.targets.includes(m.id)) {
-        const otherTargetId = data.targets.find((id: string) => id !== m.id);
-        const relation = (m as any).initialRelationships?.find((r: any) => r.targetId === otherTargetId);
-        return { ...m, affection: relation ? relation.affinity : 0 };
-      }
       // 关系型身份（现任女友/青梅…）→ 攻略对象起始好感度带一个下限
       if (affFloor > 0 && data.targets.includes(m.id)) {
         return { ...m, affection: Math.max(m.affection || 0, affFloor) };
@@ -1215,21 +1150,12 @@ export default function App() {
     // 自建角色也算"你关注的人"，否则不会出现在世界地图/关系网里
     const allTargets = [...(data.targets || []), ...ocs.map(o => o.id)];
 
-    const daughterProfile = isMomMode ? {
-      nationality: data.daughterNationality,
-      personality: data.daughterPersonality,
-      background: data.daughterBackground,
-      name: data.daughterName || '',
-      trustLevel: 50,
-    } : null;
-
-    const startLoc = isMomMode ? undefined : getStartLocation(data.identity);
+    const startLoc = getStartLocation(data.identity);
     const startScene = startLoc ? getLocation(startLoc)?.label : undefined;
     const newState: GameState = {
       ...gameState, ...data, members: allMembers, targets: allTargets,
       setupStep: SetupStep.CARDS, history: [], turnCount: 0,
       ...(startLoc ? { worldLocation: startLoc, worldDay: 1, worldSlot: 0, currentScene: startScene, isComebackSetting: comebackOnDay(allMembers, allTargets, 1) } : {}),
-      ...(daughterProfile ? { daughterProfile, momTrustLevel: 50 } : {}),
       ...(data.playerApiKey ? { playerApiKey: data.playerApiKey, playerModel: data.playerModel } : {}),
       language: data.language,
       appearances: {
@@ -1334,13 +1260,6 @@ export default function App() {
     setGameState(prev => {
       let next = { ...prev } as any;
       if (snapshot) {
-        const cpNewAffection = prev.gameMode === 'CPCP' && snapshot.members?.length > 0
-          ? snapshot.members[0].affection : null;
-
-        if (prev.gameMode === 'mom' && snapshot.members?.length > 0) {
-          next.momTrustLevel = snapshot.members[0].affection ?? next.momTrustLevel;
-        }
-
         // 沙盒（世界模式）里，时间/地点/回归期/打歌名次都归游戏管，AI 的 SNAPSHOT 不许覆盖它们
         const inWorld = !!prev.worldLocation;
         next = {
@@ -1351,9 +1270,6 @@ export default function App() {
           groupHeats: snapshot.groupHeats ?? next.groupHeats,
           currentMusicShow: inWorld ? next.currentMusicShow : (musicResult || next.currentMusicShow),
           members: next.members.map((m: Member) => {
-            if (prev.gameMode === 'CPCP' && prev.targets.includes(m.id) && cpNewAffection !== null) {
-              return { ...m, affection: cpNewAffection };
-            }
             const u = snapshot.members?.find((sm: any) => sm.id === m.id);
             return u ? { ...m, ...u } : m;
           })
@@ -1770,13 +1686,8 @@ export default function App() {
 
   if (gameState.setupStep === SetupStep.CREATION) return <CharacterCreationWizard onComplete={handleCreationComplete} members={gameState.members} />;
 
-  const isCPMode = gameState.gameMode === 'CPCP';
-  const isMomMode = gameState.gameMode === 'mom';
   const targetMembers = gameState.members.filter(m => gameState.targets.includes(m.id));
   const primaryTarget = targetMembers[0];
-  const cpAffection = primaryTarget?.affection || 0;
-  const daughterProfile = (gameState as any).daughterProfile;
-  const momTrustLevel = (gameState as any).momTrustLevel || 50;
   const roundCount = gameState.turnCount || 0;
 
   // 俯视世界里出现的爱豆：优先玩家关注的对象，否则取前若干位
@@ -1846,8 +1757,8 @@ export default function App() {
   const sceneCanContinue = sceneRounds < MAX_SCENE_ROUNDS;
 
   const lang = (gameState as any).language || 'simplified';
-  const sidebarLabel = isMomMode ? '母女信任度' : isCPMode ? (lang === 'traditional' ? 'CP 羈絆值' : 'CP 羁绊值') : (lang === 'traditional' ? '角色狀態' : '角色状态');
-  const modeLabel = isMomMode ? '宝妈' : isCPMode ? '助攻' : '攻略';
+  const sidebarLabel = lang === 'traditional' ? '角色狀態' : '角色状态';
+  const modeLabel = '攻略';
 
   const sceneConfig = getSceneConfig(gameState.currentScene);
 
@@ -1959,7 +1870,7 @@ export default function App() {
           </div>
         </div>
         <div className="flex-1 overflow-y-auto p-3.5 flex flex-col gap-5 ink-scroll">
-          {worldMode && !isMomMode && !isCPMode ? (
+          {worldMode ? (
             <WorldPanel
               members={worldMembers}
               playerName={gameState.playerName}
@@ -1974,31 +1885,7 @@ export default function App() {
           ) : (
           <section>
             <h3 className="gold-caption mb-3 flex items-center gap-2"><Users className="w-3 h-3" /> {sidebarLabel}</h3>
-            {isCPMode ? (
-              <div className="bg-white/[0.03] p-4 rounded-2xl border border-[rgba(201,162,39,0.3)]">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-xs font-bold text-[#F1ECFF]">{targetMembers.map(m => m.name).join(' ♡ ')}</span>
-                  <span className="text-[10px] text-[#C9A227] font-black">{cpAffection}/100</span>
-                </div>
-                <div className="h-[3px] bg-white/[0.08] rounded-full overflow-hidden">
-                  <motion.div animate={{ width: `${cpAffection}%` }} className="h-full rounded-full" style={{ background: 'linear-gradient(90deg,#6C79C4,#C9A227)' }} />
-                </div>
-                <div className="text-[9px] text-[#8B86B8] mt-2 italic">
-                  {cpAffection < 15 ? '互相不熟，公事公办' : cpAffection < 30 ? '有些微妙的默契' : cpAffection < 50 ? '暧昧模糊，互相试探' : cpAffection < 70 ? '明显的特殊感' : cpAffection < 85 ? '没有说破，但都知道了' : '只差最后一步'}
-                </div>
-              </div>
-            ) : isMomMode ? (
-              <div className="bg-white/[0.03] p-4 rounded-2xl border border-white/10">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-xs font-bold text-[#F1ECFF]">{daughterProfile?.name || '女儿'}</span>
-                  <span className="text-[10px] text-[#C9A227] font-mono font-bold">{momTrustLevel}/100</span>
-                </div>
-                <div className="h-[3px] bg-white/[0.08] rounded-full overflow-hidden">
-                  <motion.div animate={{ width: `${momTrustLevel}%` }} className="h-full rounded-full" style={{ background: 'linear-gradient(90deg,#6C79C4,#C9A227)' }} />
-                </div>
-                {daughterProfile && <div className="text-[9px] text-[#8B86B8] mt-1">{daughterProfile.nationality} · {daughterProfile.personality}</div>}
-              </div>
-            ) : (
+            {(
               <div className="flex flex-col gap-2">{targetMembers.map(member => (
                 <div key={member.id} className="bg-white/[0.03] p-4 rounded-2xl border border-white/10">
                   <div className="flex justify-between items-center mb-2"><span className="text-xs font-bold text-[#F1ECFF]">{member.name}</span><span className="text-[10px] text-[#C9A227] font-mono font-bold">{member.affection}/100</span></div>
@@ -2051,19 +1938,17 @@ export default function App() {
               <h2 className="text-sm font-bold flex items-center gap-1 text-[#F1ECFF]"><MapPin className="w-3 h-3 text-[#C9A227]" /> {gameState.currentScene}</h2>
             </div>
           </div>
-          {(primaryTarget || isMomMode) && (
+          {primaryTarget && (
             <button onClick={() => setShowDrawer(true)} className="lg:hidden flex items-center gap-2 bg-white/[0.06] px-3 py-2 rounded-2xl border border-white/10 active:scale-95 transition-all">
               <Heart className="w-3 h-3 text-[#C9A227]" />
-              <span className="text-[11px] font-bold text-[#F1ECFF]">
-                {isMomMode ? (daughterProfile?.name || '女儿') : isCPMode ? targetMembers.map(m => m.name).join(' ♡ ') : primaryTarget?.name}
-              </span>
-              <span className="text-[11px] font-black text-[#C9A227]">{isMomMode ? momTrustLevel : cpAffection}</span>
+              <span className="text-[11px] font-bold text-[#F1ECFF]">{primaryTarget?.name}</span>
+              <span className="text-[11px] font-black text-[#C9A227]">{primaryTarget?.affection || 0}</span>
               <ChevronUp className="w-3 h-3 text-[#8B86B8]" />
             </button>
           )}
           {apiKeyMissing && <div className="bg-white/[0.06] text-[#C9A227] text-[10px] font-black px-3 py-1 rounded-full border border-[rgba(201,162,39,0.3)] animate-pulse">API KEY MISSING</div>}
           <div className="flex items-center gap-3">
-            {!worldMode && !isMomMode && !isCPMode && (
+            {!worldMode && (
               <button onClick={openPhone} className="relative flex items-center gap-1.5 text-[11px] font-black px-3 py-1.5 rounded-xl border bg-white/[0.06] text-[#B7B2D9] border-white/10 hover:bg-white/[0.12] transition-all">
                 <Smartphone className="w-3.5 h-3.5" /> {lang === 'traditional' ? '手機' : '手机'}
                 {phoneUnread > 0 && <span className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 px-1 rounded-full bg-[#FF3B30] text-white text-[9px] font-black flex items-center justify-center animate-pulse">{phoneUnread}</span>}
@@ -2176,7 +2061,7 @@ export default function App() {
                       if (block.type === 'musicshow') return isLatest ? <MusicShowUI key={bi} result={block.data} /> : null;
                       return null;
                     }) : <StoryText content={msg.content || '（剧情推进中...）'} />}
-                    {msg.options && <OptionsUI options={msg.options} isLatest={isLatest} lang={(gameState as any).language} />}
+                    {msg.options && <OptionsUI options={msg.options} isLatest={isLatest} lang={(gameState as any).language} onPick={(a) => handleSend(a)} disabled={isLoading} />}
                     {msg.content?.includes('错误信息') && (
                       <button onClick={() => { let j = -1; for (let k = i-1; k >= 0; k--) { if (gameState.history[k].role === MessageRole.USER) { j = k; break; } } if (j !== -1) { const c = gameState.history[j].content; setGameState(prev => ({ ...prev, history: prev.history.slice(0, i) })); handleSend(c); } }}
                         className="self-start flex items-center gap-2 text-xs font-black text-[#B7A9E8] bg-white/[0.04] px-3 py-2 rounded-xl border border-white/10 hover:bg-white/[0.09]"><RefreshCw className="w-3 h-3" /> {lang === "traditional" ? "重試" : "重试"}</button>
