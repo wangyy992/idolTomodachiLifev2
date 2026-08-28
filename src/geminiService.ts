@@ -1131,16 +1131,24 @@ SNAPSHOT_END
       }
     };
 
-    // 超时 / 网络错误 / 5xx → 自动重试一次；401/402/429 等业务错误不重试
+    // 超时 / 网络&TLS 错误（Failed to fetch → TypeError，含 ERR_SSL_PROTOCOL_ERROR）/ 5xx
+    // → 自动重试，指数退避 0.8s/2s/4s，让偶发的传输层抖动自己恢复；401/402/429 等业务错误不重试。
     const retriable = (e: any) => e?.name === 'AbortError' || e?.name === 'TypeError' || (typeof e?.status === 'number' && e.status >= 500);
+    const backoffs = [800, 2000, 4000];
     let text = '';
-    try {
-      text = await once();
-    } catch (e: any) {
-      if (!retriable(e)) throw e;
-      await new Promise(r => setTimeout(r, 800));
-      text = await once();
+    let lastErr: any = null;
+    for (let attempt = 0; attempt <= backoffs.length; attempt++) {
+      try {
+        text = await once();
+        lastErr = null;
+        break;
+      } catch (e: any) {
+        lastErr = e;
+        if (!retriable(e) || attempt === backoffs.length) throw e;
+        await new Promise(r => setTimeout(r, backoffs[attempt]));
+      }
     }
+    if (lastErr) throw lastErr;
 
     if (!text || text.trim() === '') throw new Error('AI 返回内容为空。');
     console.log('🤖 AI原始返回：\n', text);
@@ -1148,6 +1156,8 @@ SNAPSHOT_END
 
   } catch (error) {
     if (error instanceof Error && error.name === 'AbortError') throw new Error('通讯超时，请重试。');
+    // 传输层失败（网络断开 / TLS 握手失败 ERR_SSL_PROTOCOL_ERROR 等）在浏览器里都是 TypeError
+    if (error instanceof TypeError) throw new Error('网络连接不稳定（多次重试仍失败），请稍后再试一次。');
     throw error;
   }
 }
