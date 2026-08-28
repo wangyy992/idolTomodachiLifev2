@@ -7,7 +7,7 @@ import type { Ending, YearbookRow } from './endings';
 
 // 结局卡：像素小人定格 + 结算卡（不画 CG，像素定格更合调性且零成本）
 export default function EndingCard({
-  ending, yearbook, cast, lang, onClose, onContinue,
+  ending, yearbook, cast, lang, onClose, onContinue, milestoneLog,
 }: {
   ending?: Ending | null;
   yearbook?: YearbookRow[] | null;
@@ -15,6 +15,7 @@ export default function EndingCard({
   lang: string;
   onClose: () => void;
   onContinue?: () => void;
+  milestoneLog?: { title: string; name: string; day: number; memory: string }[];
 }) {
   const tw = lang === 'traditional';
   const accent = ending?.color || '#C9A227';
@@ -48,6 +49,26 @@ export default function EndingCard({
             <div className="gold-caption mb-1" style={{ color: accent }}>{ending.subtitle}</div>
             <h2 className="text-[22px] font-black text-[#F1ECFF] mb-3">{ending.title}</h2>
             <p className="text-[13.5px] leading-[1.9] text-[#B7B2D9] text-left">{ending.body}</p>
+          </div>
+        )}
+
+        {milestoneLog && milestoneLog.length > 0 && (
+          <div className="px-7 pb-5">
+            <div className="gold-caption mb-2.5">{tw ? '這一年的重要時刻' : '这一年的重要时刻'}</div>
+            <div className="relative flex flex-col gap-3 pl-4">
+              <div className="absolute left-[5px] top-1 bottom-1 w-px bg-[rgba(201,162,39,0.35)]" />
+              {milestoneLog.map((e, i) => (
+                <div key={i} className="relative">
+                  <div className="absolute -left-4 top-1 w-2.5 h-2.5 rounded-full" style={{ background: '#C9A227', boxShadow: '0 0 8px rgba(201,162,39,0.8)' }} />
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-[9px] font-black text-[#8B86B8]">D{e.day}</span>
+                    <span className="text-[12.5px] font-black text-[#F1ECFF]">{e.title}</span>
+                    {e.name && <span className="text-[10px] text-[#C9A227]">· {e.name}</span>}
+                  </div>
+                  {e.memory && <p className="text-[11px] text-[#B7B2D9] leading-relaxed mt-0.5">{e.memory}</p>}
+                </div>
+              ))}
+            </div>
           </div>
         )}
 

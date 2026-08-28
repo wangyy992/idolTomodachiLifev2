@@ -103,6 +103,10 @@ input, textarea, select {
 @keyframes waterflip { 0%, 49.9% { opacity: 0; } 50%, 100% { opacity: 1; } }
 .water-flip { animation: waterflip 1.6s step-end infinite; }
 
+/* 头顶需求气泡 / 心情表情的轻轻浮动 */
+@keyframes needbob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+.need-bob { animation: needbob 2.4s ease-in-out infinite; }
+
 /* 手机竖屏 → 提示横屏；横屏 / 桌面隐藏 */
 .rotate-gate { display: none; }
 @media (max-width: 1024px) and (orientation: portrait) {

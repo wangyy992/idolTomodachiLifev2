@@ -14,6 +14,9 @@ import { nextTime, idolsAt, getLocation, getActivity, unitKeyOf, getStartLocatio
 import { seedIdolRelations, pairKey, deriveType, hasFlag, PLAYER, type Intent } from './relations';
 import { computeMusicShow, isMusicShowDay, weekOf, DAYS_PER_YEAR } from './calendar';
 import { availableEnding, buildYearbook } from './endings';
+import { pendingMilestone, quietPlaceNow, milestoneTitle } from './milestones';
+import type { Need } from './needs';
+import { pairNews, crossingNews, soloMood } from './islandNews';
 import EndingCard from './EndingCard';
 
 const LOCAL_STORAGE_KEY = 'star_reality_kpop_game_state';
@@ -515,10 +518,6 @@ const CharacterCreationWizard = ({ onComplete, members }: { onComplete: (data: a
   const cpIds = ["娱乐公司实习生","音乐节目工作人员","妆造师/发型助理","翻译/海外商务助理","娱乐记者/博主","普通粉丝","资深粉丝","韩国留学生","便利店/咖啡厅打工人","公寓同栋住户"];
   const currentIds = ids;
 
-  const modes = [
-    { id: 'romance', name: '自由世界', desc: '在地图上认识爱豆，恋爱和拉郎都在里面' },
-    { id: 'mom', name: '宝妈模式', desc: '养一个出道女儿（旧版剧情）' }
-  ];
   const nationalities = ['韩国', '中国', '日本', '其他'];
   const personalities = [
     { id: '完美主义型', desc: '对自己要求极高，进步快但容易崩' },
@@ -716,15 +715,6 @@ const CharacterCreationWizard = ({ onComplete, members }: { onComplete: (data: a
                     </div>
                   )}
                 </div>
-              </>)}
-
-              {cur === 'mode' && (<>
-                <label className="text-xs font-black text-[#454F87] uppercase">{T('选择模式','選擇模式')}</label>
-                <div className="flex flex-col gap-3">{modes.map(m => (
-                  <button key={m.id} onClick={() => { setData({...data, gameMode: m.id, targets: [], daughterNationality: '', daughterPersonality: '', daughterBackground: '', daughterName: ''}); setSelectedGroup(null); }} className={`w-full p-4 rounded-2xl border text-left transition-all ${data.gameMode === m.id ? 'bg-[#E7E6F6] border-[#5B6BB0] text-[#454F87]' : 'bg-white border-[#DAD8EE] text-[#2A2A3D]'}`}>
-                    <div className="font-black text-sm">{m.name}</div><div className="text-[10px] opacity-60 mt-1">{m.desc}</div>
-                  </button>
-                ))}</div>
               </>)}
 
               {cur === 'face' && (
@@ -1265,6 +1255,16 @@ export default function App() {
     let musicResult: any = null;
     const snapshotBlock = extractBlock(remaining, 'SNAPSHOT_START', 'SNAPSHOT_END');
     if (snapshotBlock) { remaining = snapshotBlock.remaining; try { snapshot = JSON.parse(snapshotBlock.content); } catch(e) {} }
+    // 好感变化飘字：满足需求 / 有来有往的即时爽感（攻略/自由世界模式）
+    if (snapshot?.members && stateAtCall.gameMode !== 'CPCP' && stateAtCall.gameMode !== 'mom') {
+      snapshot.members.forEach((sm: any) => {
+        const old = stateAtCall.members.find(m => m.id === sm.id);
+        if (!old || typeof sm.affection !== 'number') return;
+        const d = sm.affection - (old.affection || 0);
+        if (d === 0) return;
+        pushToast(`${old.name} ♡ ${d > 0 ? '+' : ''}${d}`, d > 0 ? 'romance' : 'tension');
+      });
+    }
     const musicBlock = extractBlock(remaining, 'MUSICSHOW_START', 'MUSICSHOW_END');
     if (musicBlock) { remaining = musicBlock.remaining; try { musicResult = JSON.parse(musicBlock.content); } catch(e) {} }
     let relDeltas: any = null;
@@ -1277,6 +1277,11 @@ export default function App() {
     // MILESTONE_ID=xxx：阶段突破已演出，记录下来避免重复触发
     const firedMilestones: string[] = [];
     remaining = remaining.replace(/^\s*MILESTONE_ID\s*=\s*(\S+)\s*$/gm, (_s, id) => { firedMilestones.push(String(id)); return ''; });
+    // 大节点触发 → 醒目 toast（和普通小事件区分开）
+    firedMilestones.filter(id => !(stateAtCall.milestones || []).includes(id)).forEach(id => {
+      const nm = gameState.members.find(m => m.id === (id.includes(':') ? id.split(':')[0] : ''))?.name || '';
+      pushToast(`⚡ ${nm ? nm + '：' : ''}${milestoneTitle(id)}`, 'romance');
+    });
     // EVENT_ID=xxx：本轮演过的事件，记下来做冷却
     const firedEvents: string[] = [];
     remaining = remaining.replace(/^\s*EVENT_ID\s*=\s*(\S+)\s*$/gm, (_s, id) => { firedEvents.push(String(id)); return ''; });
@@ -1356,9 +1361,23 @@ export default function App() {
         firedEvents.forEach(id => { re[id] = d; });
         next.recentEvents = re;
       }
-      // 阶段突破：记录已触发，避免重复
+      // 阶段突破：记录已触发，避免重复；并写进"大事记"喂给年鉴/结局
       if (firedMilestones.length) {
+        const already = new Set(prev.milestones || []);
+        const fresh = firedMilestones.filter(id => !already.has(id));
         next.milestones = Array.from(new Set([...(prev.milestones || []), ...firedMilestones]));
+        if (fresh.length) {
+          const day = prev.worldDay ?? 1;
+          const mem = snapshot?.hiddenSummary ? String(snapshot.hiddenSummary).slice(0, 80) : '';
+          next.milestoneLog = [
+            ...(prev.milestoneLog || []),
+            ...fresh.map(id => {
+              const memberId = id.includes(':') ? id.split(':')[0] : '';
+              const name = prev.members.find((m: Member) => m.id === memberId)?.name || '';
+              return { id, memberId, name, title: milestoneTitle(id), day, memory: mem };
+            }),
+          ].slice(-40);
+        }
       }
       // 长期记忆：把本轮摘要写进在场爱豆的档案（每人最多留 12 条）
       const focus = (stateAtCall as any).sceneFocusIds as string[] | undefined;
@@ -1416,7 +1435,7 @@ export default function App() {
     });
   };
 
-  const handleSend = async (content?: any, opts?: { focusIds?: string[]; consumeAction?: boolean }) => {
+  const handleSend = async (content?: any, opts?: { focusIds?: string[]; consumeAction?: boolean; vignette?: any }) => {
     const textToSend = typeof content === 'string' ? content : input;
     if (!textToSend || !textToSend.trim()) return;
     if (isLoading) return;
@@ -1425,6 +1444,10 @@ export default function App() {
     // 本场登场的人：走近/围观时显式传入；同一场景内后续对话沿用当前 scene
     const focus = opts?.focusIds ?? scene?.ids;
     nextState.sceneFocusIds = focus && focus.length ? focus : undefined;
+    // 碎片剧场需求：开场带上（handleTalkTo 传 vignette）；新开的非碎片场景清掉；
+    // 续聊/主输入（无 focusIds）沿用当前 scene 的需求不动。
+    if (opts?.vignette !== undefined) nextState.vignetteNeed = opts.vignette;
+    else if (opts?.focusIds) nextState.vignetteNeed = null;
     // 深度互动消耗本时段的行动点（每时段全员共享一次）
     if (opts?.consumeAction) nextState.actionUsedAt = `${nextState.worldDay ?? 1}-${nextState.worldSlot ?? 0}`;
     nextState.history = [...nextState.history, { role: MessageRole.USER, content: textToSend, timestamp: Date.now() }];
@@ -1433,7 +1456,7 @@ export default function App() {
   };
 
   // 从俯视世界点击爱豆 → 切回剧情，预填带场景/心情语境的“走近”动作交给 DeepSeek
-  const handleTalkTo = (m: Member, ctx?: { location: WorldLocation; activity: Activity }) => {
+  const handleTalkTo = (m: Member, ctx?: { location: WorldLocation; activity: Activity; need?: Need }) => {
     const isTw = (gameState as any).language === 'traditional';
     // 本时段的行动点已用掉 → 只能闲聊：本地生成一句，不调 AI、不涨好感
     if (actionUsed) {
@@ -1441,6 +1464,19 @@ export default function App() {
       return;
     }
     const where = ctx ? `在${ctx.location.label}` : '';
+    // 碎片剧场：点了带需求气泡的爱豆 → 走精简 vignette，seed 一句带上她此刻的小状态
+    const need = ctx?.need;
+    if (need) {
+      const seedLine = isTw
+        ? `（我${where}走近${m.name}——看她${need.label}的样子）`
+        : `（我${where}走近${m.name}——看她${need.label}的样子）`;
+      setScene({ ids: [m.id], anchor: gameState.history.length });
+      handleSend(seedLine, {
+        focusIds: [m.id], consumeAction: true,
+        vignette: { kind: need.kind, label: need.label, seed: need.seed, quickHints: need.quickHints, targetName: need.targetName },
+      });
+      return;
+    }
     const doing = ctx ? `（她正${ctx.activity.label}，${ctx.activity.mood}）` : '';
     const line = isTw
       ? `（我${where}走近${m.name}，和ta打個招呼）${doing}`
@@ -1543,6 +1579,7 @@ export default function App() {
       const rels = { ...(prev.worldRelations || {}) };
       const feed = [...(prev.worldFeed || [])];
       const tmembers = prev.members.filter(m => (prev.targets || []).includes(m.id));
+      const bigNews: { text: string; kind: string }[] = [];
       for (const L of WORLD_LOCATIONS) {
         if (L.id === here) continue; // 你在的地方已经现场结算过
         const present = idolsAt(tmembers, L.id, day, slot);
@@ -1554,17 +1591,37 @@ export default function App() {
             const a = present[i], b = present[j], k = pairKey(a.id, b.id);
             const match = (prev.matchmakes || []).includes(k);
             const cur = rels[k] || { affinity: 0, tension: 0 };
+            const oldAff = cur.affinity || 0;
+            const newAff = Math.min(100, oldAff + (match ? 2 : 1));
             rels[k] = {
               ...cur,
-              affinity: Math.min(100, (cur.affinity || 0) + (match ? 2 : 1)),
+              affinity: newAff,
               tension: Math.max(0, (cur.tension || 0) + ((cur.tension || 0) >= 50 ? (match ? -1 : 1) : 0)),
             };
-            feed.unshift({ id: `${k}-${day}-${slot}-${Math.random().toString(36).slice(2, 6)}`, text: `${a.name} × ${b.name} 在${L.label}相处`, kind: match ? 'romance' : 'friendly', day, slot });
+            // 有画面的日常动态
+            const line = pairNews(a.name, b.name, L.label, newAff, cur.tension || 0, match, `${k}-${day}-${slot}`);
+            feed.unshift({ id: `${k}-${day}-${slot}-${Math.random().toString(36).slice(2, 6)}`, text: line.text, kind: line.kind, day, slot });
+            // 跨过关系门槛 → 大新闻（进手机 + toast）
+            const cross = crossingNews(a.name, b.name, oldAff, newAff, match);
+            if (cross) { feed.unshift({ id: `x-${k}-${day}`, text: cross.text, kind: cross.kind, day, slot }); bigNews.push({ text: cross.text, kind: cross.kind }); }
           }
+          // 单人心情动态（稀疏），让没互动的人也活着
+          const mood = soloMood(present[i].name, present[i].realPersonality || present[i].publicPersona || '', `${present[i].id}-mood-${day}-${slot}`);
+          if (mood) feed.unshift({ id: `mood-${present[i].id}-${day}-${slot}`, text: mood.text, kind: mood.kind, day, slot });
         }
       }
       const nt = nextTime(day, slot);
-      let next: any = { ...prev, worldRelations: rels, worldFeed: feed.slice(0, 15), worldDay: nt.day, worldSlot: nt.slot };
+      let next: any = { ...prev, worldRelations: rels, worldFeed: feed.slice(0, 30), worldDay: nt.day, worldSlot: nt.slot };
+
+      // 关系跨门槛的大新闻 → 进手机 + 弹 toast，让"她们自己处出感情"被你看见
+      if (bigNews.length) {
+        next.phoneFeed = [...(prev.phoneFeed || []), ...bigNews.slice(0, 3).map((n, i) => ({
+          id: `news-${nt.day}-${i}-${Math.random().toString(36).slice(2, 6)}`,
+          type: 'weverse' as const, ts: Date.now(), read: false,
+          data: { artist: '八卦速报', group: '岛屿新闻', content: n.text, imageDesc: null, likes: 1200 + Math.floor(Math.random() * 8000), comments: 80 + Math.floor(Math.random() * 400), time: '刚刚' },
+        }))].slice(-60);
+        bigNews.slice(0, 2).forEach((n, i) => setTimeout(() => pushToast(n.text, n.kind), 120 * i));
+      }
 
       // 打歌日晚上结算一位：分数由代码算（可累积、可对比），玩家的应援与爱豆士气都算进去
       const mainGroup = tmembers[0]?.group;
@@ -1587,7 +1644,7 @@ export default function App() {
           id: `ms-${nt.day}`,
           text: won ? `${mainGroup} 拿下本周一位！` : `本周一位是 ${res.winner}，${mainGroup} 差 ${res.scores[0].total - (res.scores.find(s => s.group === mainGroup)?.total || 0)} 分`,
           kind: won ? 'romance' : 'tension', day: nt.day, slot: nt.slot,
-        }, ...next.worldFeed].slice(0, 15);
+        }, ...next.worldFeed].slice(0, 30);
         next.phoneFeed = [...(prev.phoneFeed || []), {
           id: `msp-${nt.day}`, type: 'theqoo' as const, ts: Date.now(), read: false,
           data: {
@@ -1666,6 +1723,19 @@ export default function App() {
 
   // 俯视世界里出现的爱豆：优先玩家关注的对象，否则取前若干位
   const worldMembers = targetMembers.length > 0 ? targetMembers : gameState.members.slice(0, 6);
+
+  // 大节点预兆：当前世界里哪些爱豆此刻有"待触发"的重头戏 → 头顶亮 ⚡
+  const worldPendingMilestones: Record<string, { title: string; omen: string }> = {};
+  const quietNow = quietPlaceNow(worldSlot, worldLocation);
+  worldMembers.forEach(m => {
+    const md = pendingMilestone(m.id, {
+      affection: m.affection || 0,
+      intentRomance: (gameState.relationIntents || {})[m.id] === 'romance',
+      quietPlace: quietNow,
+      done: gameState.milestones || [],
+    });
+    if (md) worldPendingMilestones[m.id] = { title: md.title, omen: md.omen };
+  });
 
   // ── 结局：条件触发，玩家自己决定何时收 ──
   const confessedIds = worldMembers
@@ -1770,6 +1840,7 @@ export default function App() {
       {(showEnding || beOpen) && (ending || yearbook) && (
         <EndingCard
           ending={ending} yearbook={yearbook} cast={endingCast} lang={lang}
+          milestoneLog={(gameState.milestoneLog || []).filter(e => worldMembers.some(m => m.id === e.memberId))}
           onClose={() => { setShowEnding(false); setEndingDismissed(true); }}
           onContinue={ending?.kind === 'be' ? undefined : () => { setShowEnding(false); setEndingDismissed(true); }}
         />
@@ -1819,7 +1890,7 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      {sidebarOpen && <div className="hidden lg:block fixed inset-0 z-[90] bg-black/25" onClick={() => setSidebarOpen(false)} />}
+      {/* 桌面端不再用全屏遮罩罩住地图（会把点爱豆的第一下吃掉）——侧栏浮在左侧，地图随时可点，收起用顶栏按钮 */}
       <aside className={`${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} w-56 border-r border-white/[0.06] flex-col hidden lg:flex fixed left-0 top-0 bottom-0 z-[95] transition-transform duration-300 shadow-2xl`} style={{background: 'linear-gradient(180deg, #14121f, #0B0A14)'}}>
         <div className="p-4 border-b border-white/[0.06]">
           <h1 className="text-sm font-black text-[#F1ECFF] tracking-tighter flex items-center gap-1.5"><Gamepad2 className="w-4 h-4 flex-shrink-0 text-[#C9A227]" /> 爱豆收集梦想生活</h1>
@@ -2009,6 +2080,7 @@ export default function App() {
             onCustomize={setCustomizing}
             phoneUnread={phoneUnread}
             onOpenPhone={openPhone}
+            pendingMilestones={worldPendingMilestones}
           />
         </div>
         ) : (

@@ -3,6 +3,7 @@ import { PLAYER } from './relations';
 
 import { pickEvent, MATCHMAKE_VERBS } from './events';
 import { phaseAt } from './calendar';
+import { pendingMilestone, quietPlaceNow } from './milestones';
 
 const TIME_SLOT_CN = ['上午', '下午', '晚上'];
 
@@ -894,23 +895,26 @@ ${soloIntent === 'romance'
     return `- ${m.name}：\n` + list.map(e => `    · D${e.day}·${TIME_SLOT_CN[e.slot] || ''} ${e.text}`).join('\n');
   });
 
-  // ==== 阶段突破：好感阈值 + 情境条件 → 强插一条特殊事件指令 ====
+  // ==== 阶段突破（里程碑）：暗线攒够 → 强插一场"重头戏"大节点（更长、更正式、authored）====
   const wday = (gameState as any).worldDay ?? 1;
   const wslot = (gameState as any).worldSlot ?? 0;
   const wloc = (gameState as any).worldLocation ?? '';
   const doneMilestones: string[] = (gameState as any).milestones || [];
   const milestoneHints: string[] = [];
+  const quiet = quietPlaceNow(wslot, wloc);
   for (const m of onStage) {
-    const aff = m.affection || 0;
-    const fire = (id: string, cond: boolean, text: string) => {
-      if (cond && !doneMilestones.includes(`${m.id}:${id}`)) milestoneHints.push(`[特殊事件·${m.name}] ${text}\nMILESTONE_ID=${m.id}:${id}`);
-    };
-    fire('vulnerable', aff >= 30 && (wslot === 2 || wloc === 'hangang' || wloc === 'rooftop'),
-      `本轮她要吐露最近最大的职业压力，露出脆弱的一面，关系推进到"朋友"。写得克制、具体，不要煽情。`);
-    fire('boundary', aff >= 55 && soloIntent === 'romance',
-      `本轮出现一次两人都察觉到的越界瞬间（不是告白），事后两人都装作没发生。`);
-    fire('confess_ready', aff >= 75 && soloIntent === 'romance',
-      `她已经明白玩家的心意，本轮要给出一个明确的"可以更进一步"的信号，但由玩家来捅破。`);
+    const md = pendingMilestone(m.id, {
+      affection: m.affection || 0,
+      intentRomance: soloIntent === 'romance',
+      quietPlace: quiet,
+      done: doneMilestones,
+    });
+    if (md) {
+      milestoneHints.push(
+        `[⚡ 重头戏·${m.name}：${md.title}] ${md.directive}\n` +
+        `——这是一场大节点，不是日常闲聊：慢下来，写 250-450 字，郑重、完整、有起承转合；不要一句带过，也不要塞进无关的日常琐碎。演完后原样输出一行 MILESTONE_ID=${m.id}:${md.id}`
+      );
+    }
   }
 
   // ==== 曝光度：偷偷来往的代价 ====
@@ -967,7 +971,38 @@ RELDELTA_START
 RELDELTA_END
 a/b 必须用成员英文id，只写真正发生了互动的爱豆对。`;
 
-  const systemPrompt = languageInstruction + (isCPMode ? cpPrompt : isMomMode ? momPrompt : romancePrompt) + relationModule;
+  // ==== 碎片剧场（Tomodachi 日常小片段）：点了头顶冒需求气泡的爱豆才走这条。
+  // 精简 prompt：只给在场这人的人设 + 写作纪律 + 这条需求；不塞曝光/事件/里程碑/关系网那一大坨。
+  const vig = (gameState as any).vignetteNeed;
+  const isVignette = !!vig && !isMomMode && !isCPMode;
+  const vigPersona = onStage.length ? onStage.map(fullPersona).join('\n\n') : targetsAll.slice(0, 1).map(fullPersona).join('\n\n');
+  const vignettePrompt = `你是一个韩娱平行世界互动游戏的 DM。现在演一个 Tomodachi Life 风格的**日常小片段**——就一件小事，不是大剧情、不是重头戏。本作全部虚构。
+
+【玩家】${gameState.playerName}，${gameState.playerAge}岁，${playerIdentity}。默认女性，用"她"称呼玩家。
+【在场（严格按人设演，台词要能听出是谁，带上她的口头禅/说话习惯）】
+${vigPersona}
+${gameState.hiddenSummary ? `\n【你们最近的状态】${gameState.hiddenSummary}` : ''}
+
+【此刻这件小事】${vig?.label || ''}${vig?.targetName ? `（对象：${vig.targetName}）` : ''} —— ${vig?.seed || ''}
+
+写作要求（重要）：
+- 就演这一件小事。**很短**，60-140 字。
+- 她带着自己的性格，反应真实、可以夸张一点、像真人（有停顿、有废话、有小情绪），别端着、别玛丽苏、别霸总腔。
+- 不要升华、不要点题、不要突然扯进大剧情或严肃话题。轻。
+- 少用形容词副词，多写动作和具体的话。不要"空气凝固""心跳漏拍"这种 AI 腔。
+${dmForbidden}
+【输出格式】
+第一部分：小片段正文（60-140字）。
+第二部分（可选）：如果自然，可加一条手机消息，用 KKTMSG_START...KKTMSG_END 单独成行。
+第三部分：3 个非常具体的玩家回应，直接写，A./B./C. 每行一个（用你自己的话写具体，方向可参考：${(vig?.quickHints || []).join(' / ') || '随情境'}）。
+第四部分：
+SNAPSHOT_START
+{"members":[${targetAffections.map(m => `{"id":"${m.id}","affection":好感度数字0-100,"careerPressure":0,"status":"一句话状态"}`).join(',')}],"currentScene":"当前地点","weekCount":${gameState.turnCount || 1},"isWeekEnd":false,"hiddenSummary":"1-2句本次小互动的记忆","isComebackSetting":false,"groupHeats":[]}
+SNAPSHOT_END
+- SNAPSHOT 必须有；affection 按这次互动小幅动一动（满足了她 +1~+4，敷衍/尴尬 0 或 -1~-2）。
+- 禁止韩语/日语原文出现在正文；所有标签单独成行。`;
+
+  const systemPrompt = languageInstruction + (isVignette ? vignettePrompt : isCPMode ? cpPrompt : isMomMode ? momPrompt : romancePrompt) + (isVignette ? '' : relationModule);
 
   try {
     const cleanHistory = messages.slice(-10).map(msg => ({
@@ -994,7 +1029,10 @@ a/b 必须用成员英文id，只写真正发生了互动的爱豆对。`;
     if (chatMessages[0].role !== 'user') chatMessages.unshift({ role: 'user', content: '继续故事' });
 
     const lastUserIdx = chatMessages.map(m => m.role).lastIndexOf('user');
-    if (lastUserIdx !== -1) {
+    if (isVignette && lastUserIdx !== -1) {
+      // 碎片剧场：短、轻、A/B/C + SNAPSHOT，不塞其它情境
+      chatMessages[lastUserIdx].content += '\n[格式：正文 60-140 字的日常小片段；结尾必须有 A./B./C. 三行具体选项；必须有 SNAPSHOT_START...SNAPSHOT_END（affection 小幅变化）；标签单独成行。别写成大剧情。]';
+    } else if (lastUserIdx !== -1) {
       const assistantCount = gameState.history.filter(h => h.role === MessageRole.ASSISTANT).length;
       const turnsInCurrentScene = assistantCount % 2;
       const nextWeek = (gameState.turnCount || 1) + 1;
@@ -1093,16 +1131,24 @@ a/b 必须用成员英文id，只写真正发生了互动的爱豆对。`;
       }
     };
 
-    // 超时 / 网络错误 / 5xx → 自动重试一次；401/402/429 等业务错误不重试
+    // 超时 / 网络&TLS 错误（Failed to fetch → TypeError，含 ERR_SSL_PROTOCOL_ERROR）/ 5xx
+    // → 自动重试，指数退避 0.8s/2s/4s，让偶发的传输层抖动自己恢复；401/402/429 等业务错误不重试。
     const retriable = (e: any) => e?.name === 'AbortError' || e?.name === 'TypeError' || (typeof e?.status === 'number' && e.status >= 500);
+    const backoffs = [800, 2000, 4000];
     let text = '';
-    try {
-      text = await once();
-    } catch (e: any) {
-      if (!retriable(e)) throw e;
-      await new Promise(r => setTimeout(r, 800));
-      text = await once();
+    let lastErr: any = null;
+    for (let attempt = 0; attempt <= backoffs.length; attempt++) {
+      try {
+        text = await once();
+        lastErr = null;
+        break;
+      } catch (e: any) {
+        lastErr = e;
+        if (!retriable(e) || attempt === backoffs.length) throw e;
+        await new Promise(r => setTimeout(r, backoffs[attempt]));
+      }
     }
+    if (lastErr) throw lastErr;
 
     if (!text || text.trim() === '') throw new Error('AI 返回内容为空。');
     console.log('🤖 AI原始返回：\n', text);
@@ -1110,6 +1156,8 @@ a/b 必须用成员英文id，只写真正发生了互动的爱豆对。`;
 
   } catch (error) {
     if (error instanceof Error && error.name === 'AbortError') throw new Error('通讯超时，请重试。');
+    // 传输层失败（网络断开 / TLS 握手失败 ERR_SSL_PROTOCOL_ERROR 等）在浏览器里都是 TypeError
+    if (error instanceof TypeError) throw new Error('网络连接不稳定（多次重试仍失败），请稍后再试一次。');
     throw error;
   }
 }

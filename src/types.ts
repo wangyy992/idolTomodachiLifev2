@@ -155,10 +155,13 @@ export interface GameState {
   worldFeed?: { id: string; text: string; kind: string; day: number; slot: number }[]; // 世界动态流
   sceneFocusIds?: string[]; // 本场登场的爱豆（给 prompt 聚焦用；不在场的只给一行简介）
   actionUsedAt?: string;    // 本时段的深度互动已用掉（值为 "day-slot"，推进时段自然失效）
+  vignetteNeed?: { kind: string; label: string; seed: string; quickHints: string[]; targetName?: string } | null; // 碎片剧场：本次互动的需求（临时，非持久）
   // 长期记忆：每个爱豆一份滚动档案（只注入摘要，不注入全历史）
   memories?: Record<string, { day: number; slot: number; text: string }[]>;
   // 已触发过的阶段突破（key = `${memberId}:${milestoneId}`），避免重复触发
   milestones?: string[];
+  // 大事记：每次里程碑触发记一条，喂给年鉴/结局，让"发展"看得见
+  milestoneLog?: { id: string; memberId: string; name: string; title: string; day: number; memory: string }[];
   // 曝光度 0-100：偷偷来往的风险累积；低调会缓慢回落
   exposureLevel?: number;
   exposureTier?: number;    // 已播报到第几档，避免同一档重复触发
