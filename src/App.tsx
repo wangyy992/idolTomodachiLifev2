@@ -10,7 +10,7 @@ import FaceCustomizer, { SpritePreview } from './FaceCustomizer';
 import SceneView from './SceneView';
 import WorldPanel from './WorldPanel';
 import { getPlayerAppearance, getDefaultAppearance, getAppearance, normalizeAppearance, type Appearance } from './spriteUtils';
-import { nextTime, idolsAt, getLocation, getActivity, unitKeyOf, getStartLocation, startingAffection, identitySummary, WORLD_LOCATIONS, type WorldLocation, type Activity } from './worldConfig';
+import { nextTime, idolsAt, getLocation, getActivity, unitKeyOf, parseLocKey, getStartLocation, startingAffection, identitySummary, WORLD_LOCATIONS, type WorldLocation, type Activity } from './worldConfig';
 import { seedIdolRelations, pairKey, deriveType, hasFlag, PLAYER, type Intent } from './relations';
 import { computeMusicShow, isMusicShowDay, weekOf, DAYS_PER_YEAR } from './calendar';
 import { availableEnding, buildYearbook } from './endings';
@@ -1778,9 +1778,10 @@ export default function App() {
     }
   }
   const sceneMembers = scene ? gameState.members.filter(m => scene.ids.includes(m.id)) : [];
-  const sceneLoc = getLocation(worldLocation);
+  const sceneLoc = getLocation(parseLocKey(worldLocation).base);
   // 强制脱出：一次相遇最多聊 MAX_SCENE_ROUNDS 轮，之后只给「结束本次互动」
-  const MAX_SCENE_ROUNDS = 3;
+  // （原来 3 太小——聊 2 次就被切断，选项和自由行动一起消失，像"不回复了"。放宽到 12。）
+  const MAX_SCENE_ROUNDS = 12;
   const sceneRounds = scene
     ? gameState.history.slice(scene.anchor).filter(h => h.role === MessageRole.ASSISTANT).length
     : 0;
@@ -1976,7 +1977,7 @@ export default function App() {
         </div>
       </aside>
 
-      <main className="flex-1 flex flex-col h-full lg:rounded-l-[2rem] lg:shadow-sm overflow-hidden" style={{background: 'rgba(11,10,20,0.72)'}}>
+      <main className={`flex-1 flex flex-col h-full lg:rounded-l-[2rem] lg:shadow-sm overflow-hidden transition-[margin] duration-300 ${sidebarOpen ? 'lg:ml-56' : ''}`} style={{background: 'rgba(11,10,20,0.72)'}}>
         <header className="h-11 border-b border-white/[0.06] px-4 flex items-center justify-between z-10 flex-shrink-0" style={{ background: 'rgba(14,12,28,0.85)' }}>
           <div className="flex items-center gap-3">
             <button onClick={handleReset} className="lg:hidden p-2 text-[#B7A9E8] hover:bg-white/10 rounded-xl"><RefreshCw className="w-4 h-4" /></button>
