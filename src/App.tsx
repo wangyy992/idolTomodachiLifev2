@@ -251,17 +251,31 @@ const MusicShowUI = ({ result }: { result: any }) => (
   </div>
 );
 
-const OptionsUI = ({ options, isLatest, lang }: { options: any[], isLatest: boolean, lang?: string }) => {
-  if (!isLatest || !options?.length) return null;
+const OptionsUI = ({ options, isLatest, lang, onPick, disabled }: { options: any[], isLatest: boolean, lang?: string, onPick?: (action: string) => void, disabled?: boolean }) => {
+  if (!options?.length) return null;
   const l = lang || 'simplified';
+  // 最新一条 + 有回调 → 可点选（点了等于把这个行动发出去）；历史消息只读回顾
+  const clickable = isLatest && !!onPick;
   return (
     <div className="mt-4 rounded-2xl bg-white/[0.03] border border-white/10 p-4">
-      <div className="gold-caption mb-3 flex items-center gap-1.5"><span className="w-1 h-1 rounded-full bg-[#FF7A93]" />{l === "traditional" ? "當時的選擇" : "当时的选择"}</div>
+      <div className="gold-caption mb-3 flex items-center gap-1.5"><span className="w-1 h-1 rounded-full bg-[#FF7A93]" />{clickable ? (l === "traditional" ? "選一個行動" : "选一个行动") : (l === "traditional" ? "當時的選擇" : "当时的选择")}</div>
       <div className="flex flex-col gap-2">
         {options.map((opt: any, i) => {
-          const text = (typeof opt === 'string' ? opt : opt.text).replace(/^[A-Da-d][\.、。\)]\s*/, '');
+          const raw = (typeof opt === 'string' ? opt : opt.text);
+          const action = (typeof opt === 'string' ? opt : (opt.action || opt.text));
+          const text = raw.replace(/^[A-Da-d][\.、。\)]\s*/, '');
+          const cls = "flex items-start gap-2.5 rounded-xl px-3 py-2.5 border text-left w-full transition-all";
+          if (clickable) {
+            return (
+              <button key={i} disabled={disabled} onClick={() => onPick!(action)}
+                className={cls + " bg-white/[0.03] border-white/[0.06] hover:border-[rgba(255,122,147,0.5)] hover:bg-white/[0.06] active:scale-[0.99] disabled:opacity-50"}>
+                <span className="mt-0.5 w-5 h-5 rounded-lg bg-[#E7E6F6] text-[#5B6BB0] text-[10px] font-black flex items-center justify-center flex-shrink-0">{'ABCD'[i] || '·'}</span>
+                <span className="text-[13px] text-[#F1ECFF] font-semibold leading-relaxed">{text}</span>
+              </button>
+            );
+          }
           return (
-            <div key={i} className="flex items-start gap-2.5 bg-white/[0.03] rounded-xl px-3 py-2.5 border border-white/[0.06]">
+            <div key={i} className={cls + " bg-white/[0.03] border-white/[0.06]"}>
               <span className="mt-0.5 w-5 h-5 rounded-lg bg-[#E7E6F6] text-[#5B6BB0] text-[10px] font-black flex items-center justify-center flex-shrink-0">{'ABCD'[i] || '·'}</span>
               <span className="text-[13px] text-[#D8D4EE] font-semibold leading-relaxed">{text}</span>
             </div>
@@ -2047,7 +2061,7 @@ export default function App() {
                       if (block.type === 'musicshow') return isLatest ? <MusicShowUI key={bi} result={block.data} /> : null;
                       return null;
                     }) : <StoryText content={msg.content || '（剧情推进中...）'} />}
-                    {msg.options && <OptionsUI options={msg.options} isLatest={isLatest} lang={(gameState as any).language} />}
+                    {msg.options && <OptionsUI options={msg.options} isLatest={isLatest} lang={(gameState as any).language} onPick={(a) => handleSend(a)} disabled={isLoading} />}
                     {msg.content?.includes('错误信息') && (
                       <button onClick={() => { let j = -1; for (let k = i-1; k >= 0; k--) { if (gameState.history[k].role === MessageRole.USER) { j = k; break; } } if (j !== -1) { const c = gameState.history[j].content; setGameState(prev => ({ ...prev, history: prev.history.slice(0, i) })); handleSend(c); } }}
                         className="self-start flex items-center gap-2 text-xs font-black text-[#B7A9E8] bg-white/[0.04] px-3 py-2 rounded-xl border border-white/10 hover:bg-white/[0.09]"><RefreshCw className="w-3 h-3" /> {lang === "traditional" ? "重試" : "重试"}</button>
