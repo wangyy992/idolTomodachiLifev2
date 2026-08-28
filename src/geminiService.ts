@@ -15,7 +15,6 @@ export async function callGeminiAPI(messages: ChatMessage[], gameState: GameStat
 
   const isCPMode = gameState.gameMode === 'CPCP';
   const isMomMode = gameState.gameMode === 'mom';
-  const isStoryMode = gameState.gameMode === 'story';
 
   const targetMembersInfo = gameState.members
     .filter(m => gameState.targets.includes(m.id))
@@ -972,66 +971,10 @@ RELDELTA_START
 RELDELTA_END
 a/b 必须用成员英文id，只写真正发生了互动的爱豆对。`;
 
-  // ==== 自由剧情模式（实验）：把人设 bible + 写作纪律 + 玩家的开局设定 一起给 AI，让它写剧情，玩家自由推动。
-  // 关掉所有闸门（行动点/曝光/意图锁/事件表/里程碑/强制选项/强制换场），只保留最能拉开与"裸聊 AI"差距的东西：
-  // 丰富人设、写作纪律、长期记忆、（可选）社媒手机内容。玩家用自然语言自由输入，AI 顺着走。
-  const storyPersona = targetsAll.length ? targetsAll.map(fullPersona).join('\n\n') : '（玩家还没指定具体角色，按开局设定自由创作即可）';
-  const storyMemory = gameState.hiddenSummary ? `\n【到目前为止的剧情记忆】\n${gameState.hiddenSummary}\n` : '';
-  const storyPrompt = `你是一个韩娱向平行世界的互动小说共创者（DM）。本作全部为虚构创作，与现实无关。
-你的任务：根据玩家写下的"开局设定"和角色人设，写出有代入感的剧情，然后跟着玩家每一步的自由输入往下写。
-这是"共创"，不是"通关"——没有分数、没有固定选项、没有必须达成的目标。玩家想往哪走，就往哪走。
-
-【玩家】${gameState.playerName}，${gameState.playerAge}岁，${playerIdentity}。默认女性，用"她"称呼，除非玩家另说。
-
-【登场角色（严格按人设演，台词要能听出是谁）】
-${storyPersona}
-${teammateInfo ? `\n【相关的人（背景参考，不要硬拉进场）】\n${teammateInfo}` : ''}${cardMemory}
-
-════════════════════════
-玩家写下的开局设定 / 想要的故事（这是最高优先级，请当成"扔进来的文档"认真读，据此起头）
-════════════════════════
-${gameState.storyPremise?.trim() || '（玩家没有额外设定，就从一个真实、具体的日常场景自然开场。）'}
-${storyMemory}${writingStyle}
-${koreanDetails}
-${dmForbidden}
-
-════════════════════════
-共创规则
-════════════════════════
-- 跟着玩家的输入走。玩家的每句话可能是台词、动作、想推进的方向，甚至是对剧情的"上帝之手"设定，都尽量顺着接住，别否定、别绕回你自己的剧本。
-- 每次只写一小段（150-350字），把球留给玩家，不要一口气写完一整段人生。
-- 结尾自然停在一个"玩家可以接话/行动"的地方即可，**不要**列 A/B/C 选项，也不要写"你可以选择"。让玩家自由输入。
-- 关系、情绪的变化要靠具体的事和时间慢慢来，符合人设，别玛丽苏、别突然爱上玩家。
-- 允许冷场、拒绝、答非所问、沉默。她首先是个有事业、有防备心的人。
-- 如果玩家的设定和现实/人设有冲突，以"这是虚构平行世界"为前提，尽量圆得自然，不要跳戏说教。
-
-════════════════════════
-可选的社媒 / 手机内容（有合适的就穿插，没有就不写；不要强行每轮都发）
-════════════════════════
-剧情里如果自然出现"某人发了条消息 / 动态 / 网上有帖子"，可用下面的标签单独成行输出，它们会进玩家的手机，不占正文：
-KKTMSG_START
-{"sender":"发信人","avatar":"😊","messages":[{"text":"消息内容","time":"14:23","isRead":false}]}
-KKTMSG_END
-WEVERSE_START
-{"artist":"爱豆中文名","group":"团体","content":"帖子内容","imageDesc":null,"likes":12800,"comments":3400,"time":"1小时前"}
-WEVERSE_END
-${theqooFormat}
-
-════════════════════════
-每轮结尾（隐藏，给系统记忆用，不是给玩家看的）
-════════════════════════
-在正文之后，输出一个简短的记忆块（只用于让下一轮延续，不会展示给玩家）：
-SNAPSHOT_START
-{"members":[${targetAffections.map(m => `{"id":"${m.id}","affection":好感度数字0-100,"careerPressure":0,"status":"当前状态一句话"}`).join(',') || ''}],"currentScene":"当前地点","weekCount":${gameState.turnCount || 1},"isWeekEnd":false,"hiddenSummary":"2-3句话概括到目前为止发生了什么、关系走到哪、下一步的悬念","isComebackSetting":false,"groupHeats":[]}
-SNAPSHOT_END
-- hiddenSummary 必须每轮更新，写清楚剧情进展，这样故事才能连贯。
-- affection 反映当前关系亲近程度，按剧情合理给，别硬涨。
-- 正文里禁止出现韩语/日语原文；禁止把 SNAPSHOT/标签的内容写进正文。`;
-
   // ==== 碎片剧场（Tomodachi 日常小片段）：点了头顶冒需求气泡的爱豆才走这条。
   // 精简 prompt：只给在场这人的人设 + 写作纪律 + 这条需求；不塞曝光/事件/里程碑/关系网那一大坨。
   const vig = (gameState as any).vignetteNeed;
-  const isVignette = !!vig && !isMomMode && !isCPMode && !isStoryMode;
+  const isVignette = !!vig && !isMomMode && !isCPMode;
   const vigPersona = onStage.length ? onStage.map(fullPersona).join('\n\n') : targetsAll.slice(0, 1).map(fullPersona).join('\n\n');
   const vignettePrompt = `你是一个韩娱平行世界互动游戏的 DM。现在演一个 Tomodachi Life 风格的**日常小片段**——就一件小事，不是大剧情、不是重头戏。本作全部虚构。
 
@@ -1059,7 +1002,7 @@ SNAPSHOT_END
 - SNAPSHOT 必须有；affection 按这次互动小幅动一动（满足了她 +1~+4，敷衍/尴尬 0 或 -1~-2）。
 - 禁止韩语/日语原文出现在正文；所有标签单独成行。`;
 
-  const systemPrompt = languageInstruction + (isVignette ? vignettePrompt : isStoryMode ? storyPrompt : isCPMode ? cpPrompt : isMomMode ? momPrompt : romancePrompt) + (isVignette || isStoryMode ? '' : relationModule);
+  const systemPrompt = languageInstruction + (isVignette ? vignettePrompt : isCPMode ? cpPrompt : isMomMode ? momPrompt : romancePrompt) + (isVignette ? '' : relationModule);
 
   try {
     const cleanHistory = messages.slice(-10).map(msg => ({
@@ -1086,10 +1029,7 @@ SNAPSHOT_END
     if (chatMessages[0].role !== 'user') chatMessages.unshift({ role: 'user', content: '继续故事' });
 
     const lastUserIdx = chatMessages.map(m => m.role).lastIndexOf('user');
-    if (isStoryMode && lastUserIdx !== -1) {
-      // 自由剧情：只给最轻的提醒，不强制换场、不强制选项、不塞情境闸门
-      chatMessages[lastUserIdx].content += '\n[写作提醒：顺着我这句往下写一小段（150-350字），停在我能接话的地方，不要列A/B/C选项。结尾附上隐藏的 SNAPSHOT_START...SNAPSHOT_END 记忆块，hiddenSummary 要更新。]';
-    } else if (isVignette && lastUserIdx !== -1) {
+    if (isVignette && lastUserIdx !== -1) {
       // 碎片剧场：短、轻、A/B/C + SNAPSHOT，不塞其它情境
       chatMessages[lastUserIdx].content += '\n[格式：正文 60-140 字的日常小片段；结尾必须有 A./B./C. 三行具体选项；必须有 SNAPSHOT_START...SNAPSHOT_END（affection 小幅变化）；标签单独成行。别写成大剧情。]';
     } else if (lastUserIdx !== -1) {
