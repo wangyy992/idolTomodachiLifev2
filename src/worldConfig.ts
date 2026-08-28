@@ -14,6 +14,7 @@ export const WORLD_LOCATIONS: WorldLocation[] = [
   { id: 'backstage', label: '待机室', sceneKey: 'backstage_hall', icon: '🎤' },
   { id: 'variety_studio', label: '综艺棚', sceneKey: 'recording_studio', icon: '🎬' },
   { id: 'concert', label: '演唱会现场', sceneKey: 'concert', icon: '🎆' },
+  { id: 'music_stage', label: '打歌舞台', sceneKey: 'stage_wing', icon: '🏆' },
   { id: 'dorm', label: '宿舍', sceneKey: 'dorm', icon: '🛋️' },
   { id: 'cafe', label: '咖啡厅', sceneKey: 'cafe', icon: '☕' },
   { id: 'convenience', label: '便利店', sceneKey: 'convenience_store', icon: '🏪' },
@@ -38,6 +39,7 @@ export const LOCATION_SCOPE: Record<string, 'shared' | 'company' | 'group'> = {
   practice_room: 'company', rooftop: 'company',   // 公司楼内
   dorm: 'group', concert: 'group',                // 各团各自的宿舍 / 演唱会
   backstage: 'shared', variety_studio: 'shared',  // 打歌待机室 / 综艺棚：跨公司互动区
+  music_stage: 'shared',                          // 打歌舞台：各团轮番上，跨公司同屏
   district: 'shared', cafe: 'shared', convenience: 'shared', hangang: 'shared',
 };
 // 某成员在某地点的"归属单位"（公司 / 团 / 无）
@@ -70,7 +72,7 @@ export interface Activity {
 const ACT: Record<string, Activity> = {
   practice: { key: 'practice', label: '练习', loc: 'practice_room', available: true, mood: '专注、略疲惫' },
   stage:    { key: 'stage', label: '待机室候场', loc: 'backstage', available: true, mood: '紧绷、要强' },
-  perform:  { key: 'perform', label: '打歌舞台', loc: 'concert', available: true, mood: '临上台、亢奋又紧张' },
+  perform:  { key: 'perform', label: '打歌舞台', loc: 'music_stage', available: true, mood: '临上台、亢奋又紧张' },
   variety:  { key: 'variety', label: '录综艺', loc: 'variety_studio', available: true, mood: '放松、综艺感' },
   concert:  { key: 'concert', label: '演唱会', loc: 'concert', available: true, mood: '肾上腺素飙升、台上台下' },
   rest:     { key: 'rest', label: '宿舍休息', loc: 'dorm', available: true, mood: '松弛、露出真实一面' },
@@ -192,8 +194,8 @@ export function startingAffection(identity?: string[]): number {
   return floor;
 }
 
-// 人人可去的公共场所
-export const PUBLIC_LOCS = ['concert', 'cafe', 'convenience', 'hangang', 'district'];
+// 人人可去的公共场所（打歌舞台：粉丝能进观众席、圈内人能进后台，统一放开）
+export const PUBLIC_LOCS = ['concert', 'music_stage', 'cafe', 'convenience', 'hangang', 'district'];
 
 // 身份类别 → 公共场所之外，额外解锁的地点
 const IDENTITY_ACCESS: { test: RegExp; extra: string[] }[] = [
