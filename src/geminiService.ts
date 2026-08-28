@@ -899,7 +899,7 @@ ${soloIntent === 'romance'
   const wloc = (gameState as any).worldLocation ?? '';
   const doneMilestones: string[] = (gameState as any).milestones || [];
   const milestoneHints: string[] = [];
-  const quiet = quietPlaceNow(wslot, wloc);
+  const quiet = quietPlaceNow(wslot, wloc.split('@')[0]);
   for (const m of onStage) {
     const md = pendingMilestone(m.id, {
       affection: m.affection || 0,

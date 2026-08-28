@@ -1285,6 +1285,24 @@ export default function App() {
     // MILESTONE_ID=xxx：阶段突破已演出，记录下来避免重复触发
     const firedMilestones: string[] = [];
     remaining = remaining.replace(/^\s*MILESTONE_ID\s*=\s*(\S+)\s*$/gm, (_s, id) => { firedMilestones.push(String(id)); return ''; });
+    // F10：里程碑不再只靠 AI 回显 —— 本轮在场的攻略对象若命中触发条件（和喂给 prompt 的同一套），
+    // 客户端直接记为已触发，避免 AI 忘了回显 ID 导致重头戏反复触发。
+    {
+      const focus = ((stateAtCall as any).sceneFocusIds || []) as string[];
+      const wl = (stateAtCall as any).worldLocation;
+      if (wl && focus.length && stateAtCall.gameMode !== 'CPCP' && stateAtCall.gameMode !== 'mom') {
+        const wslot = (stateAtCall as any).worldSlot ?? 0;
+        const wbase = parseLocKey(wl).base;
+        const done = (stateAtCall as any).milestones || [];
+        const intents = (stateAtCall as any).relationIntents || {};
+        for (const id of focus) {
+          const mem = stateAtCall.members.find(m => m.id === id);
+          if (!mem) continue;
+          const md = pendingMilestone(id, { affection: mem.affection || 0, intentRomance: intents[id] === 'romance', quietPlace: quietPlaceNow(wslot, wbase), done });
+          if (md && !firedMilestones.includes(`${id}:${md.id}`)) firedMilestones.push(`${id}:${md.id}`);
+        }
+      }
+    }
     // 大节点触发 → 醒目 toast（和普通小事件区分开）
     firedMilestones.filter(id => !(stateAtCall.milestones || []).includes(id)).forEach(id => {
       const nm = gameState.members.find(m => m.id === (id.includes(':') ? id.split(':')[0] : ''))?.name || '';
@@ -1334,6 +1352,22 @@ export default function App() {
             return u ? { ...m, ...u } : m;
           })
         };
+      }
+      // F8：好感兜底 —— AI 漏写/写坏 SNAPSHOT 时，本轮在场的攻略对象至少 +1，避免长期停滞
+      {
+        const focus = ((stateAtCall as any).sceneFocusIds || []) as string[];
+        const snapIds = new Set((snapshot?.members || []).map((sm: any) => sm.id));
+        if (prev.worldLocation && focus.length && prev.gameMode !== 'CPCP' && prev.gameMode !== 'mom') {
+          const bumped: { name: string }[] = [];
+          next.members = next.members.map((m: Member) => {
+            if (focus.includes(m.id) && !snapIds.has(m.id)) {
+              bumped.push({ name: m.name });
+              return { ...m, affection: Math.min(100, (m.affection || 0) + 1) };
+            }
+            return m;
+          });
+          bumped.forEach(bp => pushToast(`${bp.name} ♡ +1`, 'romance'));
+        }
       }
       // 打歌名次只由系统结算（handleAdvanceTime）；世界模式下忽略 AI 自报的打歌结果
       if (musicResult && !prev.worldLocation) next.musicShowHistory = [...(next.musicShowHistory || []), musicResult];
@@ -1625,6 +1659,8 @@ export default function App() {
       let next: any = { ...prev, worldRelations: rels, worldFeed: feed.slice(0, 30), worldDay: nt.day, worldSlot: nt.slot };
       // 回归期由日历决定（推进到新的一天时刷新）
       next.isComebackSetting = comebackOnDay(prev.members, prev.targets, nt.day);
+      // F9：曝光度被动回落 —— 每推进一个时段低调无事就自然降 1，不再是一路奔 BE 的棘轮
+      next.exposureLevel = Math.max(0, (prev.exposureLevel || 0) - 1);
 
       // 关系跨门槛的大新闻 → 进手机 + 弹 toast，让"她们自己处出感情"被你看见
       if (bigNews.length) {
