@@ -15,6 +15,7 @@ import { seedIdolRelations, pairKey, deriveType, hasFlag, PLAYER, type Intent } 
 import { computeMusicShow, isMusicShowDay, weekOf, DAYS_PER_YEAR } from './calendar';
 import { availableEnding, buildYearbook } from './endings';
 import { pendingMilestone, quietPlaceNow, milestoneTitle } from './milestones';
+import type { Need } from './needs';
 import EndingCard from './EndingCard';
 
 const LOCAL_STORAGE_KEY = 'star_reality_kpop_game_state';
@@ -1478,7 +1479,7 @@ export default function App() {
     });
   };
 
-  const handleSend = async (content?: any, opts?: { focusIds?: string[]; consumeAction?: boolean }) => {
+  const handleSend = async (content?: any, opts?: { focusIds?: string[]; consumeAction?: boolean; vignette?: any }) => {
     const textToSend = typeof content === 'string' ? content : input;
     if (!textToSend || !textToSend.trim()) return;
     if (isLoading) return;
@@ -1487,6 +1488,10 @@ export default function App() {
     // 本场登场的人：走近/围观时显式传入；同一场景内后续对话沿用当前 scene
     const focus = opts?.focusIds ?? scene?.ids;
     nextState.sceneFocusIds = focus && focus.length ? focus : undefined;
+    // 碎片剧场需求：开场带上（handleTalkTo 传 vignette）；新开的非碎片场景清掉；
+    // 续聊/主输入（无 focusIds）沿用当前 scene 的需求不动。
+    if (opts?.vignette !== undefined) nextState.vignetteNeed = opts.vignette;
+    else if (opts?.focusIds) nextState.vignetteNeed = null;
     // 深度互动消耗本时段的行动点（每时段全员共享一次）
     if (opts?.consumeAction) nextState.actionUsedAt = `${nextState.worldDay ?? 1}-${nextState.worldSlot ?? 0}`;
     nextState.history = [...nextState.history, { role: MessageRole.USER, content: textToSend, timestamp: Date.now() }];
@@ -1495,7 +1500,7 @@ export default function App() {
   };
 
   // 从俯视世界点击爱豆 → 切回剧情，预填带场景/心情语境的“走近”动作交给 DeepSeek
-  const handleTalkTo = (m: Member, ctx?: { location: WorldLocation; activity: Activity }) => {
+  const handleTalkTo = (m: Member, ctx?: { location: WorldLocation; activity: Activity; need?: Need }) => {
     const isTw = (gameState as any).language === 'traditional';
     // 本时段的行动点已用掉 → 只能闲聊：本地生成一句，不调 AI、不涨好感
     if (actionUsed) {
@@ -1503,6 +1508,19 @@ export default function App() {
       return;
     }
     const where = ctx ? `在${ctx.location.label}` : '';
+    // 碎片剧场：点了带需求气泡的爱豆 → 走精简 vignette，seed 一句带上她此刻的小状态
+    const need = ctx?.need;
+    if (need) {
+      const seedLine = isTw
+        ? `（我${where}走近${m.name}——看她${need.label}的样子）`
+        : `（我${where}走近${m.name}——看她${need.label}的样子）`;
+      setScene({ ids: [m.id], anchor: gameState.history.length });
+      handleSend(seedLine, {
+        focusIds: [m.id], consumeAction: true,
+        vignette: { kind: need.kind, label: need.label, seed: need.seed, quickHints: need.quickHints, targetName: need.targetName },
+      });
+      return;
+    }
     const doing = ctx ? `（她正${ctx.activity.label}，${ctx.activity.mood}）` : '';
     const line = isTw
       ? `（我${where}走近${m.name}，和ta打個招呼）${doing}`

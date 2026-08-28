@@ -1028,7 +1028,38 @@ SNAPSHOT_END
 - affection 反映当前关系亲近程度，按剧情合理给，别硬涨。
 - 正文里禁止出现韩语/日语原文；禁止把 SNAPSHOT/标签的内容写进正文。`;
 
-  const systemPrompt = languageInstruction + (isStoryMode ? storyPrompt : isCPMode ? cpPrompt : isMomMode ? momPrompt : romancePrompt) + (isStoryMode ? '' : relationModule);
+  // ==== 碎片剧场（Tomodachi 日常小片段）：点了头顶冒需求气泡的爱豆才走这条。
+  // 精简 prompt：只给在场这人的人设 + 写作纪律 + 这条需求；不塞曝光/事件/里程碑/关系网那一大坨。
+  const vig = (gameState as any).vignetteNeed;
+  const isVignette = !!vig && !isMomMode && !isCPMode && !isStoryMode;
+  const vigPersona = onStage.length ? onStage.map(fullPersona).join('\n\n') : targetsAll.slice(0, 1).map(fullPersona).join('\n\n');
+  const vignettePrompt = `你是一个韩娱平行世界互动游戏的 DM。现在演一个 Tomodachi Life 风格的**日常小片段**——就一件小事，不是大剧情、不是重头戏。本作全部虚构。
+
+【玩家】${gameState.playerName}，${gameState.playerAge}岁，${playerIdentity}。默认女性，用"她"称呼玩家。
+【在场（严格按人设演，台词要能听出是谁，带上她的口头禅/说话习惯）】
+${vigPersona}
+${gameState.hiddenSummary ? `\n【你们最近的状态】${gameState.hiddenSummary}` : ''}
+
+【此刻这件小事】${vig?.label || ''}${vig?.targetName ? `（对象：${vig.targetName}）` : ''} —— ${vig?.seed || ''}
+
+写作要求（重要）：
+- 就演这一件小事。**很短**，60-140 字。
+- 她带着自己的性格，反应真实、可以夸张一点、像真人（有停顿、有废话、有小情绪），别端着、别玛丽苏、别霸总腔。
+- 不要升华、不要点题、不要突然扯进大剧情或严肃话题。轻。
+- 少用形容词副词，多写动作和具体的话。不要"空气凝固""心跳漏拍"这种 AI 腔。
+${dmForbidden}
+【输出格式】
+第一部分：小片段正文（60-140字）。
+第二部分（可选）：如果自然，可加一条手机消息，用 KKTMSG_START...KKTMSG_END 单独成行。
+第三部分：3 个非常具体的玩家回应，直接写，A./B./C. 每行一个（用你自己的话写具体，方向可参考：${(vig?.quickHints || []).join(' / ') || '随情境'}）。
+第四部分：
+SNAPSHOT_START
+{"members":[${targetAffections.map(m => `{"id":"${m.id}","affection":好感度数字0-100,"careerPressure":0,"status":"一句话状态"}`).join(',')}],"currentScene":"当前地点","weekCount":${gameState.turnCount || 1},"isWeekEnd":false,"hiddenSummary":"1-2句本次小互动的记忆","isComebackSetting":false,"groupHeats":[]}
+SNAPSHOT_END
+- SNAPSHOT 必须有；affection 按这次互动小幅动一动（满足了她 +1~+4，敷衍/尴尬 0 或 -1~-2）。
+- 禁止韩语/日语原文出现在正文；所有标签单独成行。`;
+
+  const systemPrompt = languageInstruction + (isVignette ? vignettePrompt : isStoryMode ? storyPrompt : isCPMode ? cpPrompt : isMomMode ? momPrompt : romancePrompt) + (isVignette || isStoryMode ? '' : relationModule);
 
   try {
     const cleanHistory = messages.slice(-10).map(msg => ({
@@ -1058,6 +1089,9 @@ SNAPSHOT_END
     if (isStoryMode && lastUserIdx !== -1) {
       // 自由剧情：只给最轻的提醒，不强制换场、不强制选项、不塞情境闸门
       chatMessages[lastUserIdx].content += '\n[写作提醒：顺着我这句往下写一小段（150-350字），停在我能接话的地方，不要列A/B/C选项。结尾附上隐藏的 SNAPSHOT_START...SNAPSHOT_END 记忆块，hiddenSummary 要更新。]';
+    } else if (isVignette && lastUserIdx !== -1) {
+      // 碎片剧场：短、轻、A/B/C + SNAPSHOT，不塞其它情境
+      chatMessages[lastUserIdx].content += '\n[格式：正文 60-140 字的日常小片段；结尾必须有 A./B./C. 三行具体选项；必须有 SNAPSHOT_START...SNAPSHOT_END（affection 小幅变化）；标签单独成行。别写成大剧情。]';
     } else if (lastUserIdx !== -1) {
       const assistantCount = gameState.history.filter(h => h.role === MessageRole.ASSISTANT).length;
       const turnsInCurrentScene = assistantCount % 2;
