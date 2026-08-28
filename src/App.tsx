@@ -951,10 +951,13 @@ function chitchatLine(m: Member, ctx: { activity?: Activity } | undefined, tw: b
 const StoryText = ({ content }: { content: string }) => {
   const script = parseScript(content);
   return (
-    <div className="flex flex-col gap-2.5 text-[15px] leading-[1.85] text-[#E7E6F6]">
+    <div className="flex flex-col gap-3 text-[15.5px] leading-[1.95] text-[#E7E6F6]">
       {script.map((s, i) => s.kind === 'narration'
-        ? <p key={i} className="text-[#B7B2D9] italic">{s.text}</p>
-        : <p key={i} className="pl-3 border-l-2 border-[rgba(201,162,39,0.3)]"><span className="font-black text-[#B7A9E8]">{s.speaker}</span><span className="text-[#8B86B8]">：</span>「{s.text}」</p>
+        ? <p key={i} className="text-[#B0ABD4] italic tracking-[0.01em]">{s.text}</p>
+        : <p key={i} className="pl-3.5 border-l-2 border-[rgba(201,162,39,0.45)]">
+            <span className="font-black text-[#C6BAF3]">{s.speaker}</span>
+            <span className="text-[#C9A227] mx-0.5">「</span><span className="text-[#F1ECFF]">{s.text}</span><span className="text-[#C9A227]">」</span>
+          </p>
       )}
     </div>
   );
@@ -1014,6 +1017,9 @@ export default function App() {
     setTimeout(() => setToasts(t => t.filter(x => x.id !== id)), 4800);
   };
   const [wallpaper, setWallpaper] = useState<string>(() => localStorage.getItem('wallpaper') || '');
+  // 新手引导：首次进世界弹一次，讲清照看循环
+  const [showIntro, setShowIntro] = useState<boolean>(() => { try { return !localStorage.getItem('seen_intro_v1'); } catch { return false; } });
+  const dismissIntro = () => { setShowIntro(false); try { localStorage.setItem('seen_intro_v1', '1'); } catch {} };
 
   const handleWallpaperUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -1050,7 +1056,14 @@ export default function App() {
 
   const loadGame = (id: string) => {
     const data = localStorage.getItem(`save_data_${id}`);
-    if (data) { try { setGameState(JSON.parse(data)); setShowSaveSlots(false); } catch {} }
+    if (data) {
+      try {
+        const p = JSON.parse(data);
+        // 存档存的是完整 gameState（所有新字段都在）；这里补几个旧存档可能缺的默认值，避免读回后报错
+        setGameState({ ...p, collectedCards: p.collectedCards || [], playerImpact: p.playerImpact || { albumImpact: 0, voteImpact: 0 } });
+        setShowSaveSlots(false);
+      } catch {}
+    }
   };
 
   const deleteSlot = (id: string) => {
@@ -1597,41 +1610,49 @@ export default function App() {
         bigNews.slice(0, 2).forEach((n, i) => setTimeout(() => pushToast(n.text, n.kind), 120 * i));
       }
 
-      // 打歌日晚上结算一位：分数由代码算（可累积、可对比），玩家的应援与爱豆士气都算进去
-      const mainGroup = tmembers[0]?.group;
-      if (mainGroup && nt.slot === 2 && isMusicShowDay(mainGroup, nt.day)) {
-        const rivals = Array.from(new Set(prev.members.map(m => m.group))).filter(g => g !== mainGroup).slice(0, 3);
-        const morale = tmembers.length
-          ? Math.round(tmembers.reduce((s, m) => s + (m.affection || 0), 0) / tmembers.length * 0.5 + 50)
-          : 50;
+      // 打歌日晚上结算一位（#27：你关注的每个团各自结算，不再只算第一个团）
+      const involvedGroups = Array.from(new Set(tmembers.map(m => m.group).filter(g => g && g !== '自建')));
+      const showGroups = nt.slot === 2 ? involvedGroups.filter(g => isMusicShowDay(g, nt.day)) : [];
+      if (showGroups.length) {
         const boost = prev.playerImpact || { albumImpact: 0, voteImpact: 0 };
-        const res = computeMusicShow(mainGroup, rivals.length ? rivals : ['其他团'], nt.day, {
-          morale,
-          boost: { vote: boost.voteImpact, sns: Math.round(boost.voteImpact * 0.6), digital: boost.albumImpact },
-        });
-        const result = { week: weekOf(nt.day), winner: res.winner, scores: res.scores };
-        next.currentMusicShow = result;
-        next.musicShowHistory = [...(prev.musicShowHistory || []), result];
+        const feedAdds: any[] = [];
+        const phoneAdds: any[] = [];
+        const toasts: { text: string; kind: string }[] = [];
+        for (const g of showGroups) {
+          const gm = tmembers.filter(m => m.group === g);
+          const rivals = Array.from(new Set(prev.members.map(m => m.group))).filter(x => x !== g && x !== '自建').slice(0, 3);
+          const morale = gm.length ? Math.round(gm.reduce((s, m) => s + (m.affection || 0), 0) / gm.length * 0.5 + 50) : 50;
+          const res = computeMusicShow(g, rivals.length ? rivals : ['其他团'], nt.day, {
+            morale,
+            boost: { vote: boost.voteImpact, sns: Math.round(boost.voteImpact * 0.6), digital: boost.albumImpact },
+          });
+          const result = { week: weekOf(nt.day), winner: res.winner, scores: res.scores };
+          next.currentMusicShow = result;
+          next.musicShowHistory = [...(next.musicShowHistory || prev.musicShowHistory || []), result];
+          const won = res.winner === g;
+          feedAdds.push({
+            id: `ms-${g}-${nt.day}`,
+            text: won ? `${g} 拿下本周一位！` : `本周一位是 ${res.winner}，${g} 差 ${res.scores[0].total - (res.scores.find(s => s.group === g)?.total || 0)} 分`,
+            kind: won ? 'romance' : 'tension', day: nt.day, slot: nt.slot,
+          });
+          phoneAdds.push({
+            id: `msp-${g}-${nt.day}`, type: 'theqoo' as const, ts: Date.now(), read: false,
+            data: {
+              title: won ? `${g} 今天一位了…真的哭了` : `今天一位是 ${res.winner}，${g} 也太可惜了`,
+              category: '음악방송', viewsCount: 40000 + Math.floor(Math.random() * 60000),
+              likesCount: 800 + Math.floor(Math.random() * 3000), commentsCount: 120,
+              comments: [
+                { authorId: 'ㅇㅇ', content: won ? '무대 진짜 미쳤다' : '아쉽다 다음엔 꼭', translation: won ? '舞台真的绝了' : '好可惜，下次一定' },
+                { authorId: 'ㅇㅇ', content: `총점 ${res.scores[0].total}`, translation: `总分 ${res.scores[0].total}` },
+              ],
+            },
+          });
+          toasts.push({ text: won ? `🏆 ${g} 本周一位！` : `本周一位：${res.winner}`, kind: won ? 'romance' : 'tension' });
+        }
         next.playerImpact = { albumImpact: 0, voteImpact: 0 }; // 每场结算后清空本轮投入
-        const won = res.winner === mainGroup;
-        next.worldFeed = [{
-          id: `ms-${nt.day}`,
-          text: won ? `${mainGroup} 拿下本周一位！` : `本周一位是 ${res.winner}，${mainGroup} 差 ${res.scores[0].total - (res.scores.find(s => s.group === mainGroup)?.total || 0)} 分`,
-          kind: won ? 'romance' : 'tension', day: nt.day, slot: nt.slot,
-        }, ...next.worldFeed].slice(0, 30);
-        next.phoneFeed = [...(prev.phoneFeed || []), {
-          id: `msp-${nt.day}`, type: 'theqoo' as const, ts: Date.now(), read: false,
-          data: {
-            title: won ? `${mainGroup} 今天一位了…真的哭了` : `今天一位是 ${res.winner}，${mainGroup} 也太可惜了`,
-            category: '음악방송', viewsCount: 40000 + Math.floor(Math.random() * 60000),
-            likesCount: 800 + Math.floor(Math.random() * 3000), commentsCount: 120,
-            comments: [
-              { authorId: 'ㅇㅇ', content: won ? '무대 진짜 미쳤다' : '아쉽다 다음엔 꼭', translation: won ? '舞台真的绝了' : '好可惜，下次一定' },
-              { authorId: 'ㅇㅇ', content: `총점 ${res.scores[0].total}`, translation: `总分 ${res.scores[0].total}` },
-            ],
-          },
-        }];
-        setTimeout(() => pushToast(won ? `🏆 ${mainGroup} 本周一位！` : `本周一位：${res.winner}`, won ? 'romance' : 'tension'), 0);
+        next.worldFeed = [...feedAdds, ...next.worldFeed].slice(0, 30);
+        next.phoneFeed = [...(prev.phoneFeed || []), ...phoneAdds];
+        toasts.forEach((t, i) => setTimeout(() => pushToast(t.text, t.kind), i * 120));
       }
       return next;
     });
@@ -1773,6 +1794,34 @@ export default function App() {
         <div className="text-white font-black text-base">{lang === 'traditional' ? '請橫過手機遊玩' : '请横过手机游玩'}</div>
         <div className="text-[#b6bde6] text-xs leading-relaxed">{lang === 'traditional' ? '這個世界是寬螢幕的，橫屏才能完整看到場景' : '这个世界是宽屏的，横屏才能完整看到场景'}</div>
       </div>
+      {/* 新手引导：首次进世界 */}
+      {showIntro && worldMode && (
+        <div className="fixed inset-0 z-[200] bg-black/70 backdrop-blur-sm flex items-center justify-center p-5" onClick={dismissIntro}>
+          <div className="ink-panel ink-scroll rounded-[24px] w-full max-w-sm p-6 border border-[rgba(201,162,39,0.3)] max-h-[92vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <div className="text-center mb-4">
+              <div className="text-3xl mb-1.5">🏝️</div>
+              <h2 className="text-[17px] font-black text-[#F1ECFF]">{lang === 'traditional' ? '歡迎來到這座島' : '欢迎来到这座岛'}</h2>
+              <p className="text-[11px] text-[#8B86B8] mt-1">{lang === 'traditional' ? '她們有自己的作息，你來照看她們的日常' : '她们有自己的作息，你来照看她们的日常'}</p>
+            </div>
+            <div className="flex flex-col gap-2.5">
+              {[
+                { e: '💭', t: lang === 'traditional' ? '點頭頂冒氣泡的愛豆，滿足她的小需求（每人每時段一次）' : '点头顶冒气泡的爱豆，满足她的小需求（每人每时段一次）' },
+                { e: '⚡', t: lang === 'traditional' ? '好感攢夠，頭頂會亮金光 —— 那是一場重頭戲' : '好感攒够，头顶会亮金光 —— 那是一场重头戏' },
+                { e: '⏭️', t: lang === 'traditional' ? '「推進時段」讓世界往前走，她們會自己發生事' : '「推进时段」让世界往前走，她们会自己发生事' },
+                { e: '📡', t: lang === 'traditional' ? '右上角看島嶼動態和手機；🎤 進打歌舞台' : '右上角看岛屿动态和手机；🎤 进打歌舞台' },
+              ].map((r, i) => (
+                <div key={i} className="flex items-start gap-3 rounded-2xl bg-white/[0.03] border border-white/10 px-3.5 py-3">
+                  <span className="text-[18px] leading-none">{r.e}</span>
+                  <span className="text-[12.5px] text-[#D8D4EE] leading-relaxed">{r.t}</span>
+                </div>
+              ))}
+            </div>
+            <button onClick={dismissIntro} className="w-full mt-5 py-3 rounded-2xl text-white text-[13px] font-black transition-all hover:-translate-y-0.5" style={{ background: 'linear-gradient(135deg,#6C79C4,#454F87)', boxShadow: '0 8px 20px -6px rgba(91,107,176,0.7)' }}>
+              {lang === 'traditional' ? '開始遊玩' : '开始游玩'}
+            </button>
+          </div>
+        </div>
+      )}
       {/* VN 相遇场景 */}
       {scene && (
         <SceneView
