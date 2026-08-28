@@ -16,6 +16,7 @@ import { computeMusicShow, isMusicShowDay, weekOf, DAYS_PER_YEAR } from './calen
 import { availableEnding, buildYearbook } from './endings';
 import { pendingMilestone, quietPlaceNow, milestoneTitle } from './milestones';
 import type { Need } from './needs';
+import { pairNews, crossingNews, soloMood } from './islandNews';
 import EndingCard from './EndingCard';
 
 const LOCAL_STORAGE_KEY = 'star_reality_kpop_game_state';
@@ -1307,6 +1308,16 @@ export default function App() {
     let musicResult: any = null;
     const snapshotBlock = extractBlock(remaining, 'SNAPSHOT_START', 'SNAPSHOT_END');
     if (snapshotBlock) { remaining = snapshotBlock.remaining; try { snapshot = JSON.parse(snapshotBlock.content); } catch(e) {} }
+    // 好感变化飘字：满足需求 / 有来有往的即时爽感（攻略/自由世界模式）
+    if (snapshot?.members && stateAtCall.gameMode !== 'CPCP' && stateAtCall.gameMode !== 'mom') {
+      snapshot.members.forEach((sm: any) => {
+        const old = stateAtCall.members.find(m => m.id === sm.id);
+        if (!old || typeof sm.affection !== 'number') return;
+        const d = sm.affection - (old.affection || 0);
+        if (d === 0) return;
+        pushToast(`${old.name} ♡ ${d > 0 ? '+' : ''}${d}`, d > 0 ? 'romance' : 'tension');
+      });
+    }
     const musicBlock = extractBlock(remaining, 'MUSICSHOW_START', 'MUSICSHOW_END');
     if (musicBlock) { remaining = musicBlock.remaining; try { musicResult = JSON.parse(musicBlock.content); } catch(e) {} }
     let relDeltas: any = null;
@@ -1623,6 +1634,7 @@ export default function App() {
       const rels = { ...(prev.worldRelations || {}) };
       const feed = [...(prev.worldFeed || [])];
       const tmembers = prev.members.filter(m => (prev.targets || []).includes(m.id));
+      const bigNews: { text: string; kind: string }[] = [];
       for (const L of WORLD_LOCATIONS) {
         if (L.id === here) continue; // 你在的地方已经现场结算过
         const present = idolsAt(tmembers, L.id, day, slot);
@@ -1634,17 +1646,37 @@ export default function App() {
             const a = present[i], b = present[j], k = pairKey(a.id, b.id);
             const match = (prev.matchmakes || []).includes(k);
             const cur = rels[k] || { affinity: 0, tension: 0 };
+            const oldAff = cur.affinity || 0;
+            const newAff = Math.min(100, oldAff + (match ? 2 : 1));
             rels[k] = {
               ...cur,
-              affinity: Math.min(100, (cur.affinity || 0) + (match ? 2 : 1)),
+              affinity: newAff,
               tension: Math.max(0, (cur.tension || 0) + ((cur.tension || 0) >= 50 ? (match ? -1 : 1) : 0)),
             };
-            feed.unshift({ id: `${k}-${day}-${slot}-${Math.random().toString(36).slice(2, 6)}`, text: `${a.name} × ${b.name} 在${L.label}相处`, kind: match ? 'romance' : 'friendly', day, slot });
+            // 有画面的日常动态
+            const line = pairNews(a.name, b.name, L.label, newAff, cur.tension || 0, match, `${k}-${day}-${slot}`);
+            feed.unshift({ id: `${k}-${day}-${slot}-${Math.random().toString(36).slice(2, 6)}`, text: line.text, kind: line.kind, day, slot });
+            // 跨过关系门槛 → 大新闻（进手机 + toast）
+            const cross = crossingNews(a.name, b.name, oldAff, newAff, match);
+            if (cross) { feed.unshift({ id: `x-${k}-${day}`, text: cross.text, kind: cross.kind, day, slot }); bigNews.push({ text: cross.text, kind: cross.kind }); }
           }
+          // 单人心情动态（稀疏），让没互动的人也活着
+          const mood = soloMood(present[i].name, present[i].realPersonality || present[i].publicPersona || '', `${present[i].id}-mood-${day}-${slot}`);
+          if (mood) feed.unshift({ id: `mood-${present[i].id}-${day}-${slot}`, text: mood.text, kind: mood.kind, day, slot });
         }
       }
       const nt = nextTime(day, slot);
-      let next: any = { ...prev, worldRelations: rels, worldFeed: feed.slice(0, 15), worldDay: nt.day, worldSlot: nt.slot };
+      let next: any = { ...prev, worldRelations: rels, worldFeed: feed.slice(0, 30), worldDay: nt.day, worldSlot: nt.slot };
+
+      // 关系跨门槛的大新闻 → 进手机 + 弹 toast，让"她们自己处出感情"被你看见
+      if (bigNews.length) {
+        next.phoneFeed = [...(prev.phoneFeed || []), ...bigNews.slice(0, 3).map((n, i) => ({
+          id: `news-${nt.day}-${i}-${Math.random().toString(36).slice(2, 6)}`,
+          type: 'weverse' as const, ts: Date.now(), read: false,
+          data: { artist: '八卦速报', group: '岛屿新闻', content: n.text, imageDesc: null, likes: 1200 + Math.floor(Math.random() * 8000), comments: 80 + Math.floor(Math.random() * 400), time: '刚刚' },
+        }))].slice(-60);
+        bigNews.slice(0, 2).forEach((n, i) => setTimeout(() => pushToast(n.text, n.kind), 120 * i));
+      }
 
       // 打歌日晚上结算一位：分数由代码算（可累积、可对比），玩家的应援与爱豆士气都算进去
       const mainGroup = tmembers[0]?.group;
@@ -1667,7 +1699,7 @@ export default function App() {
           id: `ms-${nt.day}`,
           text: won ? `${mainGroup} 拿下本周一位！` : `本周一位是 ${res.winner}，${mainGroup} 差 ${res.scores[0].total - (res.scores.find(s => s.group === mainGroup)?.total || 0)} 分`,
           kind: won ? 'romance' : 'tension', day: nt.day, slot: nt.slot,
-        }, ...next.worldFeed].slice(0, 15);
+        }, ...next.worldFeed].slice(0, 30);
         next.phoneFeed = [...(prev.phoneFeed || []), {
           id: `msp-${nt.day}`, type: 'theqoo' as const, ts: Date.now(), read: false,
           data: {
@@ -1914,7 +1946,7 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      {sidebarOpen && <div className="hidden lg:block fixed inset-0 z-[90] bg-black/25" onClick={() => setSidebarOpen(false)} />}
+      {/* 桌面端不再用全屏遮罩罩住地图（会把点爱豆的第一下吃掉）——侧栏浮在左侧，地图随时可点，收起用顶栏按钮 */}
       <aside className={`${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} w-56 border-r border-white/[0.06] flex-col hidden lg:flex fixed left-0 top-0 bottom-0 z-[95] transition-transform duration-300 shadow-2xl`} style={{background: 'linear-gradient(180deg, #14121f, #0B0A14)'}}>
         <div className="p-4 border-b border-white/[0.06]">
           <h1 className="text-sm font-black text-[#F1ECFF] tracking-tighter flex items-center gap-1.5"><Gamepad2 className="w-4 h-4 flex-shrink-0 text-[#C9A227]" /> 爱豆收集梦想生活</h1>
