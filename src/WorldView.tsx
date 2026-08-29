@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { MessageCircle, Clock, CalendarDays, ChevronRight, X, Users, Rss, Palette, Lock, Smartphone, CalendarRange, Megaphone, Mic2 } from 'lucide-react';
+import { MessageCircle, Clock, CalendarDays, ChevronRight, X, Users, Rss, Palette, Lock, Smartphone, CalendarRange, Megaphone, Mic2, Map as MapIcon } from 'lucide-react';
 import { buildYearPhases, phaseAt, weekOf, dayInWeek, isMusicShowDay, WEEKS_PER_YEAR } from './calendar';
 import { SpritePreview } from './FaceCustomizer';
 import { Member } from './types';
@@ -157,10 +157,11 @@ export default function WorldView({
   const [, setTick] = useState(0);
   const [nearId, setNearId] = useState<string | null>(null);
   const [watchable, setWatchable] = useState<{ aId: string; bId: string } | null>(null);
-  const [showSchedule, setShowSchedule] = useState(false);
+  const [showPlanner, setShowPlanner] = useState(false);       // 日程 + 年历 合一
+  const [plannerTab, setPlannerTab] = useState<'schedule' | 'calendar'>('schedule');
   const [showRelations, setShowRelations] = useState(false);
   const [showFeed, setShowFeed] = useState(false);
-  const [showCalendar, setShowCalendar] = useState(false);
+  const [showMap, setShowMap] = useState(false);               // 地图（选位置）
   const [showFacePick, setShowFacePick] = useState(false);
   const [lockToast, setLockToast] = useState<string | null>(null);
   // 涉及到的所有团（去重、保序，排除自建 OC —— OC 没有回归/打歌档期）
@@ -448,11 +449,11 @@ export default function WorldView({
           <Rss className="w-4 h-4" />
           {worldFeed.length > 0 && <span className="absolute -top-1 -right-1 min-w-[15px] h-[15px] px-1 rounded-full bg-[#FF7A93] text-white text-[8px] flex items-center justify-center">{worldFeed.length}</span>}
         </button>
-        <button onClick={() => setShowSchedule(true)} title={tw ? '日程' : '日程'} className="w-8 h-8 rounded-xl flex items-center justify-center text-[#F1ECFF] transition-all hover:bg-white/10" style={{ background: 'rgba(14,11,26,0.6)', backdropFilter: 'blur(6px)', border: '1px solid rgba(255,255,255,0.1)' }}>
-          <CalendarDays className="w-4 h-4" />
+        <button onClick={() => setShowMap(true)} title={tw ? '地圖 · 選位置' : '地图 · 选位置'} className="w-8 h-8 rounded-xl flex items-center justify-center text-[#F1ECFF] transition-all hover:bg-white/10" style={{ background: 'rgba(14,11,26,0.6)', backdropFilter: 'blur(6px)', border: '1px solid rgba(255,255,255,0.1)' }}>
+          <MapIcon className="w-4 h-4" />
         </button>
-        <button onClick={() => setShowCalendar(true)} title={tw ? '年曆' : '年历'} className="w-8 h-8 rounded-xl flex items-center justify-center text-[#F1ECFF] transition-all hover:bg-white/10" style={{ background: 'rgba(14,11,26,0.6)', backdropFilter: 'blur(6px)', border: '1px solid rgba(255,255,255,0.1)' }}>
-          <CalendarRange className="w-4 h-4" />
+        <button onClick={() => { setPlannerTab('schedule'); setShowPlanner(true); }} title={tw ? '日程 / 年曆' : '日程 / 年历'} className="w-8 h-8 rounded-xl flex items-center justify-center text-[#F1ECFF] transition-all hover:bg-white/10" style={{ background: 'rgba(14,11,26,0.6)', backdropFilter: 'blur(6px)', border: '1px solid rgba(255,255,255,0.1)' }}>
+          <CalendarDays className="w-4 h-4" />
         </button>
         {isPromo && (
           <button onClick={onSupport} disabled={supportUsed} title={tw ? '應援打投' : '应援打投'}
@@ -567,27 +568,40 @@ export default function WorldView({
         </div>
       )}
 
-      {/* 底部：地点切换栏 */}
-      <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-30 flex gap-1.5 px-2 py-1.5 rounded-2xl max-w-[95%] overflow-x-auto" style={{ background: 'rgba(8,6,16,0.55)', backdropFilter: 'blur(6px)' }}>
-        {WORLD_LOCATIONS.filter(loc => loc.id !== 'music_stage').map(loc => {
-          const n = countAt(loc.id);
-          const active = loc.id === baseLoc;
-          const locked = !accessible.has(loc.id);
-          return (
-            <button
-              key={loc.id}
-              onClick={() => tryTravel(loc.id)}
-              title={locked ? lockReason(loc.id, tw) : undefined}
-              className={`relative flex-shrink-0 px-2.5 py-1.5 rounded-xl text-[10px] font-black flex items-center gap-1 transition-all ${active ? 'bg-white text-[#211D33]' : locked ? 'bg-white/[0.05] text-white/35' : 'bg-white/15 text-white hover:bg-white/25'}`}
-            >
-              <span className={locked ? 'grayscale opacity-70' : ''}>{loc.icon}</span> {loc.label}
-              {locked
-                ? <Lock className="w-2.5 h-2.5 ml-0.5" />
-                : n > 0 && <span className="ml-0.5 min-w-[15px] h-[15px] px-1 rounded-full text-[8px] flex items-center justify-center bg-[#5B6BB0] text-white">{n}</span>}
-            </button>
-          );
-        })}
-      </div>
+      {/* 地图：选位置（右上角「地图」图标打开，取代原底部地点栏） */}
+      {showMap && (
+        <div className="absolute inset-0 z-40 bg-black/70 backdrop-blur-md flex items-center justify-center p-4" onClick={() => setShowMap(false)}>
+          <div className="ink-panel ink-scroll rounded-[18px] p-5 max-w-md w-full max-h-[85%] overflow-auto" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-[14px] font-black text-[#F1ECFF] flex items-center gap-2"><MapIcon className="w-4 h-4 text-[#C9A227]" /> {tw ? '去哪裡' : '去哪里'}</h3>
+              <button onClick={() => setShowMap(false)} className="w-7 h-7 rounded-lg bg-white/[0.06] hover:bg-white/[0.12] text-[#B7B2D9] flex items-center justify-center transition-colors"><X className="w-4 h-4" /></button>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              {WORLD_LOCATIONS.filter(loc => loc.id !== 'music_stage').map(loc => {
+                const n = countAt(loc.id);
+                const active = loc.id === baseLoc;
+                const locked = !accessible.has(loc.id);
+                return (
+                  <button
+                    key={loc.id}
+                    onClick={() => { if (!locked) { tryTravel(loc.id); setShowMap(false); } else { tryTravel(loc.id); } }}
+                    title={locked ? lockReason(loc.id, tw) : undefined}
+                    className={`relative px-3 py-3 rounded-2xl text-[12px] font-black flex items-center gap-2 border transition-all ${active ? 'bg-white text-[#211D33] border-transparent' : locked ? 'bg-white/[0.03] text-white/35 border-white/[0.06]' : 'bg-white/[0.06] text-white border-white/10 hover:bg-white/[0.14]'}`}
+                  >
+                    <span className={`text-[16px] ${locked ? 'grayscale opacity-70' : ''}`}>{loc.icon}</span>
+                    <span className="flex-1 text-left">{loc.label}</span>
+                    {locked
+                      ? <Lock className="w-3 h-3" />
+                      : n > 0 && <span className="min-w-[16px] h-[16px] px-1 rounded-full text-[9px] flex items-center justify-center bg-[#5B6BB0] text-white">{n}</span>}
+                    {active && <span className="text-[9px] font-black text-[#5B6BB0]">{tw ? '在這' : '在这'}</span>}
+                  </button>
+                );
+              })}
+            </div>
+            <p className="text-[10px] text-[#8B86B8] mt-3 flex items-center gap-1 flex-wrap"><Lock className="w-2.5 h-2.5" /> {tw ? '=你的身份進不去；數字=現在有幾位在那裡。' : '=你的身份进不去；数字=现在有几位在那里。'}</p>
+          </div>
+        </div>
+      )}
 
       {/* 世界动态流 */}
       {showFeed && (
@@ -650,12 +664,15 @@ export default function WorldView({
       )}
 
       {/* 年历：一年的档期一眼看完，玩家能提前规划 */}
-      {showCalendar && (
-        <div className="absolute inset-0 z-40 bg-black/70 backdrop-blur-md flex items-center justify-center p-4" onClick={() => setShowCalendar(false)}>
+      {showPlanner && plannerTab === 'calendar' && (
+        <div className="absolute inset-0 z-40 bg-black/70 backdrop-blur-md flex items-center justify-center p-4" onClick={() => setShowPlanner(false)}>
           <div className="ink-panel ink-scroll rounded-[18px] p-5 max-w-2xl w-full max-h-[85%] overflow-auto" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between mb-1">
-              <h3 className="text-[14px] font-black text-[#F1ECFF] flex items-center gap-2"><CalendarRange className="w-4 h-4 text-[#C9A227]" /> {tw ? '年曆' : '年历'}</h3>
-              <button onClick={() => setShowCalendar(false)} className="w-7 h-7 rounded-lg bg-white/[0.06] hover:bg-white/[0.12] text-[#B7B2D9] flex items-center justify-center transition-colors"><X className="w-4 h-4" /></button>
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex gap-1.5 p-1 rounded-xl bg-white/[0.05]">
+                <button onClick={() => setPlannerTab('schedule')} className="px-3 py-1.5 rounded-lg text-[12px] font-black text-[#B7B2D9] hover:text-white flex items-center gap-1.5"><CalendarDays className="w-3.5 h-3.5" /> {tw ? '日程' : '日程'}</button>
+                <button onClick={() => setPlannerTab('calendar')} className="px-3 py-1.5 rounded-lg text-[12px] font-black text-[#211D33] flex items-center gap-1.5" style={{ background: 'linear-gradient(135deg,#C9A227,#E6C34A)' }}><CalendarRange className="w-3.5 h-3.5" /> {tw ? '年曆' : '年历'}</button>
+              </div>
+              <button onClick={() => setShowPlanner(false)} className="w-7 h-7 rounded-lg bg-white/[0.06] hover:bg-white/[0.12] text-[#B7B2D9] flex items-center justify-center transition-colors"><X className="w-4 h-4" /></button>
             </div>
             <p className="text-[10px] text-[#8B86B8] mb-4">{tw ? `第 ${weekOf(day)} 週 · 第 ${day} 天（第 ${dayInWeek(day)} 日）` : `第 ${weekOf(day)} 周 · 第 ${day} 天（周内第 ${dayInWeek(day)} 日）`}</p>
 
@@ -711,13 +728,16 @@ export default function WorldView({
         </div>
       )}
 
-      {/* 日程面板 */}
-      {showSchedule && (
-        <div className="absolute inset-0 z-40 bg-black/70 backdrop-blur-md flex items-center justify-center p-4" onClick={() => setShowSchedule(false)}>
+      {/* 日程 / 年历 面板（日程 tab） */}
+      {showPlanner && plannerTab === 'schedule' && (
+        <div className="absolute inset-0 z-40 bg-black/70 backdrop-blur-md flex items-center justify-center p-4" onClick={() => setShowPlanner(false)}>
           <div className="ink-panel ink-scroll rounded-[18px] p-5 max-w-2xl w-full max-h-[85%] overflow-auto" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-[14px] font-black text-[#F1ECFF] flex items-center gap-2"><CalendarDays className="w-4 h-4 text-[#C9A227]" /> {tw ? `第${day}天 · 日程` : `第${day}天 · 日程`}</h3>
-              <button onClick={() => setShowSchedule(false)} className="w-7 h-7 rounded-lg bg-white/[0.06] hover:bg-white/[0.12] text-[#B7B2D9] flex items-center justify-center transition-colors"><X className="w-4 h-4" /></button>
+              <div className="flex gap-1.5 p-1 rounded-xl bg-white/[0.05]">
+                <button onClick={() => setPlannerTab('schedule')} className="px-3 py-1.5 rounded-lg text-[12px] font-black text-[#211D33] flex items-center gap-1.5" style={{ background: 'linear-gradient(135deg,#C9A227,#E6C34A)' }}><CalendarDays className="w-3.5 h-3.5" /> {tw ? `第${day}天 · 日程` : `第${day}天 · 日程`}</button>
+                <button onClick={() => setPlannerTab('calendar')} className="px-3 py-1.5 rounded-lg text-[12px] font-black text-[#B7B2D9] hover:text-white flex items-center gap-1.5"><CalendarRange className="w-3.5 h-3.5" /> {tw ? '年曆' : '年历'}</button>
+              </div>
+              <button onClick={() => setShowPlanner(false)} className="w-7 h-7 rounded-lg bg-white/[0.06] hover:bg-white/[0.12] text-[#B7B2D9] flex items-center justify-center transition-colors"><X className="w-4 h-4" /></button>
             </div>
             <table className="w-full text-[11px] border-collapse">
               <thead>
@@ -764,7 +784,7 @@ export default function WorldView({
                 ])}
               </tbody>
             </table>
-            <p className="text-[10px] text-[#8B86B8] mt-3 flex items-center gap-1 flex-wrap leading-relaxed">{tw ? '劃掉=在外地/聯繫不上；' : '划掉=在外地/联系不上；'}<Lock className="w-2.5 h-2.5" />{tw ? '=你的身份進不去。點下方地點欄過去找人；沒人就「推進時段」等日程變化。' : '=你的身份进不去。点下方地点栏过去找人；没人就「推进时段」等日程变化。'}</p>
+            <p className="text-[10px] text-[#8B86B8] mt-3 flex items-center gap-1 flex-wrap leading-relaxed">{tw ? '劃掉=在外地/聯繫不上；' : '划掉=在外地/联系不上；'}<Lock className="w-2.5 h-2.5" />{tw ? '=你的身份進不去。點右上角「地圖」選位置過去找人；沒人就「推進時段」等日程變化。' : '=你的身份进不去。点右上角「地图」选位置过去找人；没人就「推进时段」等日程变化。'}</p>
           </div>
         </div>
       )}
