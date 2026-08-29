@@ -16,6 +16,7 @@ import { computeMusicShow, isMusicShowDay, weekOf, phaseAt, DAYS_PER_YEAR } from
 import { availableEnding, buildYearbook } from './endings';
 import { pendingMilestone, quietPlaceNow, milestoneTitle } from './milestones';
 import type { Need } from './needs';
+import { getNeed } from './needs';
 import { pairNews, crossingNews, soloMood } from './islandNews';
 import EndingCard from './EndingCard';
 
@@ -682,6 +683,8 @@ const CharacterCreationWizard = ({ onComplete, members }: { onComplete: (data: a
       identity: ['圈内工作人员'],
       targets: [],
       customMembers: cast,
+      demoMode: true,
+      autoDemo: true,
     });
   };
 
@@ -1122,6 +1125,8 @@ export default function App() {
   const usedThisSlot = (gameState.usedActions || []).filter(k => k.startsWith(slotPrefix)).map(k => k.slice(slotPrefix.length));
   const isActionUsed = (id: string) => usedThisSlot.includes(id);
   const supportUsed = isActionUsed('__support__');
+  const demoMode = !!(gameState as any).demoMode;
+  const autoDemo = !!(gameState as any).autoDemo;
   const phoneFeed = gameState.phoneFeed || [];
   const phoneUnread = phoneFeed.filter(f => !f.read).length;
   const openPhone = () => setShowPhone(true);
@@ -1207,6 +1212,76 @@ export default function App() {
   useEffect(() => { localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(gameState)); }, [gameState]);
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [gameState.history]);
   // 密钥现由服务端持有，前端不再探测（真缺失时由 /api/chat 报错提示）
+
+  // ── 自动演示（Demo 自动驾驶）──────────────────────────────
+  // 开启后，游戏每隔一小段自行推进：在场就自动走近爱豆演一段、有选项就自动选、
+  // 一段聊够就自动脱出、没人可撩就自动换地点 / 推进时段。全程无需操作，录像用。
+  useEffect(() => {
+    if (!autoDemo) return;
+    if (gameState.setupStep === SetupStep.CREATION || gameState.setupStep === SetupStep.CARDS) return;
+    if (isLoading) return;
+    // 有弹窗/结局占屏时先不动，让它自然展示
+    if (showEnding || showConfirmReset || customizing || showPhone) return;
+    // 首屏引导：自动看几秒再关掉
+    if (showIntro) { const t = setTimeout(() => dismissIntro(), 3200); return () => clearTimeout(t); }
+
+    const targets = gameState.members.filter(m => (gameState.targets || []).includes(m.id));
+    const wm = targets.length > 0 ? targets : gameState.members.slice(0, 6);
+    const usedNow = (id: string) => usedThisSlot.includes(id);
+
+    // 决策：返回 { run, delay }
+    let plan: { run: () => void; delay: number } | null = null;
+
+    if (scene) {
+      const hist = gameState.history;
+      let msg: any = null;
+      for (let i = hist.length - 1; i >= scene.anchor; i--) { if (hist[i].role === MessageRole.ASSISTANT) { msg = hist[i]; break; } }
+      const rounds = hist.slice(scene.anchor).filter(h => h.role === MessageRole.ASSISTANT).length;
+      const opts: { text: string; action: string }[] = msg?.options || [];
+      if (rounds >= 3) {
+        plan = { run: () => setScene(null), delay: 2600 };               // 聊够了，脱出
+      } else if (opts.length > 0) {
+        const pick = opts[Math.floor(Math.random() * opts.length)];
+        plan = { run: () => handleSend(pick.action), delay: 2000 };      // 自动选一个选项
+      } else {
+        plan = { run: () => setScene(null), delay: 2600 };               // 没选项了，脱出
+      }
+    } else {
+      const base = parseLocKey(worldLocation).base;
+      const hereFree = idolsAt(wm, base, worldDay, worldSlot).filter(m => !usedNow(m.id));
+      if (hereFree.length > 0) {
+        // 优先撩头顶有需求气泡的那个，更有看头
+        const withNeed = hereFree.map(m => {
+          const act = getActivity(m.id, worldDay, worldSlot, m.group);
+          const others = hereFree.filter(o => o.id !== m.id).map(o => ({ id: o.id, name: o.name }));
+          return { m, act, need: getNeed(m, worldDay, worldSlot, act.available, others) };
+        });
+        const chosen = withNeed.find(x => x.need) || withNeed[0];
+        const loc = getLocation(base);
+        plan = {
+          run: () => handleTalkTo(chosen.m, loc ? { location: loc, activity: chosen.act, need: chosen.need || undefined } : undefined),
+          delay: 1700,
+        };
+      } else if (!supportUsed && (gameState.isComebackSetting)) {
+        plan = { run: () => handleSupport(), delay: 1500 };              // 回归期顺手打投
+      } else {
+        // 本地没人可撩：去有人的地方；实在没有就推进时段
+        let dest: string | null = null;
+        for (const L of WORLD_LOCATIONS) {
+          if (L.id === base) continue;
+          if (idolsAt(wm, L.id, worldDay, worldSlot).some(m => !usedNow(m.id))) { dest = L.id; break; }
+        }
+        plan = dest
+          ? { run: () => setWorldLocation(dest!), delay: 1300 }
+          : { run: () => handleAdvanceTime(), delay: 1600 };
+      }
+    }
+
+    const timer = setTimeout(() => plan && plan.run(), plan?.delay ?? 1500);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoDemo, isLoading, scene, showEnding, showConfirmReset, customizing, showPhone, showIntro,
+      worldDay, worldSlot, worldLocation, gameState.history.length, gameState.setupStep, gameState.usedActions]);
 
   // 首次进入世界时，用各成员的 initialRelationships 播种爱豆↔爱豆关系
   useEffect(() => {
@@ -2192,6 +2267,21 @@ export default function App() {
             onOpenPhone={openPhone}
             pendingMilestones={worldPendingMilestones}
           />
+          {/* Demo 自动演示开关：这局由一键 Demo 开始时才显示 */}
+          {demoMode && (
+            <button
+              onClick={() => setGameState(prev => ({ ...(prev as any), autoDemo: !(prev as any).autoDemo }))}
+              title={autoDemo ? (lang === 'traditional' ? '停止自動演示' : '停止自动演示') : (lang === 'traditional' ? '開始自動演示' : '开始自动演示')}
+              className={`absolute bottom-4 left-1/2 -translate-x-1/2 z-[60] px-4 py-2 rounded-full text-[12px] font-black flex items-center gap-2 border transition-all shadow-lg ${
+                autoDemo
+                  ? 'bg-[rgba(201,162,39,0.16)] border-[rgba(201,162,39,0.6)] text-[#F1ECFF]'
+                  : 'bg-black/45 border-white/15 text-[#B7B2D9] hover:bg-black/60'
+              }`}
+            >
+              <span className={`w-2 h-2 rounded-full ${autoDemo ? 'bg-[#C9A227] animate-pulse' : 'bg-white/40'}`} />
+              {autoDemo ? (lang === 'traditional' ? '自動演示中 · 點擊停止' : '自动演示中 · 点击停止') : (lang === 'traditional' ? '▶ 自動演示' : '▶ 自动演示')}
+            </button>
+          )}
         </div>
         ) : (
         <>
