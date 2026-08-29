@@ -577,7 +577,7 @@ export default function WorldView({
               <button onClick={() => setShowMap(false)} className="w-7 h-7 rounded-lg bg-white/[0.06] hover:bg-white/[0.12] text-[#B7B2D9] flex items-center justify-center transition-colors"><X className="w-4 h-4" /></button>
             </div>
             <div className="grid grid-cols-2 gap-2">
-              {WORLD_LOCATIONS.filter(loc => loc.id !== 'music_stage').map(loc => {
+              {WORLD_LOCATIONS.map(loc => {
                 const n = countAt(loc.id);
                 const active = loc.id === baseLoc;
                 const locked = !accessible.has(loc.id);
