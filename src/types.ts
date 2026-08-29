@@ -148,6 +148,9 @@ export interface GameState {
   worldRelations?: Record<string, { affinity: number; tension: number; note?: string; flags?: string[] }>;
   relationIntents?: Record<string, 'romance' | 'friend' | 'none'>; // 玩家对某爱豆的意图（key=成员id）
   matchmakes?: string[]; // 玩家想撮合的爱豆对（pairKey）
+  // Demo 展示：demoMode=这局由一键 Demo 开始（显示自动演示开关）；autoDemo=当前正在自动演示
+  demoMode?: boolean;
+  autoDemo?: boolean;
   // 自由世界运行状态（持久化）
   worldDay?: number;
   worldSlot?: number;
