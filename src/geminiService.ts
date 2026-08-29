@@ -302,9 +302,11 @@ ${dmForbidden}
 ════════════════════════
 好感度规则（必须严格执行）
 ════════════════════════
-每轮必须在SNAPSHOT里更新affection，禁止连续两轮affection数值不变：
-- 有实质互动：+2~+5 / 负面互动：-3~-8 / 普通接触：+0~+2 / 重大突破：+6~+10
-- 禁止好感度长期停滞，每3轮内至少有一次实质变化
+好感度只在"真的发生了什么"时才变，绝不为了凑数而涨：
+- 有意义的互动（帮到她/聊到心里去/一起做了件事）：+2~+5
+- 突破性事件：+6~+10 / 负面（冷场/被拒/惹她不快）：-2~-8
+- 敷衍、普通寒暄、她没心情、只是打了个照面：+0（保持不变，完全可以）
+- 严禁"没接触也加好感"：她今天不理你、你只是路过打了声招呼，就不要加。宁可不动，也不硬涨。
 
 ════════════════════════
 UI触发规则
@@ -548,7 +550,7 @@ SNAPSHOT_END
         extraPrompt += '\n[本轮情境提示：' + triggerHints.join('；') + ']';
       }
 
-      chatMessages[lastUserIdx].content += extraPrompt + '\n[格式强制要求：①回复末尾必须有严格如下三行：\nA. xxxx\nB. xxxx\nC. xxxx\n不能写"你可以选择"，不能用数字编号，必须是A/B/C开头每行一个选项。②必须有SNAPSHOT_START...SNAPSHOT_END，这是强制要求禁止省略。affection必须根据本轮互动变化更新，哪怕只是普通接触也要+1或+2，禁止连续两轮数值完全不变。③如有消息/帖子必须用对应标签：KKTMSG_START/END、THEQOO_START/END、BUBBLE_START/END、WEVERSE_START/END，标签单独成行]';
+      chatMessages[lastUserIdx].content += extraPrompt + '\n[格式强制要求：①回复末尾必须有严格如下三行：\nA. xxxx\nB. xxxx\nC. xxxx\n不能写"你可以选择"，不能用数字编号，必须是A/B/C开头每行一个选项。②必须有SNAPSHOT_START...SNAPSHOT_END，这是强制要求禁止省略。affection 只在本轮真的有实质进展时才变；敷衍/寒暄/被冷落就保持不变(+0)，不要为了凑数硬加。③如有消息/帖子必须用对应标签：KKTMSG_START/END、THEQOO_START/END、BUBBLE_START/END、WEVERSE_START/END，标签单独成行]';
     }
 
     const payload = JSON.stringify({

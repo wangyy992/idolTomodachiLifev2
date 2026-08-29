@@ -473,7 +473,7 @@ const CharacterCreationWizard = ({ onComplete, members }: { onComplete: (data: a
   // 自建角色（像 Tomodachi Life 那样把自己想要的人放进来）
   const [ocDraft, setOcDraft] = useState<any | null>(null);
   const [ocFace, setOcFace] = useState(false);
-  const [source, setSource] = useState<'idol' | 'oc'>('idol');
+  const [source, setSource] = useState<'girls' | 'boys' | 'oc'>('girls');
   const [customIdentity, setCustomIdentity] = useState('');
   const lang = data.language || 'simplified';
 
@@ -579,6 +579,20 @@ const CharacterCreationWizard = ({ onComplete, members }: { onComplete: (data: a
     const val = customIdentity.trim();
     const identity = val && !data.identity.includes(val) ? [...data.identity, val] : data.identity;
     onComplete({ ...data, identity });
+  };
+
+  // Demo 一键开始：预置一套好角色 + 设定，直接进世界（录像/展示用）
+  const startDemo = () => {
+    const demoTargets = ['yeji', 'karina', 'wonyoung'].filter(id => members.some(m => m.id === id));
+    onComplete({
+      ...data,
+      playerName: data.playerName.trim() || (data.language === 'traditional' ? '林澄' : '林澄'),
+      playerAge: 22,
+      gameMode: 'romance',
+      identity: ['圈内工作人员'],
+      targets: demoTargets.length ? demoTargets : members.slice(0, 3).map(m => m.id),
+      customMembers: [],
+    });
   };
 
   return (
@@ -689,6 +703,11 @@ const CharacterCreationWizard = ({ onComplete, members }: { onComplete: (data: a
                     </div>
                   )}
                 </div>
+                <button onClick={startDemo}
+                  className="w-full py-3 rounded-2xl text-[12px] font-black flex items-center justify-center gap-2 border border-dashed border-[rgba(201,162,39,0.5)] text-[#F1ECFF] hover:bg-[rgba(201,162,39,0.08)] transition-all">
+                  🎬 {T('Demo · 一键开始（黄礼志 / 카리나 / 张元英）','Demo · 一鍵開始（黃禮志 / 카리나 / 張元英）')}
+                </button>
+                <p className="text-[10px] text-[#8B86B8] text-center -mt-1.5">{T('预置好角色与设定，直接进世界 —— 录像/试玩用','預置好角色與設定，直接進世界 —— 錄像/試玩用')}</p>
               </>)}
 
               {cur === 'face' && (
@@ -737,6 +756,12 @@ const CharacterCreationWizard = ({ onComplete, members }: { onComplete: (data: a
                           ? <>{T('你们本来就认识，起始好感 ','你們本來就認識，起始好感 ')}<b className="text-[#FF7A93]">{s.affFloor}</b></>
                           : T('从陌生人开始，好感需要慢慢积累', '從陌生人開始，好感需要慢慢累積')}</span>
                       </div>
+                      {s.affFloor > 0 && (
+                        <div className="flex items-start gap-2 text-[11px] text-[#8B86B8] leading-relaxed pt-0.5 border-t border-white/5 mt-0.5">
+                          <Users className="w-3.5 h-3.5 text-[#C9A227] mt-0.5 flex-shrink-0" />
+                          <span>{T('这段关系会落在你下一步选择的自担身上 —— 选谁，就是「谁的青梅竹马 / 现任女友」。','這段關係會落在你下一步選擇的自擔身上 —— 選誰，就是「誰的青梅竹馬 / 現任女友」。')}</span>
+                        </div>
+                      )}
                     </div>
                   );
                 })()}
@@ -744,14 +769,20 @@ const CharacterCreationWizard = ({ onComplete, members }: { onComplete: (data: a
 
               {cur === 'idols' && (<>
                 <div className="flex gap-2">
-                  {[{ k: 'idol', n: T('从爱豆里选','從愛豆裡選') }, { k: 'oc', n: T('我自己创建','我自己創建') }].map(o => (
+                  {[{ k: 'girls', n: T('女团','女團') }, { k: 'boys', n: T('男团','男團') }, { k: 'oc', n: T('自己创造','自己創造') }].map(o => (
                     <button key={o.k} onClick={() => setSource(o.k as any)}
                       className={`flex-1 py-2.5 rounded-xl border text-[12px] font-black transition-all ${source === o.k ? 'bg-[rgba(201,162,39,0.1)] border-[rgba(201,162,39,0.5)] text-[#F1ECFF]' : 'bg-white/[0.03] border-white/10 text-[#B7B2D9]'}`}>
                       {o.n}
                     </button>
                   ))}
                 </div>
-                {source === 'idol' ? <MemberPicker label={T('选择你的自担','選擇您的自擔')} /> : (
+                {source === 'girls' ? <MemberPicker label={T('请选择','請選擇')} /> : source === 'boys' ? (
+                  <div className="rounded-2xl bg-white/[0.03] border border-white/10 p-6 text-center flex flex-col items-center gap-2">
+                    <div className="text-3xl">🚧</div>
+                    <div className="text-[13px] font-black text-[#F1ECFF]">{T('男团即将开放','男團即將開放')}</div>
+                    <div className="text-[11px] text-[#8B86B8] leading-relaxed">{T('现在先玩女团，或者去「自己创造」捏一个你想要的角色～','現在先玩女團，或者去「自己創造」捏一個你想要的角色～')}</div>
+                  </div>
+                ) : (
                   <div className="flex flex-col gap-3">
                     <p className="text-[10px] text-[#8B86B8] leading-relaxed">
                       {T('自己创建角色：起名、写性格、捏脸。他们会和爱豆一样有作息、会走动、能攻略也能被撮合。',
@@ -1288,22 +1319,8 @@ export default function App() {
           })
         };
       }
-      // F8：好感兜底 —— AI 漏写/写坏 SNAPSHOT 时，本轮在场的攻略对象至少 +1，避免长期停滞
-      {
-        const focus = ((stateAtCall as any).sceneFocusIds || []) as string[];
-        const snapIds = new Set((snapshot?.members || []).map((sm: any) => sm.id));
-        if (prev.worldLocation && focus.length && prev.gameMode !== 'CPCP' && prev.gameMode !== 'mom') {
-          const bumped: { name: string }[] = [];
-          next.members = next.members.map((m: Member) => {
-            if (focus.includes(m.id) && !snapIds.has(m.id)) {
-              bumped.push({ name: m.name });
-              return { ...m, affection: Math.min(100, (m.affection || 0) + 1) };
-            }
-            return m;
-          });
-          bumped.forEach(bp => pushToast(`${bp.name} ♡ +1`, 'romance'));
-        }
-      }
+      // 好感度只跟 AI 的 SNAPSHOT 走 —— 不再"没实质进展也硬 +1"（避免没接触也涨好感）。
+      // AI 漏写某人时就保持原值不动，等下一轮有真进展再涨。
       // 打歌名次只由系统结算（handleAdvanceTime）；世界模式下忽略 AI 自报的打歌结果
       if (musicResult && !prev.worldLocation) next.musicShowHistory = [...(next.musicShowHistory || []), musicResult];
       if (newCards.length > 0) next.collectedCards = [...(next.collectedCards || []), ...newCards];
