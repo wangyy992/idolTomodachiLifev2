@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { MessageCircle, Clock, CalendarDays, ChevronRight, X, Users, Rss, Palette, Lock, Smartphone, CalendarRange, Megaphone, Mic2, Map as MapIcon } from 'lucide-react';
+import { MessageCircle, Clock, CalendarDays, ChevronRight, X, Users, Rss, Palette, Lock, Smartphone, CalendarRange, Megaphone, Map as MapIcon } from 'lucide-react';
 import { buildYearPhases, phaseAt, weekOf, dayInWeek, isMusicShowDay, WEEKS_PER_YEAR } from './calendar';
 import { SpritePreview } from './FaceCustomizer';
 import { Member } from './types';
@@ -422,19 +422,6 @@ export default function WorldView({
 
       {/* 右上：快捷入口（毛玻璃图标） + 推进时段（主操作） */}
       <div className="absolute top-3 right-3 z-30 flex gap-1.5 flex-wrap justify-end">
-        {/* 打歌舞台：单拎出来的一个"地方"，打歌日你的团会在这儿 */}
-        {(() => {
-          const stageCount = countAt('music_stage');
-          const onStageNow = baseLoc === 'music_stage';
-          return (
-            <button onClick={() => tryTravel('music_stage')} title={tw ? '打歌舞台' : '打歌舞台'}
-              className={`relative h-8 px-2.5 rounded-xl flex items-center gap-1 text-[10px] font-black transition-all ${onStageNow ? 'text-[#211D33]' : 'text-[#F1ECFF] hover:bg-white/10'}`}
-              style={onStageNow ? { background: 'linear-gradient(135deg,#C9A227,#E6C34A)' } : { background: 'rgba(14,11,26,0.6)', backdropFilter: 'blur(6px)', border: '1px solid rgba(255,255,255,0.1)' }}>
-              <Mic2 className="w-4 h-4" /> {tw ? '打歌' : '打歌'}
-              {stageCount > 0 && <span className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 px-1 rounded-full bg-[#FF7A93] text-white text-[8px] font-black flex items-center justify-center shadow animate-pulse">{stageCount}</span>}
-            </button>
-          );
-        })()}
         <button onClick={onOpenPhone} title={tw ? '手機' : '手机'} className="relative w-8 h-8 rounded-xl flex items-center justify-center text-[#F1ECFF] transition-all hover:bg-white/10" style={{ background: 'rgba(14,11,26,0.6)', backdropFilter: 'blur(6px)', border: '1px solid rgba(255,255,255,0.1)' }}>
           <Smartphone className="w-4 h-4" />
           {phoneUnread > 0 && <span className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 px-1 rounded-full bg-[#FF3B30] text-white text-[9px] font-black flex items-center justify-center shadow animate-pulse">{phoneUnread}</span>}
