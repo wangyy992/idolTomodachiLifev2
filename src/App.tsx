@@ -1218,7 +1218,8 @@ export default function App() {
   // 一段聊够就自动脱出、没人可撩就自动换地点 / 推进时段。全程无需操作，录像用。
   useEffect(() => {
     if (!autoDemo) return;
-    if (gameState.setupStep === SetupStep.CREATION || gameState.setupStep === SetupStep.CARDS) return;
+    if (gameState.setupStep === SetupStep.CREATION) return;
+    if (!gameState.worldLocation) return; // 还没进世界
     if (isLoading) return;
     // 有弹窗/结局占屏时先不动，让它自然展示
     if (showEnding || showConfirmReset || customizing || showPhone) return;
