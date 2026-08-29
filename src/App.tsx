@@ -459,6 +459,37 @@ const PhoneModal = ({ feed, onClose, lang, members, onSendDM, dmLeft }: {
   );
 };
 
+// Demo 一键开始用的原创角色：一个三人女团「STELLA」，三种极鲜明的性格，方便录像/试玩
+const DEMO_CAST: any[] = [
+  {
+    id: 'demo_sole', name: '江予昭', group: 'STELLA', age: 2000, nationality: '韩国', role: '队长 / 主唱',
+    publicPersona: '沉稳可靠的门面担当，采访里滴水不漏，被粉丝称作"人间清醒"。',
+    realPersonality: `【底色】冰山掌控型。她把情绪管理当成一门技术活——不是没有情绪，是先算清楚说出来会不会给别人添麻烦，算不过就咽下去。作为队长，她习惯性地把所有人的状态扫描一遍，在没人注意的地方把问题解决掉，然后把功劳让出去。看似疏离，其实是全团最操心的人。
+【软处】只有在确定没人看的时候，她才会露出疲惫。她极不擅长接受别人的好意——你对她好，她第一反应是"我要怎么还"。真正走进她，不是靠热情，是靠让她相信"你不需要她回报"。`,
+    speechStyle: '句子短、逻辑清楚，很少用语气词。被戳中时会突然沉默两秒再回答。',
+    secret: '出道前最后一次月评差点被淘汰，是现在的忙内白露替她说了话才留下来的——这件事她谁都没提过。',
+    affection: 12,
+  },
+  {
+    id: 'demo_wildy', name: '温野', group: 'STELLA', age: 2003, nationality: '中国', role: '主舞 / Rapper',
+    publicPersona: '综艺感炸裂的气氛担当，舞台上极具攻击性，下台就变成话痨小狗。',
+    realPersonality: `【底色】热烈直球型，情绪全写在脸上，藏都藏不住——高兴了整个人发光，委屈了眼圈立刻红。她敢爱敢恨，想到什么做什么，是那种会第一个冲过来抱住你的人。但这团火底下压着强烈的不安：她怕自己"太多了"，怕热情吓跑别人，所以有时会突然收住，然后自己纠结半天。
+【软处】她给出去的都是真心，也因此特别容易受伤。她不会说"我需要你"，但会用行动疯狂暗示——反复找你、给你带吃的、记住你随口说的小事。你只要接住一次，她能记一辈子。`,
+    speechStyle: '语速快、语气词多（"诶！""真的假的""你听我说"），激动时会飙一两句中文。',
+    secret: '一个人在异国出道，最难的那阵子是靠每天给家里报"我很好"撑过来的，其实哭了很多次。',
+    affection: 38,
+  },
+  {
+    id: 'demo_dew', name: '白露', group: 'STELLA', age: 2005, nationality: '韩国', role: '忙内 / 副唱',
+    publicPersona: '慵懒厌世的忙内，表情包本包，一句话能把姐姐们噎住，粉丝爱她的毒舌。',
+    realPersonality: `【底色】慵懒毒舌天才型。能躺着绝不坐着，对大多数事情都是一副"随便吧"的懒散样，但脑子转得极快——毒舌背后全是精准的观察，她其实把每个人都看得透透的，只是懒得说破。她的冷淡是保护色：越在乎的事越装作不在乎。
+【软处】她的刀子嘴专门用来掩盖豆腐心。她会用最欠揍的语气做最温柔的事——嘴上嫌你烦，转头把你落下的东西默默收好。想让她卸下防备，别被她的话激到，看她做了什么。`,
+    speechStyle: '懒洋洋、爱用反问和吐槽，冷幽默，句尾常带一个拖长的"……啊"。',
+    secret: '其实是三人里最黏队长江予昭的那个，会偷偷观察她累不累，但打死不承认。',
+    affection: 25,
+  },
+];
+
 const CharacterCreationWizard = ({ onComplete, members }: { onComplete: (data: any) => void, members: Member[] }) => {
   const [stepIdx, setStepIdx] = useState(0);
   const [selectedGroup, setSelectedGroup] = useState<string | null>(null);
@@ -583,15 +614,16 @@ const CharacterCreationWizard = ({ onComplete, members }: { onComplete: (data: a
 
   // Demo 一键开始：预置一套好角色 + 设定，直接进世界（录像/展示用）
   const startDemo = () => {
-    const demoTargets = ['yeji', 'karina', 'wonyoung'].filter(id => members.some(m => m.id === id));
+    // 一套原创角色（三人团 STELLA），不占用已有爱豆，直接进世界
+    const cast = DEMO_CAST.map(c => ({ ...c, appearance: getAppearance('demo-' + c.id) }));
     onComplete({
       ...data,
-      playerName: data.playerName.trim() || (data.language === 'traditional' ? '林澄' : '林澄'),
+      playerName: data.playerName.trim() || '林澄',
       playerAge: 22,
       gameMode: 'romance',
       identity: ['圈内工作人员'],
-      targets: demoTargets.length ? demoTargets : members.slice(0, 3).map(m => m.id),
-      customMembers: [],
+      targets: [],
+      customMembers: cast,
     });
   };
 
@@ -705,9 +737,9 @@ const CharacterCreationWizard = ({ onComplete, members }: { onComplete: (data: a
                 </div>
                 <button onClick={startDemo}
                   className="w-full py-3 rounded-2xl text-[12px] font-black flex items-center justify-center gap-2 border border-dashed border-[rgba(201,162,39,0.5)] text-[#F1ECFF] hover:bg-[rgba(201,162,39,0.08)] transition-all">
-                  🎬 {T('Demo · 一键开始（黄礼志 / 카리나 / 张元英）','Demo · 一鍵開始（黃禮志 / 카리나 / 張元英）')}
+                  🎬 {T('Demo · 一键开始（三人团 STELLA）','Demo · 一鍵開始（三人團 STELLA）')}
                 </button>
-                <p className="text-[10px] text-[#8B86B8] text-center -mt-1.5">{T('预置好角色与设定，直接进世界 —— 录像/试玩用','預置好角色與設定，直接進世界 —— 錄像/試玩用')}</p>
+                <p className="text-[10px] text-[#8B86B8] text-center -mt-1.5">{T('预置一套原创角色：江予昭 / 温野 / 白露，直接进世界 —— 录像/试玩用','預置一套原創角色：江予昭 / 溫野 / 白露，直接進世界 —— 錄像/試玩用')}</p>
               </>)}
 
               {cur === 'face' && (
@@ -1187,7 +1219,9 @@ export default function App() {
       age: o.age || 2002, nationality: o.nationality || '—', role: o.role || '',
       publicPersona: o.publicPersona || '你自己创建的角色',
       realPersonality: o.realPersonality || '（未填写性格，AI 会按名字与设定自由发挥）',
-      affection: affFloor > 0 ? affFloor : 0,
+      ...(o.speechStyle ? { speechStyle: o.speechStyle } : {}),
+      ...(o.secret ? { secret: o.secret } : {}),
+      affection: typeof o.affection === 'number' ? o.affection : (affFloor > 0 ? affFloor : 0),
       careerPressure: 40, status: '自由',
     }));
     const allMembers = [...initializedMembers, ...ocs];
