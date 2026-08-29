@@ -1911,8 +1911,15 @@ export default function App() {
 
       {/* 桌面端不再用全屏遮罩罩住地图（会把点爱豆的第一下吃掉）——侧栏浮在左侧，地图随时可点，收起用顶栏按钮 */}
       <aside className={`${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} w-56 border-r border-white/[0.06] flex-col hidden lg:flex fixed left-0 top-0 bottom-0 z-[95] transition-transform duration-300 shadow-2xl`} style={{background: 'linear-gradient(180deg, #14121f, #0B0A14)'}}>
-        <div className="p-4 border-b border-white/[0.06]">
-          <h1 className="text-sm font-black text-[#F1ECFF] tracking-tighter flex items-center gap-1.5"><Gamepad2 className="w-4 h-4 flex-shrink-0 text-[#C9A227]" /> 爱豆收集梦想生活</h1>
+        <div className="p-4 border-b border-white/[0.06] relative">
+          <button
+            onClick={() => setSidebarOpen(false)}
+            title={lang === 'traditional' ? '收起側欄' : '收起侧栏'}
+            className="absolute top-3 right-3 w-7 h-7 rounded-lg bg-white/[0.06] hover:bg-white/[0.14] text-[#B7A9E8] flex items-center justify-center transition-colors"
+          >
+            <PanelLeftClose className="w-4 h-4" />
+          </button>
+          <h1 className="text-sm font-black text-[#F1ECFF] tracking-tighter flex items-center gap-1.5 pr-8"><Gamepad2 className="w-4 h-4 flex-shrink-0 text-[#C9A227]" /> 爱豆收集梦想生活</h1>
           <div className="flex items-center gap-2 mt-2">
             <span className="text-[9px] text-white px-2 py-0.5 rounded-full font-black uppercase" style={{ background: 'linear-gradient(135deg,#6C79C4,#454F87)' }}>{modeLabel}</span>
             <span className="text-[10px] text-[#8B86B8] font-bold">Idol Tomodachi Life</span>
