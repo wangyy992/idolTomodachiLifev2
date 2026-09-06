@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>爱豆收集梦想生活</title>
+<meta name="description" content="一款把大语言模型接进《Tomodachi Life》式开放世界的 AI 沙盒养成游戏 —— 项目展示页" />
+
+<!--
+  ┌─────────────────────────────────────────────────────────────┐
+  │  部署前改这两处即可：                                          │
+  │  1) 试玩链接：搜索 PLAY_URL，把 href 换成你的游戏地址          │
+  │  2) Demo 视频：把录好的视频命名为 demo.mp4，放到本文件同目录    │
+  │     （想用 B 站：删掉 <video> 那段，换成 B 站的 <iframe> 即可） │
+  │  然后把整个 promo/ 文件夹丢到静态托管（OSS/COS/GitHub Pages）  │
+  └─────────────────────────────────────────────────────────────┘
+-->
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700;900&display=swap" rel="stylesheet" />
+
+<style>
+  :root{
+    --ink:#0B0A14;          /* 墨底（带一点紫偏） */
+    --ink-2:#100E1B;
+    --panel:#14121F;        /* 面板 */
+    --panel-2:#1A1729;
+    --line:rgba(201,162,39,.22);
+    --hair:rgba(255,255,255,.07);
+    --gold:#C9A227;
+    --gold-lt:#E8CE6B;
+    --rose:#FF7A93;
+    --peri:#8C97D8;
+    --ink-txt:#F1ECFF;      /* 亮文字 */
+    --muted:#C3BEE2;        /* 正文 */
+    --faint:#8B86B8;        /* 说明/caption */
+    --serif:"Noto Serif SC",serif;
+    --sans:"Noto Sans SC",system-ui,sans-serif;
+    --cormorant:"Cormorant Garamond","Noto Serif SC",serif;
+    --maxw:1120px;
+  }
+
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0;
+    font-family:var(--sans);
+    color:var(--muted);
+    background:
+      radial-gradient(120% 80% at 50% -10%, #17132a 0%, transparent 55%),
+      radial-gradient(90% 60% at 100% 0%, rgba(201,162,39,.10) 0%, transparent 45%),
+      var(--ink);
+    line-height:1.85;
+    overflow-x:hidden;
+  }
+  ::selection{background:rgba(201,162,39,.3);color:#fff}
+  a{color:inherit}
+  img,video{max-width:100%;display:block}
+
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 24px}
+
+  /* 顶部细金线，像新闻册的书脊 */
+  .topline{height:3px;background:linear-gradient(90deg,transparent,var(--gold) 20%,var(--gold-lt) 50%,var(--gold) 80%,transparent)}
+
+  /* ── 导航 ── */
+  nav{display:flex;align-items:center;justify-content:space-between;padding:20px 24px;max-width:var(--maxw);margin:0 auto}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:700;color:var(--ink-txt);letter-spacing:.02em}
+  .brand .dot{width:9px;height:9px;border-radius:50%;background:var(--gold);box-shadow:0 0 14px var(--gold)}
+  .navlinks{display:flex;gap:22px;font-size:.86rem;color:var(--faint)}
+  .navlinks a{text-decoration:none;transition:color .2s}
+  .navlinks a:hover{color:var(--gold-lt)}
+  @media(max-width:640px){.navlinks{display:none}}
+
+  /* ── Hero ── */
+  header{position:relative;padding:64px 0 40px;text-align:center}
+  .glow{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:0}
+  .glow span{position:absolute;border-radius:50%;filter:blur(70px);opacity:.5}
+  .glow .g1{width:340px;height:340px;left:8%;top:0;background:radial-gradient(circle,#6C79C4,transparent 70%);animation:float 11s ease-in-out infinite}
+  .glow .g2{width:400px;height:400px;right:4%;top:10%;background:radial-gradient(circle,var(--gold),transparent 70%);opacity:.28;animation:float 14s ease-in-out infinite reverse}
+  .glow .g3{width:260px;height:260px;left:42%;top:34%;background:radial-gradient(circle,var(--rose),transparent 70%);opacity:.22;animation:float 13s ease-in-out infinite}
+  header > *{position:relative;z-index:1}
+
+  .eyebrow{font-size:.74rem;letter-spacing:.34em;text-transform:uppercase;color:var(--gold);font-weight:700}
+  .latin{font-family:var(--cormorant);font-style:italic;font-size:clamp(1.1rem,2.4vw,1.7rem);color:var(--gold-lt);letter-spacing:.04em;margin-top:14px}
+  h1{
+    font-family:var(--serif);font-weight:900;color:var(--ink-txt);
+    font-size:clamp(2.7rem,7vw,5rem);line-height:1.05;margin:.18em 0 0;
+    text-wrap:balance;letter-spacing:.01em;
+    text-shadow:0 2px 40px rgba(201,162,39,.18);
+  }
+  .tagline{max-width:40ch;margin:22px auto 0;font-size:clamp(1rem,1.6vw,1.15rem);color:var(--muted)}
+  .cta{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:34px}
+  .btn{
+    display:inline-flex;align-items:center;gap:9px;padding:13px 26px;border-radius:999px;
+    font-weight:700;font-size:.95rem;text-decoration:none;transition:transform .18s,box-shadow .25s,background .2s;
+    cursor:pointer;
+  }
+  .btn-gold{background:linear-gradient(135deg,var(--gold),#a9861d);color:#1b1608;box-shadow:0 10px 30px -10px rgba(201,162,39,.7)}
+  .btn-gold:hover{transform:translateY(-2px);box-shadow:0 16px 38px -10px rgba(201,162,39,.85)}
+  .btn-ghost{border:1px solid var(--line);color:var(--ink-txt);background:rgba(255,255,255,.02)}
+  .btn-ghost:hover{border-color:var(--gold);background:rgba(201,162,39,.08);transform:translateY(-2px)}
+
+  .meta-row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:26px}
+  .chip{font-size:.74rem;letter-spacing:.06em;color:var(--faint);border:1px solid var(--hair);border-radius:999px;padding:5px 13px;background:rgba(255,255,255,.02)}
+  .chip b{color:var(--gold-lt);font-weight:700}
+
+  /* ── 通用区块 ── */
+  section{padding:56px 0}
+  .sec-head{display:flex;flex-direction:column;gap:8px;margin-bottom:30px}
+  .sec-head .eyebrow{color:var(--gold)}
+  .sec-head h2{font-family:var(--serif);font-weight:700;color:var(--ink-txt);font-size:clamp(1.5rem,3.2vw,2.2rem);margin:0;text-wrap:balance;letter-spacing:.01em}
+
+  /* ── Demo 视频「舞台屏」── */
+  .screen{
+    position:relative;border-radius:18px;overflow:hidden;
+    border:1px solid var(--line);
+    background:linear-gradient(160deg,#0e0c18,#07060d);
+    box-shadow:0 40px 90px -40px rgba(0,0,0,.8),0 0 0 1px rgba(255,255,255,.03) inset;
+    aspect-ratio:16/9;
+  }
+  .screen video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:2;background:transparent}
+  /* 视频就位前的占位（视频加载后会覆盖在其上层） */
+  .screen__ph{position:absolute;inset:0;z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;
+    background:radial-gradient(60% 70% at 50% 42%,rgba(201,162,39,.10),transparent 70%)}
+  .play{width:78px;height:78px;border-radius:50%;border:2px solid var(--gold);display:flex;align-items:center;justify-content:center;box-shadow:0 0 30px -6px rgba(201,162,39,.6)}
+  .play::after{content:"";width:0;height:0;border-style:solid;border-width:15px 0 15px 24px;border-color:transparent transparent transparent var(--gold);margin-left:6px}
+  .screen__ph .lbl{font-family:var(--cormorant);letter-spacing:.5em;text-transform:uppercase;color:var(--gold-lt);font-size:1rem}
+  .screen__ph .hint{font-size:.78rem;color:var(--faint);letter-spacing:.02em}
+  .screen__cap{margin-top:14px;font-size:.8rem;color:var(--faint);text-align:center}
+
+  /* ── 简介 ── */
+  .lede{font-family:var(--serif);font-weight:700;color:var(--ink-txt);font-size:clamp(1.25rem,2.6vw,1.7rem);line-height:1.6;text-wrap:balance;max-width:22ch}
+  .intro-grid{display:grid;grid-template-columns:1fr 1.3fr;gap:40px;align-items:start}
+  .intro-grid p{margin:0 0 16px;max-width:62ch}
+  .intro-grid .pull{border-left:2px solid var(--gold);padding-left:18px;color:var(--gold-lt);font-family:var(--serif)}
+  @media(max-width:760px){.intro-grid{grid-template-columns:1fr;gap:20px}.lede{max-width:none}}
+
+  /* ── 特色 ── */
+  .feat{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  @media(max-width:860px){.feat{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:520px){.feat{grid-template-columns:1fr}}
+  .card{background:linear-gradient(180deg,var(--panel),var(--ink-2));border:1px solid var(--hair);border-radius:16px;padding:22px;display:flex;flex-direction:column;gap:9px;transition:border-color .25s,transform .25s}
+  .card:hover{border-color:var(--line);transform:translateY(-3px)}
+  .card .ic{font-size:1.5rem;line-height:1}
+  .card h3{margin:2px 0 0;font-size:1.02rem;color:var(--ink-txt);font-weight:700;font-family:var(--sans)}
+  .card p{margin:0;font-size:.9rem;color:var(--muted)}
+  /* 让第一张卡横跨、更像“主打” */
+  .card.hero-card{grid-column:1/-1;background:linear-gradient(120deg,var(--panel-2),var(--ink-2));border-color:var(--line)}
+  @media(max-width:520px){.card.hero-card{grid-column:auto}}
+  .card.hero-card h3{font-family:var(--serif);font-size:1.25rem}
+
+  /* ── 技术架构 ── */
+  .tech{background:linear-gradient(180deg,var(--panel),var(--ink-2));border:1px solid var(--line);border-radius:18px;padding:34px}
+  .spec{display:flex;flex-direction:column}
+  .spec .row{display:grid;grid-template-columns:180px 1fr;gap:24px;padding:18px 0;border-top:1px solid var(--hair)}
+  .spec .row:first-child{border-top:none}
+  .spec dt{color:var(--gold-lt);font-weight:700;font-size:.92rem;font-family:var(--serif)}
+  .spec dd{margin:0;color:var(--muted);font-size:.94rem}
+  @media(max-width:640px){.spec .row{grid-template-columns:1fr;gap:6px}}
+  .stack{display:flex;flex-wrap:wrap;gap:8px;margin-top:26px}
+  .stack span{font-size:.78rem;letter-spacing:.04em;color:var(--ink-txt);border:1px solid var(--line);border-radius:8px;padding:6px 12px;background:rgba(201,162,39,.06)}
+
+  /* ── 页脚 ── */
+  footer{padding:48px 0 64px;text-align:center;border-top:1px solid var(--hair);margin-top:40px}
+  .foot-cta{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-bottom:22px}
+  footer .fine{font-size:.78rem;color:var(--faint)}
+
+  @media(prefers-reduced-motion:reduce){.glow span{animation:none}}
+  @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-22px)}}
+</style>
+</head>
+<body>
+  <div class="topline"></div>
+
+  <nav>
+    <div class="brand"><span class="dot"></span> 爱豆收集梦想生活</div>
+    <div class="navlinks">
+      <a href="#demo">Demo</a>
+      <a href="#about">简介</a>
+      <a href="#features">特色</a>
+      <a href="#tech">技术</a>
+    </div>
+  </nav>
+
+  <header>
+    <div class="glow"><span class="g1"></span><span class="g2"></span><span class="g3"></span></div>
+    <div class="wrap">
+      <div class="eyebrow">AI 沙盒养成 · 独立开发</div>
+      <div class="latin">Idol Tomodachi Life</div>
+      <h1>爱豆收集<br>梦想生活</h1>
+      <p class="tagline">把大语言模型接进一座会自己运转的小岛 —— 游戏掌管世界，AI 只演当下这一刻。</p>
+      <div class="cta">
+        <!-- PLAY_URL：把 href 换成你的游戏链接 -->
+        <a class="btn btn-gold" href="#" target="_blank" rel="noopener">▶ 立即试玩</a>
+        <a class="btn btn-ghost" href="https://github.com/wangyy992/idolTomodachiLifev2" target="_blank" rel="noopener">GitHub 源码</a>
+      </div>
+      <div class="meta-row">
+        <span class="chip"><b>3</b> 个原创女团 · <b>9</b> 位角色</span>
+        <span class="chip">一键 Demo · 自动演示</span>
+        <span class="chip">简繁双语</span>
+      </div>
+    </div>
+  </header>
+
+  <section id="demo">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow">Demo 视频</span>
+        <h2>三分钟看它怎么玩</h2>
+      </div>
+      <figure class="screen" style="margin:0">
+        <div class="screen__ph">
+          <div class="play"></div>
+          <div class="lbl">Demo</div>
+          <div class="hint">把录好的 demo.mp4 放到本页同目录即可自动播放</div>
+        </div>
+        <!-- 有视频后自动显示；想用 B 站可删掉此 <video> 换成 B 站 iframe -->
+        <video controls playsinline preload="metadata" src="demo.mp4"></video>
+      </figure>
+      <div class="screen__cap">俯视世界里照看偶像的日常 · 需求气泡 → 碎片剧场 · 好感攒够触发重头戏</div>
+    </div>
+  </section>
+
+  <section id="about">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow">游戏简介</span>
+        <h2>一座自己过日子的偶像小岛</h2>
+      </div>
+      <div class="intro-grid">
+        <p class="lede">你不是在推剧情，而是在照看一个持续运转的世界。</p>
+        <div>
+          <p>这是一款《Tomodachi Life》式的俯视沙盒养成游戏：几组偶像各有自己的作息与档期，在一座小岛上照常练习、打歌、巡演、发呆。你以圈内工作人员的身份进入，走近头顶冒气泡的她、满足一个小小的需求，就展开一段由 AI 现场生成的对话。</p>
+          <p class="pull">好感攒够，她头顶会亮起金光 —— 那是一场专门为你写的重头戏。</p>
+          <p>它的内核是一套<b style="color:var(--ink-txt)">「确定性模拟 + 生成式 AI」的混合叙事</b>：游戏用代码稳稳掌管时间、日程、需求与关系数值，保证世界连续可信；大模型只负责演好"此刻这一场"，既开放自由，又不会失控。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="features">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow">特色亮点</span>
+        <h2>让世界活起来的那些机关</h2>
+      </div>
+      <div class="feat">
+        <div class="card hero-card">
+          <div class="ic">🏝️</div>
+          <h3>会自己过日子的世界</h3>
+          <p>偶像按确定性日程各自作息、打歌、去外地巡演；你不在场时她们照样发生事、关系照样变。你是照看者，不是编剧。</p>
+        </div>
+        <div class="card"><div class="ic">💭</div><h3>需求气泡 + 碎片剧场</h3><p>头顶冒泡代表她此刻有点小状态，点开就是一段短小的现场戏 —— Tomodachi 式的心跳。</p></div>
+        <div class="card"><div class="ic">⚡</div><h3>里程碑与结局</h3><p>好感与信任累积到位触发"重头戏"，长期发展沉淀成结局与年鉴，看得见成长。</p></div>
+        <div class="card"><div class="ic">🏆</div><h3>打歌一位</h3><p>名次由代码结算，你的应援与陪伴会通过士气兑现成舞台成绩 —— 情感线真的能变成排名。</p></div>
+        <div class="card"><div class="ic">📱</div><h3>仿真手机</h3><p>KakaoTalk 私信、Weverse、theqoo 热搜自成一套信息流，把"隔着屏幕的偶像感"做进玩法。</p></div>
+        <div class="card"><div class="ic">🎬</div><h3>一键 Demo · 自动演示</h3><p>内置三团九位原创角色，一键进世界；还有全自动巡演模式，开着就能录像展示。</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="tech">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow">技术架构</span>
+        <h2>怎么把 LLM 稳稳接进一个开放世界</h2>
+      </div>
+      <div class="tech">
+        <dl class="spec">
+          <div class="row"><dt>混合叙事架构</dt><dd>用 FNV-1a 确定性哈希驱动日程 / 需求 / 打歌成绩 / 关系数值，世界连续可控；LLM 只生成当下单场对话，兼顾自由度与稳定，并大幅降低 token 消耗。</dd></div>
+          <div class="row"><dt>结构化输出协议</dt><dd>定义状态快照 / 关系变化 / 里程碑等标签，前端解析后落库，把自由文本变成可持久化、可结算的游戏状态。</dd></div>
+          <div class="row"><dt>稳定性设计</dt><dd>DeepSeek 经 Serverless 代理隐藏密钥；针对慢生成与网络抖动做指数退避重试 + 确定性兜底，避免"AI 返回了界面却报错"。</dd></div>
+          <div class="row"><dt>体验完整度</dt><dd>角色创建与捏脸、俯视世界与 VN 对话双视图、仿真手机、结局年鉴、新手引导、简繁双语与移动端适配。</dd></div>
+        </dl>
+        <div class="stack">
+          <span>React 19</span><span>TypeScript</span><span>Vite</span><span>Tailwind CSS v4</span><span>DeepSeek LLM</span><span>Serverless</span><span>Framer Motion</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="wrap">
+      <div class="foot-cta">
+        <!-- PLAY_URL：同上，换成你的游戏链接 -->
+        <a class="btn btn-gold" href="#" target="_blank" rel="noopener">▶ 立即试玩</a>
+        <a class="btn btn-ghost" href="https://github.com/wangyy992/idolTomodachiLifev2" target="_blank" rel="noopener">GitHub 源码</a>
+      </div>
+      <div class="fine">爱豆收集梦想生活 · Idol Tomodachi Life　—　个人项目 · 独立设计与开发</div>
+    </div>
+  </footer>
+</body>
+</html>
