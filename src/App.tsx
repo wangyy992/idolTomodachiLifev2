@@ -563,7 +563,7 @@ const CharacterCreationWizard = ({ onComplete, members }: { onComplete: (data: a
   // 自建角色（像 Tomodachi Life 那样把自己想要的人放进来）
   const [ocDraft, setOcDraft] = useState<any | null>(null);
   const [ocFace, setOcFace] = useState(false);
-  const [source, setSource] = useState<'girls' | 'boys' | 'oc'>('girls');
+  const [source, setSource] = useState<'girls' | 'boys' | 'oc' | 'demo'>('girls');
   const [customIdentity, setCustomIdentity] = useState('');
   const lang = data.language || 'simplified';
 
@@ -796,11 +796,6 @@ const CharacterCreationWizard = ({ onComplete, members }: { onComplete: (data: a
                     </div>
                   )}
                 </div>
-                <button onClick={startDemo}
-                  className="w-full py-3 rounded-2xl text-[12px] font-black flex items-center justify-center gap-2 border border-dashed border-[rgba(201,162,39,0.5)] text-[#F1ECFF] hover:bg-[rgba(201,162,39,0.08)] transition-all">
-                  🎬 {T('Demo · 一键开始（3 个团 · 9 位角色）','Demo · 一鍵開始（3 個團 · 9 位角色）')}
-                </button>
-                <p className="text-[10px] text-[#8B86B8] text-center -mt-1.5">{T('预置三个原创女团：STELLA / HALO / LUMÉE，性格各异，直接进世界 —— 录像/试玩用','預置三個原創女團：STELLA / HALO / LUMÉE，性格各異，直接進世界 —— 錄像/試玩用')}</p>
               </>)}
 
               {cur === 'face' && (
@@ -862,14 +857,34 @@ const CharacterCreationWizard = ({ onComplete, members }: { onComplete: (data: a
 
               {cur === 'idols' && (<>
                 <div className="flex gap-2">
-                  {[{ k: 'girls', n: T('女团','女團') }, { k: 'boys', n: T('男团','男團') }, { k: 'oc', n: T('自己创造','自己創造') }].map(o => (
+                  {[{ k: 'girls', n: T('女团','女團') }, { k: 'boys', n: T('男团','男團') }, { k: 'oc', n: T('自建','自建') }, { k: 'demo', n: 'Demo' }].map(o => (
                     <button key={o.k} onClick={() => setSource(o.k as any)}
-                      className={`flex-1 py-2.5 rounded-xl border text-[12px] font-black transition-all ${source === o.k ? 'bg-[rgba(201,162,39,0.1)] border-[rgba(201,162,39,0.5)] text-[#F1ECFF]' : 'bg-white/[0.03] border-white/10 text-[#B7B2D9]'}`}>
-                      {o.n}
+                      className={`flex-1 py-2.5 rounded-xl border text-[12px] font-black transition-all ${source === o.k ? (o.k === 'demo' ? 'bg-[rgba(201,162,39,0.16)] border-[rgba(201,162,39,0.7)] text-[#F1ECFF]' : 'bg-[rgba(201,162,39,0.1)] border-[rgba(201,162,39,0.5)] text-[#F1ECFF]') : 'bg-white/[0.03] border-white/10 text-[#B7B2D9]'}`}>
+                      {o.k === 'demo' ? `🎬 ${o.n}` : o.n}
                     </button>
                   ))}
                 </div>
-                {source === 'girls' ? <MemberPicker label={T('请选择','請選擇')} /> : source === 'boys' ? (
+                {source === 'demo' ? (
+                  <div className="flex flex-col gap-3">
+                    <div className="rounded-2xl bg-[rgba(201,162,39,0.06)] border border-[rgba(201,162,39,0.3)] p-4 flex flex-col gap-2.5">
+                      <div className="text-[13px] font-black text-[#F1ECFF]">{T('一键开始 · 三团九人','一鍵開始 · 三團九人')}</div>
+                      <div className="text-[11px] text-[#B7B2D9] leading-relaxed">
+                        {T('预置三个性格各异的原创女团，直接进世界 —— 免建号、适合录像 / 试玩：','預置三個性格各異的原創女團，直接進世界 —— 免建號、適合錄像 / 試玩：')}
+                      </div>
+                      <div className="flex flex-col gap-1.5 text-[11px] text-[#8B86B8]">
+                        <div><b className="text-[#D8D4EE]">STELLA</b> · {T('江予昭 / 温野 / 白露','江予昭 / 溫野 / 白露')}</div>
+                        <div><b className="text-[#D8D4EE]">HALO</b> · {T('顾樘 / 叶知秋 / 苏芮','顧樘 / 葉知秋 / 蘇芮')}</div>
+                        <div><b className="text-[#D8D4EE]">LUMÉE</b> · {T('罗一诺 / 千惠 / 沈芷','羅一諾 / 千惠 / 沈芷')}</div>
+                      </div>
+                      <div className="text-[10px] text-[#8B86B8] leading-relaxed">{T('进世界后可在底部开「自动演示」，让它自己巡演给你录。','進世界後可在底部開「自動演示」，讓它自己巡演給你錄。')}</div>
+                    </div>
+                    <button onClick={startDemo}
+                      className="w-full py-3 rounded-2xl text-[13px] font-black flex items-center justify-center gap-2 text-white transition-all hover:-translate-y-0.5"
+                      style={{ background: 'linear-gradient(135deg,#C9A227,#a9861d)', boxShadow: '0 10px 26px -10px rgba(201,162,39,0.7)' }}>
+                      🎬 {T('一键开始 Demo','一鍵開始 Demo')}
+                    </button>
+                  </div>
+                ) : source === 'girls' ? <MemberPicker label={T('请选择','請選擇')} /> : source === 'boys' ? (
                   <div className="rounded-2xl bg-white/[0.03] border border-white/10 p-6 text-center flex flex-col items-center gap-2">
                     <div className="text-3xl">🚧</div>
                     <div className="text-[13px] font-black text-[#F1ECFF]">{T('男团即将开放','男團即將開放')}</div>
