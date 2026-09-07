@@ -1,0 +1,479 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>爱豆收集梦想生活 · 策划案</title>
+<meta name="description" content="AI 沙盒偶像养成游戏《爱豆收集梦想生活》完整设计文档（GDD）" />
+
+<!--
+  实机截图：把你截好的图命名后放进 docs/img/ 即可自动显示：
+    docs/img/shot-world.png   —— 俯视世界
+    docs/img/shot-scene.png   —— 对话 / 碎片剧场
+  场景原画已内置在 docs/img/scene-*.webp。
+-->
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@600;700&display=swap" rel="stylesheet" />
+
+<style>
+  :root{
+    --paper:#F5F4F0; --card:#FFFFFF;
+    --ink:#211E17; --muted:#4E4A3E; --faint:#8A8574;
+    --gold:#9C7B1E; --gold-2:#7D6218;
+    --line:#E4E0D5; --rule:#ECE8DF;
+    --note:#FBF6E9; --note-line:#E7D9AF;
+    --sans:"Noto Sans SC",system-ui,-apple-system,sans-serif;
+    --serif:"Noto Serif SC",Georgia,serif;
+    --mono:ui-monospace,"SF Mono","Cascadia Code",Menlo,Consolas,monospace;
+    --maxw:820px;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#0E0D14; --card:#16141F;
+      --ink:#ECE9F4; --muted:#B4AFC4; --faint:#837D94;
+      --gold:#E0C061; --gold-2:#C9A227;
+      --line:rgba(255,255,255,.10); --rule:rgba(255,255,255,.06);
+      --note:#191526; --note-line:rgba(201,162,39,.32);
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#0E0D14; --card:#16141F;
+    --ink:#ECE9F4; --muted:#B4AFC4; --faint:#837D94;
+    --gold:#E0C061; --gold-2:#C9A227;
+    --line:rgba(255,255,255,.10); --rule:rgba(255,255,255,.06);
+    --note:#191526; --note-line:rgba(201,162,39,.32);
+  }
+
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+  body{
+    margin:0;background:var(--paper);color:var(--muted);
+    font-family:var(--sans);font-size:16px;line-height:1.8;
+  }
+  ::selection{background:rgba(156,123,30,.22)}
+  img{max-width:100%;display:block}
+  a{color:var(--gold-2);text-decoration:none;border-bottom:1px solid transparent;transition:border-color .2s}
+  a:hover{border-color:var(--gold-2)}
+
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 26px}
+
+  /* 顶部 */
+  .masthead{border-bottom:1px solid var(--line);background:var(--card)}
+  .masthead .wrap{padding-top:52px;padding-bottom:40px}
+  .kicker{font-family:var(--mono);font-size:.72rem;letter-spacing:.22em;text-transform:uppercase;color:var(--gold-2);font-weight:700}
+  h1{font-family:var(--serif);font-weight:700;color:var(--ink);font-size:clamp(1.9rem,4.4vw,2.9rem);line-height:1.18;margin:.5rem 0 .1rem;text-wrap:balance;letter-spacing:.01em}
+  .sub{font-size:1.02rem;color:var(--muted);margin-top:.3rem}
+  .latin{font-family:var(--mono);font-size:.8rem;color:var(--faint);margin-top:.6rem;letter-spacing:.04em}
+
+  /* 元信息表 */
+  .meta{display:grid;grid-template-columns:repeat(2,1fr);gap:0 40px;margin-top:28px;border-top:1px solid var(--rule)}
+  .meta div{display:flex;gap:14px;padding:9px 0;border-bottom:1px solid var(--rule);font-size:.9rem}
+  .meta dt{color:var(--faint);min-width:70px;font-weight:500}
+  .meta dd{margin:0;color:var(--ink);font-weight:500}
+  @media(max-width:560px){.meta{grid-template-columns:1fr}}
+
+  /* 目录 */
+  .toc{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:22px 26px;margin:38px 0 10px}
+  .toc h2{font-family:var(--mono);font-size:.74rem;letter-spacing:.2em;text-transform:uppercase;color:var(--faint);margin:0 0 14px;font-weight:700}
+  .toc ol{margin:0;padding:0;list-style:none;counter-reset:toc;columns:2;column-gap:40px}
+  .toc li{counter-increment:toc;padding:4px 0;font-size:.92rem;break-inside:avoid}
+  .toc li::before{content:counter(toc,decimal-leading-zero);font-family:var(--mono);color:var(--gold-2);font-size:.78rem;margin-right:10px}
+  @media(max-width:560px){.toc ol{columns:1}}
+
+  /* 章节 */
+  main{counter-reset:sec}
+  section{padding:40px 0;border-top:1px solid var(--rule)}
+  section>.wrap>h2{counter-increment:sec;font-family:var(--serif);font-weight:700;color:var(--ink);font-size:clamp(1.35rem,2.8vw,1.7rem);margin:0 0 6px;scroll-margin-top:20px;line-height:1.3}
+  section>.wrap>h2::before{content:counter(sec,decimal-leading-zero) "　";font-family:var(--mono);color:var(--gold-2);font-size:.9em;font-weight:700}
+  h3{font-family:var(--sans);font-weight:700;color:var(--ink);font-size:1.06rem;margin:28px 0 8px}
+  h4{font-weight:700;color:var(--ink);font-size:.96rem;margin:18px 0 4px}
+  p{margin:.5rem 0;max-width:66ch}
+  strong{color:var(--ink);font-weight:700}
+  em{color:var(--gold-2);font-style:normal;font-weight:500}
+  ul,ol{margin:.5rem 0;padding-left:1.3em;max-width:66ch}
+  li{margin:5px 0}
+  ul.tight li{margin:2px 0}
+  code{font-family:var(--mono);font-size:.85em;background:var(--rule);padding:1px 6px;border-radius:5px;color:var(--ink)}
+
+  /* 设计原则 callout */
+  .note{background:var(--note);border:1px solid var(--note-line);border-radius:10px;padding:16px 20px;margin:20px 0}
+  .note .t{font-family:var(--mono);font-size:.7rem;letter-spacing:.18em;text-transform:uppercase;color:var(--gold-2);font-weight:700;margin-bottom:6px}
+  .note p{margin:0;color:var(--ink)}
+
+  /* 表格 */
+  .tbl{width:100%;border-collapse:collapse;margin:14px 0;font-size:.9rem}
+  .tbl th,.tbl td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--rule);vertical-align:top}
+  .tbl th{font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);font-weight:700;background:var(--rule)}
+  .tbl td:first-child{color:var(--ink);font-weight:500;white-space:nowrap}
+  .scroll{overflow-x:auto}
+
+  /* 玩法循环步骤 */
+  .loop{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:16px 0;counter-reset:lp}
+  .loop .step{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+  .loop .step .n{counter-increment:lp;font-family:var(--mono);color:var(--gold-2);font-size:.78rem;font-weight:700}
+  .loop .step .n::before{content:"→ 0" counter(lp)}
+  .loop .step b{display:block;color:var(--ink);margin-top:4px;font-size:.95rem}
+  .loop .step span{font-size:.84rem}
+
+  /* 场景画廊 + 截图 */
+  .gallery{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:16px 0}
+  @media(max-width:620px){.gallery{grid-template-columns:repeat(2,1fr)}}
+  figure{margin:0;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--card)}
+  figure img{aspect-ratio:16/10;object-fit:cover;width:100%}
+  figcaption{font-size:.78rem;color:var(--faint);padding:7px 11px;font-family:var(--mono);letter-spacing:.02em}
+
+  .shot{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--card);margin:16px 0}
+  .shot .ph{aspect-ratio:16/9;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
+    background:repeating-linear-gradient(45deg,transparent,transparent 12px,var(--rule) 12px,var(--rule) 13px)}
+  .shot .ph .ic{font-size:1.6rem;opacity:.5}
+  .shot .ph .tx{font-family:var(--mono);font-size:.78rem;color:var(--faint)}
+  .shot img{width:100%;display:block}
+  .shot figcaption{border-top:1px solid var(--rule)}
+
+  footer{border-top:1px solid var(--line);background:var(--card);padding:34px 0;margin-top:10px}
+  footer .wrap{font-size:.82rem;color:var(--faint)}
+  .toggle{position:fixed;top:14px;right:14px;font-family:var(--mono);font-size:.7rem;letter-spacing:.06em;color:var(--faint);background:var(--card);border:1px solid var(--line);border-radius:8px;padding:6px 11px;cursor:pointer;z-index:10}
+  .toggle:hover{color:var(--gold-2)}
+</style>
+</head>
+<body>
+<button class="toggle" id="tg" aria-label="切换深浅色">◐ 主题</button>
+
+<div class="masthead">
+  <div class="wrap">
+    <div class="kicker">Game Design Document · v1.0</div>
+    <h1>爱豆收集梦想生活</h1>
+    <div class="sub">一款把大语言模型接进《Tomodachi Life》式开放世界的 AI 沙盒偶像养成游戏。</div>
+    <div class="latin">Idol Tomodachi Life　/　游戏设计文档（策划案）</div>
+    <dl class="meta">
+      <div><dt>类型</dt><dd>沙盒养成 · 恋爱模拟 · AI 叙事</dd></div>
+      <div><dt>视角</dt><dd>俯视世界 + VN 对话双视图</dd></div>
+      <div><dt>平台</dt><dd>Web（PC / 移动端横屏）</dd></div>
+      <div><dt>引擎</dt><dd>React 19 · TypeScript · Vite</dd></div>
+      <div><dt>AI</dt><dd>DeepSeek（经 Serverless 代理）</dd></div>
+      <div><dt>语言</dt><dd>简体 / 繁体中文</dd></div>
+      <div><dt>状态</dt><dd>可玩原型（含一键 Demo）</dd></div>
+      <div><dt>规模</dt><dd>3 原创女团 · 9 角色 · 12 场景</dd></div>
+    </dl>
+  </div>
+</div>
+
+<div class="wrap">
+  <nav class="toc">
+    <h2>目录</h2>
+    <ol>
+      <li><a href="#s1">项目概述</a></li>
+      <li><a href="#s2">设计理念与核心体验</a></li>
+      <li><a href="#s3">核心玩法循环</a></li>
+      <li><a href="#s4">世界系统</a></li>
+      <li><a href="#s5">角色系统</a></li>
+      <li><a href="#s6">关系与情感线</a></li>
+      <li><a href="#s7">需求与碎片剧场</a></li>
+      <li><a href="#s8">演艺事业系统</a></li>
+      <li><a href="#s9">仿真手机</a></li>
+      <li><a href="#s10">AI 叙事架构</a></li>
+      <li><a href="#s11">美术与呈现</a></li>
+      <li><a href="#s12">本地化与无障碍</a></li>
+      <li><a href="#s13">一键 Demo 与自动演示</a></li>
+      <li><a href="#s14">技术实现与部署</a></li>
+      <li><a href="#s15">内容规模与路线图</a></li>
+      <li><a href="#s16">术语表</a></li>
+    </ol>
+  </nav>
+</div>
+
+<main>
+  <section id="s1"><div class="wrap">
+    <h2>项目概述</h2>
+    <p><strong>一句话</strong>：你以圈内工作人员的身份，进入一座会自己运转的小岛，照看几组偶像的日常 —— 走近她、满足一个小需求、陪她走过重头戏，一段由 AI 现场生成的关系就此展开。</p>
+    <p>它把两种玩法缝在一起：《Tomodachi Life》的「登记入住 → 观察角色自己发生的事 → 满足她的请求」循环，和大语言模型带来的、几乎无上限的对话自由度。玩家不是在推一条写死的剧情，而是在<strong>照看一个持续运转的世界</strong>。</p>
+    <h3>目标玩家</h3>
+    <ul class="tight">
+      <li>K-pop / 偶像文化爱好者，喜欢养成、经营、恋爱模拟；</li>
+      <li>喜欢《Tomodachi Life》《星露谷》这类「世界自己会过日子」的沙盒；</li>
+      <li>对 AI 生成叙事、和角色自由对话感兴趣的玩家。</li>
+    </ul>
+    <h3>差异化</h3>
+    <p>市面上的 AI 对话产品多是「一个聊天框」，缺乏世界感与后果；传统养成游戏则对话僵硬、分支有限。本作用<em>确定性模拟</em>提供连续可信的世界与可结算的后果，用<em>生成式 AI</em>提供当下这一刻的自由，两者互补。</p>
+  </div></section>
+
+  <section id="s2"><div class="wrap">
+    <h2>设计理念与核心体验</h2>
+    <div class="note">
+      <div class="t">核心设计原则</div>
+      <p>游戏掌管时钟与世界状态，AI 只演当下这一刻，并提出小幅改动。</p>
+    </div>
+    <p>这条原则来自对《星露谷》《Tomodachi Life》的拆解：时间由游戏推进而非对话推进；每次对话只是世界里的「一个片刻」；重头戏（心动事件）= 条件达成 + 恰当的时间地点。据此，本作把「时间、日程、地点、好感数值、打歌成绩、里程碑触发」全部交给代码掌管，AI 只负责把「此刻这一场」演好。</p>
+    <h3>三条体验支柱</h3>
+    <h4>① 世界自己会过日子</h4>
+    <p>偶像有自己的作息与档期，你不在场时她们照样练习、打歌、去外地、彼此发生关系。你是<strong>照看者，不是编剧</strong>。</p>
+    <h4>② 满足小需求，攒出大时刻</h4>
+    <p>日常是「头顶冒气泡 → 满足一个小需求」的轻互动；累积到位，则触发一场专门为你写的、更长更正式的<strong>重头戏</strong>。轻重节奏交替。</p>
+    <h4>③ 情感能被兑现</h4>
+    <p>陪伴与应援不是空转：士气会通过打歌成绩变成真实名次，关系会沉淀成结局与年鉴。投入看得见回报。</p>
+  </div></section>
+
+  <section id="s3"><div class="wrap">
+    <h2>核心玩法循环</h2>
+    <p>一个「时段」内的基本循环：</p>
+    <div class="loop">
+      <div class="step"><div class="n"></div><b>观察世界</b><span>俯视地图上，谁在哪、在做什么、头顶有没有需求气泡 / 金光预兆。</span></div>
+      <div class="step"><div class="n"></div><b>选择互动</b><span>走近某位偶像（满足需求 / 闲聊）、围观两人相遇、发私信、应援打投。</span></div>
+      <div class="step"><div class="n"></div><b>现场演出</b><span>切到 VN 对话，AI 生成这一场；你自由输入或选择选项，好感/关系据实结算。</span></div>
+      <div class="step"><div class="n"></div><b>推进时段</b><span>世界向前走一格：不在场的偶像彼此结算、岛屿动态更新、行动点恢复。</span></div>
+    </div>
+    <p>每人每时段有 <strong>1 次</strong>深度互动机会（行动点），用掉后只能闲聊；推进时段自动恢复。行动点<em>只在 AI 成功返回后才扣除</em>，失败不烧机会。</p>
+  </div></section>
+
+  <section id="s4"><div class="wrap">
+    <h2>世界系统</h2>
+    <h3>4.1　时间</h3>
+    <p>时间以「天 / 时段」为单位推进。一天分 <strong>早、午、晚</strong> 三个时段；一「年」= 52 周 × 7 天。世界日（<code>worldDay</code>）是唯一时间锚点，AI 不得自行跳时间、换场、补演。</p>
+    <h3>4.2　地点</h3>
+    <p>共 12 个场景，分<strong>公开</strong>（可自由到达）与<strong>私密</strong>（受身份/关系限制）：</p>
+    <div class="scroll"><table class="tbl">
+      <tr><th>类型</th><th>地点</th></tr>
+      <tr><td>公开</td><td>咖啡厅、商圈、汉江、便利店、打歌舞台、演唱会</td></tr>
+      <tr><td>工作</td><td>练习室、后台待机室、综艺录制棚</td></tr>
+      <tr><td>私密</td><td>宿舍、天台</td></tr>
+      <tr><td>在外</td><td>巡演·在外地 / 行程中·联系不上（不可约）</td></tr>
+    </table></div>
+    <h3>4.3　日程系统</h3>
+    <p>偶像的行程按<strong>团</strong>用确定性哈希排布，保证「同团成员在团体日严格同进同出」：</p>
+    <ul class="tight">
+      <li><strong>团体日</strong>（约 78% 的日子）：全团一起练习 / 打歌 / 录综艺 / 演唱会 / 巡演；</li>
+      <li><strong>自由日</strong>：各自散开去咖啡厅、汉江、天台等 —— 这是单独约人的最佳时机；</li>
+      <li><strong>在外地 / 行程中</strong>：线下约不到，只能通过手机联系。</li>
+    </ul>
+    <p>因为是确定性哈希（按 <code>团名|天</code> 计算），同一存档里日程稳定可复现，玩家能规划。</p>
+    <h3>4.4　大事件年历</h3>
+    <p>每个团一年有确定的大档期，开局就能在日历上看见，产生目标感：<strong>上半年回归、下半年回归、巡演、年末颁奖季</strong>。回归打歌期里固定每周两次打歌日。</p>
+  </div></section>
+
+  <section id="s5"><div class="wrap">
+    <h2>角色系统</h2>
+    <h3>5.1　角色数据模型</h3>
+    <p>每位偶像不是一句人设，而是一份结构化档案，全部喂给 AI 以保证「演得像她」：</p>
+    <div class="scroll"><table class="tbl">
+      <tr><th>字段</th><th>作用</th></tr>
+      <tr><td>publicPersona</td><td>公开人设（媒体前的样子）</td></tr>
+      <tr><td>realPersonality</td><td>底色 + 软处（真实性格，含如何走进她）</td></tr>
+      <tr><td>speechStyle</td><td>说话风格：口头禅 / 句子长短 / 语气词</td></tr>
+      <tr><td>secret</td><td>一个秘密 / 软肋，留给阶段突破时揭示</td></tr>
+      <tr><td>affection</td><td>好感度</td></tr>
+      <tr><td>careerPressure / exposure…</td><td>事业压力、公司警觉度等状态</td></tr>
+      <tr><td>initialRelationships</td><td>与其他成员的初始关系（撑起爱豆↔爱豆关系网）</td></tr>
+    </table></div>
+    <p>为对抗「玛丽苏」式失真，Prompt 里内置了 13 条写作禁令（禁止无理由倒贴、秒沦陷、降智捧场等）。</p>
+
+    <h3>5.2　Demo 阵容：三团九人</h3>
+    <p>内置三个风格不同的原创女团，性格无一重复，用于一键 Demo / 展示：</p>
+    <div class="scroll"><table class="tbl">
+      <tr><th>团 / 概念</th><th>成员（定位 · 性格）</th></tr>
+      <tr><td>STELLA<br><span style="color:var(--faint)">冷冽都市</span></td><td>江予昭（队长·冰山掌控）／温野（主舞·热烈直球）／白露（忙内·慵懒毒舌）</td></tr>
+      <tr><td>HALO<br><span style="color:var(--faint)">暗色高级</span></td><td>顾樘（队长·优雅疏离）／叶知秋（主舞·危险直球）／苏芮（忙内·敏感深情）</td></tr>
+      <tr><td>LUMÉE<br><span style="color:var(--faint)">明亮青春</span></td><td>罗一诺（队长·元气感恩）／千惠（主舞·日系职业感）／沈芷（忙内·软萌辛辣rap）</td></tr>
+    </table></div>
+    <p>三人起始好感各异（8–42），且秘密互相勾连（如忙内偷偷最黏队长、队长当年险被淘汰是忙内保下的），一进世界即有关系层次。</p>
+
+    <h3>5.3　玩家身份</h3>
+    <p>建号时选身份，决定<strong>开场地点</strong>与<strong>起始好感下限</strong>：</p>
+    <div class="scroll"><table class="tbl">
+      <tr><th>身份</th><th>开场 / 起始</th></tr>
+      <tr><td>圈内工作人员</td><td>能进后台 / 练习室等工作场景，从零好感起步</td></tr>
+      <tr><td>普通粉丝</td><td>只能在公开场合接触</td></tr>
+      <tr><td>公寓同栋住户</td><td>日常偶遇的近距离</td></tr>
+      <tr><td>青梅竹马</td><td>咖啡厅开场，起始好感 40，一开始就有底子</td></tr>
+      <tr><td>现任女友</td><td>宿舍开场，起始好感 62，玩「维持」而非「攻略」</td></tr>
+    </table></div>
+    <p>关系型身份（青梅竹马 / 现任女友）会落在玩家下一步选择的「自担」身上 —— 选谁，就是谁的青梅竹马。</p>
+
+    <h3>5.4　角色创建与捏脸</h3>
+    <p>玩家可捏自己的形象；自担来源分三档：<strong>女团 / 男团（即将开放）/ 自己创造</strong>。自建角色可填性格、说话风格、秘密、起始好感与外观，之后完全按普通成员参与世界（日程 / 关系 / 里程碑）。</p>
+  </div></section>
+
+  <section id="s6"><div class="wrap">
+    <h2>关系与情感线</h2>
+    <h3>6.1　好感度</h3>
+    <p>好感<strong>只在「真的发生了什么」时才变</strong>：敷衍、普通寒暄、她没心情、只是打了个照面，一律 +0（保持不变）。严禁「没接触也加好感」。每轮变化以飘字反馈给玩家。</p>
+    <h3>6.2　关系意图</h3>
+    <p>玩家对每位偶像可设意图：<em>攻略 / 朋友 / 撮合</em>。意图切换会切 Prompt 模式，避免「明明只想做朋友，AI 一直往暧昧推」。</p>
+    <h3>6.3　里程碑 / 阶段突破</h3>
+    <p>好感与信任累积到位，触发「重头戏」。触发前，该偶像头顶会亮起 <strong>⚡ 金光预兆</strong>（"她今天不太一样"），重头戏写得更长更正式，并会揭示她的 <code>secret</code>。里程碑客户端去重记录，不依赖 AI 回显，保证唯一触发。</p>
+    <div class="scroll"><table class="tbl">
+      <tr><th>里程碑</th><th>含义</th></tr>
+      <tr><td>vulnerable</td><td>第一次卸下防备 / 露出软处</td></tr>
+      <tr><td>boundary</td><td>关系越过一道界线</td></tr>
+      <tr><td>confess_ready</td><td>可以走向表白 / 确认关系</td></tr>
+    </table></div>
+    <h3>6.4　撮合</h3>
+    <p>玩家也可当红娘：标记想撮合的两位偶像，围观她们相遇时留意火花；推进时段时，不在场的偶像对也会在后台按关系网结算，事后以岛屿动态播报。</p>
+    <h3>6.5　结局与年鉴</h3>
+    <p>长期发展沉淀成结局：走到表白 / 确认关系的 <strong>romance 结局</strong>，以及曝光爆表、脚踏多条船导致的 <strong>BE（坏结局）</strong>。年终以「年鉴」回顾这一年发生的里程碑与大事记，让「成长」看得见。</p>
+    <h3>6.6　长期记忆</h3>
+    <p>每位偶像有一份滚动记忆档案，只把<strong>摘要</strong>注入 Prompt（而非全部历史），既让她「记得你说过的事」，又控制 token 与超时。</p>
+  </div></section>
+
+  <section id="s7"><div class="wrap">
+    <h2>需求与碎片剧场</h2>
+    <p>这是 Tomodachi Life 式的「心跳」。每位偶像在某时段有没有需求、是什么需求，用便宜的确定性哈希算出（约 45% 概率有），<strong>不调 AI、不烧钱</strong>；只有当玩家点开头顶冒泡的偶像，才进入一段短小的「碎片剧场」，此时 AI 才被调用。</p>
+    <p>共 7 类需求，并按性格加权（爱吃的更常饿、内耗型更常有心事）：</p>
+    <div class="scroll"><table class="tbl">
+      <tr><th>需求</th><th>示例</th></tr>
+      <tr><td>想吃东西 / 闲得慌</td><td>馋某样具体的吃的 / 想找人陪</td></tr>
+      <tr><td>有心事 / 想要个东西</td><td>压着没说的事 / 惦记某样东西</td></tr>
+      <tr><td>想让你牵线</td><td>想和某人拉近，不好意思开口（撮合钩子）</td></tr>
+      <tr><td>想分享 / 心情很好</td><td>拉你看新歌 / 单纯想一起高兴</td></tr>
+    </table></div>
+    <p>没需求时头顶也有一个随时段轻微漂移的心情表情，让每个人头上「总有点东西」，很 Tomodachi。</p>
+  </div></section>
+
+  <section id="s8"><div class="wrap">
+    <h2>演艺事业系统</h2>
+    <h3>8.1　打歌一位</h3>
+    <p>名次由<strong>代码结算</strong>，AI 只负责旁白 / 获奖感言 —— 这样成绩才有连续性，玩家投入才能兑现成排名。评分由五项构成：</p>
+    <div class="scroll"><table class="tbl">
+      <tr><th>维度</th><th>受什么影响</th></tr>
+      <tr><td>数字音源 / 实体 / SNS / 预投票</td><td>歌曲底子（本次回归固定）+ 随机波动 + 玩家应援</td></tr>
+      <tr><td>放送（舞台完成度）</td><td>受<strong>士气</strong>影响 —— 这是情感线兑现的出口</td></tr>
+    </table></div>
+    <p>玩家的应援打投（占用行动点）累积到成绩里；多个团同期打歌会各自结算、分别出名次。</p>
+    <h3>8.2　曝光度</h3>
+    <p>偷偷来往会累积「曝光度」（0–100），发私信太勤、行为高调都会涨；低调则每推进一时段被动回落。曝光爆表是 BE 的触发条件之一。</p>
+  </div></section>
+
+  <section id="s9"><div class="wrap">
+    <h2>仿真手机</h2>
+    <p>把「隔着屏幕的偶像感」做进玩法。theqoo 热搜、KakaoTalk 私信、Weverse、bubble 内容<strong>不进对话流</strong>，而是收进手机里的对应应用，做成仿真信息流。玩家可发私信（不占行动点，但每天有条数上限；发太勤涨曝光度），偶像不一定秒回、忙时更慢。</p>
+  </div></section>
+
+  <section id="s10"><div class="wrap">
+    <h2>AI 叙事架构</h2>
+    <p>本作的核心工程价值所在。</p>
+    <h3>10.1　混合叙事</h3>
+    <p>「游戏掌钟、AI 演当下」：用 FNV-1a 确定性哈希驱动时间 / 日程 / 需求 / 打歌成绩 / 关系数值 —— 世界连续、可控、可复现；LLM 只生成当下单场对话 —— 自由、有人味。两者互补，同时大幅降低 token 消耗与超时概率。</p>
+    <h3>10.2　结构化输出协议</h3>
+    <p>要求模型在叙事之外，用约定标签输出结构化数据，前端解析后落库：</p>
+    <ul class="tight">
+      <li><strong>状态快照 / 关系变化</strong>：好感、关系亲密度 / 张力的增量；</li>
+      <li><strong>里程碑 / 事件 ID</strong>：触发了哪个重头戏 / 事件；</li>
+      <li><strong>手机标签</strong>：KKT / Weverse / bubble / theqoo / 角色卡 内容分流到手机。</li>
+    </ul>
+    <p>这样自由文本就变成了<strong>可持久化、可结算</strong>的游戏状态。</p>
+    <h3>10.3　对话纪律</h3>
+    <ul class="tight">
+      <li><strong>实时对话</strong>：严禁 AI 自行跳时间 / 换场 / 补演，时间只由游戏推进；</li>
+      <li><strong>强制脱出</strong>：一次相遇最多聊固定轮数，之后给「结束本次互动」，避免无限拖场；</li>
+      <li><strong>意图锁定</strong>：攻略 / 撮合 走两套 Prompt，避免跑偏。</li>
+    </ul>
+    <h3>10.4　稳定性</h3>
+    <p>DeepSeek 经 Serverless 代理隐藏密钥；针对慢生成与网络抖动做<strong>指数退避重试</strong>（服务端 55s 超时→干净 504）与<strong>确定性兜底</strong>（SNAPSHOT 缺失也保底更新），避免「AI 明明返回了、界面却报错」。</p>
+  </div></section>
+
+  <section id="s11"><div class="wrap">
+    <h2>美术与呈现</h2>
+    <p>视觉基调为<strong>「墨金」</strong>：深墨底 + 金箔点缀 + 少量玫瑰粉（好感）与青紫（偶像 / 玩家）。两套视图：<strong>俯视世界</strong>（Tomodachi 式小人走动、头顶气泡）与 <strong>VN 对话</strong>（立绘 + 场景背景）。角色形象为可捏脸的 2D sprite（发型 / 配饰 / 服装分层）。</p>
+
+    <h3>实机画面</h3>
+    <div class="shot">
+      <div class="ph"><span class="ic">🗺️</span><span class="tx">放 docs/img/shot-world.png（俯视世界截图）</span></div>
+      <figcaption>俯视世界：偶像各自作息，头顶气泡 = 需求，金光 = 重头戏预兆</figcaption>
+    </div>
+    <div class="shot">
+      <div class="ph"><span class="ic">💬</span><span class="tx">放 docs/img/shot-scene.png（对话 / 碎片剧场截图）</span></div>
+      <figcaption>VN 对话：走近偶像展开一段由 AI 现场生成的戏</figcaption>
+    </div>
+
+    <h3>场景原画</h3>
+    <div class="gallery">
+      <figure><img src="img/scene-practice.webp" alt="练习室" loading="lazy" /><figcaption>练习室</figcaption></figure>
+      <figure><img src="img/scene-dorm.webp" alt="宿舍" loading="lazy" /><figcaption>宿舍</figcaption></figure>
+      <figure><img src="img/scene-cafe.webp" alt="咖啡厅" loading="lazy" /><figcaption>咖啡厅</figcaption></figure>
+      <figure><img src="img/scene-hangang.webp" alt="汉江夜" loading="lazy" /><figcaption>汉江 · 夜</figcaption></figure>
+      <figure><img src="img/scene-backstage.webp" alt="后台" loading="lazy" /><figcaption>后台待机室</figcaption></figure>
+      <figure><img src="img/scene-concert.webp" alt="演唱会" loading="lazy" /><figcaption>演唱会</figcaption></figure>
+    </div>
+  </div></section>
+
+  <section id="s12"><div class="wrap">
+    <h2>本地化与无障碍</h2>
+    <ul class="tight">
+      <li><strong>简繁双语</strong>：全文案双语，建号时选择；</li>
+      <li><strong>移动端</strong>：竖屏时提示横屏游玩（世界为宽屏）；</li>
+      <li><strong>新手引导</strong>：首次进世界给四条要点提示（气泡 / 金光 / 推进时段 / 右上角手机与动态）。</li>
+    </ul>
+  </div></section>
+
+  <section id="s13"><div class="wrap">
+    <h2>一键 Demo 与自动演示</h2>
+    <p>为演示 / 录像 / 简历展示：</p>
+    <ul class="tight">
+      <li><strong>一键 Demo</strong>：建号第一步一个按钮，预置三团九人直接进世界；</li>
+      <li><strong>自动演示（自动驾驶）</strong>：开启后世界自行推进 —— 在场就自动走近偶像演一段、有选项自动选、聊够自动脱出、没人可撩就自动换地点 / 推进时段。世界底部有「点击停止」开关，随时可接管。</li>
+    </ul>
+  </div></section>
+
+  <section id="s14"><div class="wrap">
+    <h2>技术实现与部署</h2>
+    <h3>技术栈</h3>
+    <p>React 19 · TypeScript · Vite · Tailwind CSS v4 · Framer Motion · DeepSeek LLM · Serverless（Vercel Functions）。核心逻辑：确定性哈希调度、结构化输出解析、客户端状态机与本地存档。</p>
+    <h3>部署</h3>
+    <ul class="tight">
+      <li><strong>海外 / 主线</strong>：Vercel（Git 推送自动部署，Serverless 隐藏密钥）；</li>
+      <li><strong>国内直连</strong>：零依赖自托管服务 <code>server.mjs</code>（一个进程托管静态页 + 代理 DeepSeek）+ Dockerfile，可部署到香港轻量服务器 / 容器平台；纯展示页可走对象存储静态托管。</li>
+    </ul>
+  </div></section>
+
+  <section id="s15"><div class="wrap">
+    <h2>内容规模与路线图</h2>
+    <h4>已实现</h4>
+    <ul class="tight">
+      <li>世界 / 时间 / 日程 / 12 场景；三团九人 + 自建角色；</li>
+      <li>好感 / 意图 / 里程碑 / 撮合 / 结局 / 年鉴 / 长期记忆；</li>
+      <li>需求气泡 + 碎片剧场；打歌一位；曝光度；仿真手机；</li>
+      <li>结构化 AI 协议 + 稳定性重试兜底；一键 Demo + 自动演示；简繁双语。</li>
+    </ul>
+    <h4>计划中</h4>
+    <ul class="tight">
+      <li>男团上线（当前为「即将开放」占位）；更多团与角色；</li>
+      <li>更丰富的岛屿自主事件与跨团八卦；</li>
+      <li>成就 / 图鉴、更多结局分支；音效与 BGM。</li>
+    </ul>
+  </div></section>
+
+  <section id="s16"><div class="wrap">
+    <h2>术语表</h2>
+    <div class="scroll"><table class="tbl">
+      <tr><th>术语</th><th>释义</th></tr>
+      <tr><td>需求气泡</td><td>偶像头顶的小需求提示，点开进入碎片剧场</td></tr>
+      <tr><td>碎片剧场</td><td>满足需求触发的一段短小现场戏（此时才调 AI）</td></tr>
+      <tr><td>重头戏 / 里程碑</td><td>好感攒够触发的更长更正式的关键场，含金光预兆</td></tr>
+      <tr><td>行动点</td><td>每人每时段 1 次深度互动机会</td></tr>
+      <tr><td>打歌一位</td><td>音乐节目排名，由代码结算</td></tr>
+      <tr><td>曝光度</td><td>偷偷来往的风险值，爆表可致 BE</td></tr>
+      <tr><td>自担</td><td>玩家主要关注 / 攻略的偶像</td></tr>
+      <tr><td>岛屿动态</td><td>推进时段后，不在场偶像之间自动发生的事的播报</td></tr>
+    </table></div>
+  </div></section>
+</main>
+
+<footer><div class="wrap">
+  爱豆收集梦想生活 · Idol Tomodachi Life　—　游戏设计文档 v1.0　·　个人项目 · 独立设计与开发
+</div></footer>
+
+<script>
+  // 主题切换：显式选择写入 data-theme，覆盖系统主题
+  (function(){
+    var btn=document.getElementById('tg');
+    btn.addEventListener('click',function(){
+      var cur=document.documentElement.getAttribute('data-theme');
+      var next = cur==='dark' ? 'light' : cur==='light' ? 'dark'
+        : (matchMedia('(prefers-color-scheme: dark)').matches ? 'light' : 'dark');
+      document.documentElement.setAttribute('data-theme',next);
+    });
+  })();
+</script>
+</body>
+</html>
