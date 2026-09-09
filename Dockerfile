@@ -19,3 +19,5 @@ ENV PORT=8080
 EXPOSE 8080
 # DEEPSEEK_API_KEY 在平台的环境变量里配，不要写进镜像
 CMD ["node", "server.mjs"]
+
+COPY server ./server

@@ -1,3 +1,6 @@
+import { DM_ACTIONS, dmReply, socialEvent, type DMAction } from './socialSimulation';
+import { applyMemberSnapshot, validateSnapshot, serializeGame, restoreGame, migrateStoredSecrets, encounterKey, needKey } from './gameState';
+import { getSessionApiKey, setSessionApiKey, type RequestProgress } from './chatClient';
 import React, { useState, useEffect, useRef } from 'react';
 import { Send, RefreshCw, Users, Eye, MapPin, Gamepad2, Heart, Zap, Sparkles, X, ChevronUp, Globe, User, Cake, KeyRound, ArrowRight, Check, Wand2, Save, FolderOpen, Trash2, Smartphone, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -20,1087 +23,10 @@ import { getNeed } from './needs';
 import { pairNews, crossingNews, soloMood } from './islandNews';
 import EndingCard from './EndingCard';
 
+import { KKTMessageUI, WeversePostUI, BubbleMessageUI, TheqooPostUI, CharacterCardUI, MusicShowUI, MobileDrawer, PhoneModal, CharacterCreationWizard, StoryText } from './GamePanels';
+import { parseContentBlocks, extractBlock, comebackOnDay, parseOptions, parseScript, type ScriptEntry, type ContentBlock } from './story';
+export type { ScriptEntry } from './story';
 const LOCAL_STORAGE_KEY = 'star_reality_kpop_game_state';
-
-const KKTMessageUI = ({ data, bare }: { data: any; bare?: boolean }) => bare ? (
-  <div className="font-sans bg-[#F5F0EA] rounded-2xl overflow-hidden border border-[#DAD8EE]">
-    <div className="bg-[#FAE100] px-4 py-3 flex items-center gap-3">
-      <div className="w-8 h-8 rounded-full bg-white/30 flex items-center justify-center text-lg">{data.avatar || '👤'}</div>
-      <div>
-        <div className="text-[13px] font-black text-[#3A1F00]">{data.sender}</div>
-        <div className="text-[9px] text-[#3A1F00]/60">카카오톡</div>
-      </div>
-    </div>
-    <div className="px-4 py-4 flex flex-col gap-3 bg-[#B2C7D9]/20">
-      {data.messages?.map((msg: any, idx: number) => (
-        <div key={idx} className="flex items-end gap-2">
-          <div className="w-7 h-7 rounded-full bg-[#FAE100] flex items-center justify-center text-sm flex-shrink-0">{data.avatar || '👤'}</div>
-          <div className="flex flex-col gap-0.5 max-w-[78%]">
-            <div className="bg-white rounded-2xl rounded-tl-none px-3 py-2 shadow-sm">
-              <p className="text-[12px] text-gray-800 leading-relaxed font-medium">{msg.text}</p>
-              {msg.translation && <p className="text-[11px] text-[#454F87] mt-0.5 leading-relaxed">{msg.translation}</p>}
-            </div>
-            <div className="flex items-center gap-1 pl-1">
-              <span className="text-[9px] text-gray-400">{msg.time}</span>
-              {!msg.isRead && <span className="text-[9px] text-[#FAE100] font-black">1</span>}
-            </div>
-          </div>
-        </div>
-      ))}
-    </div>
-  </div>
-) : (
-  <div className="my-6 max-w-xs mx-auto font-sans">
-    <div className="relative bg-[#1A1A1A] rounded-[2.5rem] p-3 shadow-2xl">
-      <div className="absolute top-4 left-1/2 -translate-x-1/2 w-16 h-4 bg-[#111] rounded-full flex items-center justify-center gap-1.5">
-        <div className="w-2 h-2 rounded-full bg-[#333]"></div>
-        <div className="w-3 h-3 rounded-full bg-[#2a2a2a] border border-[#444]"></div>
-      </div>
-      <div className="bg-[#F5F0EA] rounded-[2rem] overflow-hidden mt-4">
-        <div className="bg-[#F5F0EA] px-5 pt-3 pb-1"><span className="text-[10px] font-bold text-gray-500">9:41</span></div>
-        <div className="bg-[#FAE100] px-4 py-3 flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-white/30 flex items-center justify-center text-lg">{data.avatar || '👤'}</div>
-          <div>
-            <div className="text-[13px] font-black text-[#3A1F00]">{data.sender}</div>
-            <div className="text-[9px] text-[#3A1F00]/60">카카오톡</div>
-          </div>
-        </div>
-        <div className="px-4 py-4 flex flex-col gap-3 min-h-[80px] bg-[#B2C7D9]/20">
-          {data.messages?.map((msg: any, idx: number) => (
-            <div key={idx} className="flex items-end gap-2">
-              <div className="w-7 h-7 rounded-full bg-[#FAE100] flex items-center justify-center text-sm flex-shrink-0">{data.avatar || '👤'}</div>
-              <div className="flex flex-col gap-0.5 max-w-[75%]">
-                <div className="bg-white rounded-2xl rounded-tl-none px-3 py-2 shadow-sm">
-                  <p className="text-[12px] text-gray-800 leading-relaxed font-medium">{msg.text}</p>
-                  {msg.translation && <p className="text-[11px] text-[#454F87] mt-0.5 leading-relaxed">{msg.translation}</p>}
-                </div>
-                <div className="flex items-center gap-1 pl-1">
-                  <span className="text-[9px] text-gray-400">{msg.time}</span>
-                  {!msg.isRead && <span className="text-[9px] text-[#FAE100] font-black">1</span>}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-        <div className="bg-white pb-2 flex justify-center"><div className="w-24 h-1 bg-gray-300 rounded-full"></div></div>
-      </div>
-    </div>
-    <div className="text-center mt-2"><span className="text-[10px] text-[#454F87] font-bold uppercase tracking-widest">KakaoTalk</span></div>
-  </div>
-);
-
-const WeversePostUI = ({ data }: { data: any }) => (
-  <div className="my-6 max-w-sm mx-auto font-sans bg-white rounded-3xl overflow-hidden shadow-sm border border-[#DAD8EE]">
-    <div className="px-4 py-3 flex items-center justify-between border-b border-[#DAD8EE]">
-      <div className="flex items-center gap-3">
-        <span className="text-[#454F87] text-lg">{'<'}</span>
-        <div><div className="text-[14px] font-bold text-[#2A2A3D]">帖子</div><div className="text-[10px] text-[#5B6BB0]">前往社区 {'>'}</div></div>
-      </div>
-      <div className="flex gap-4 text-[#454F87] text-lg"><span>↗</span><span>✕</span></div>
-    </div>
-    <div className="px-4 pt-4 pb-2 flex items-start gap-3">
-      <div className="w-10 h-10 rounded-full bg-[#E7E6F6] flex items-center justify-center flex-shrink-0">
-        <span className="text-[#454F87] font-black text-sm">{data.artist?.[0] || '★'}</span>
-      </div>
-      <div className="flex-1">
-        <div className="flex items-center gap-1">
-          <span className="text-[14px] font-bold text-[#2A2A3D]">{data.artist}</span>
-          <span className="text-[#5B6BB0] text-[14px]">✓</span>
-        </div>
-        <div className="text-[11px] text-[#454F87]">{data.time}</div>
-        <div className="text-[11px] text-[#5B6BB0] mt-0.5">查看原文 (한국어)</div>
-      </div>
-      <span className="text-[#454F87] text-lg">⋯</span>
-    </div>
-    <div className="px-4 pb-3"><p className="text-[14px] text-[#2A2A3D] leading-relaxed">{data.content}</p></div>
-    {data.imageDesc && (
-      <div className="w-full bg-[#E7E6F6] aspect-[4/3] flex flex-col items-center justify-center gap-2 p-4">
-        <span className="text-[#454F87] text-xl">🖼</span>
-        <p className="text-[11px] text-[#454F87] text-center italic">{data.imageDesc}</p>
-      </div>
-    )}
-    <div className="px-4 py-3 flex items-center gap-6 border-t border-[#DAD8EE]">
-      <button className="flex items-center gap-1.5 text-[#454F87]"><Heart className="w-5 h-5" /><span className="text-[12px]">{(data.likes || 0).toLocaleString()}</span></button>
-      <button className="text-[#454F87] text-xl">🔖</button>
-    </div>
-  </div>
-);
-
-const BubbleMessageUI = ({ data }: { data: any }) => (
-  <div className="my-6 max-w-sm mx-auto font-sans bg-[#F0EBE3] rounded-3xl overflow-hidden shadow-sm">
-    <div className="px-4 py-3 flex items-center justify-between bg-[#F0EBE3] border-b border-[#DAD8EE]">
-      <span className="text-[#5B6BB0] text-[14px]">{'<'}</span>
-      <span className="text-[16px] font-bold text-[#2A2A3D]">{data.artist}</span>
-      <div className="flex gap-4"><span className="text-[#454F87]">🔍</span><span className="text-[#454F87]">⋯</span></div>
-    </div>
-    <div className="px-4 py-4 flex flex-col gap-2">
-      {data.messages?.map((msg: any, idx: number) => (
-        <div key={idx} className="flex items-start gap-3">
-          <div className="w-9 h-9 rounded-full bg-[#2A2A3D] flex items-center justify-center flex-shrink-0 mt-0.5">
-            <span className="text-white text-[16px]">🐱</span>
-          </div>
-          <div className="flex-1">
-            <div className="flex items-center gap-1.5 mb-1">
-              <span className="text-[10px] font-bold text-white bg-[#5B6BB0] px-1.5 py-0.5 rounded">ARTIST</span>
-              <span className="text-[12px] font-bold text-[#2A2A3D]">{data.artist}</span>
-            </div>
-            <div className="bg-white rounded-2xl rounded-tl-none px-3 py-2 inline-block max-w-[85%] border border-[#DAD8EE]">
-              <p className="text-[13px] text-[#2A2A3D] leading-relaxed">{msg.text}</p>
-              {msg.translation && <p className="text-[12px] text-[#5B6BB0] mt-0.5 leading-relaxed">{msg.translation}</p>}
-            </div>
-            <div className="text-[10px] text-[#454F87] mt-1 pl-1">{msg.time}</div>
-          </div>
-        </div>
-      ))}
-    </div>
-    <div className="px-4 py-3 bg-[#F0EBE3] border-t border-[#DAD8EE] flex items-center justify-end gap-4">
-      <span className="text-[#454F87] text-xl">☺</span><span className="text-[#5B6BB0] text-xl">➤</span>
-    </div>
-  </div>
-);
-
-const TheqooPostUI = ({ post }: { post: TheqooPost }) => (
-  <div className="bg-[#F2F2F2] border border-gray-200 rounded-3xl overflow-hidden shadow-sm my-6 max-w-lg mx-auto font-sans">
-    <div className="bg-white px-4 py-3 flex items-center justify-between border-b border-gray-200">
-      <div className="flex gap-1.5"><div className="w-2.5 h-2.5 rounded-full bg-[#FF5F57]"></div><div className="w-2.5 h-2.5 rounded-full bg-[#FFBD2E]"></div><div className="w-2.5 h-2.5 rounded-full bg-[#28C840]"></div></div>
-      <div className="bg-gray-100 px-8 py-1 rounded-full text-[10px] text-gray-400">theqoo.net</div>
-      <div className="w-6"></div>
-    </div>
-    <div className="bg-white overflow-hidden">
-      <div className="p-5 border-b border-[#F0F0F0]">
-        <div className="flex items-center gap-2 mb-3">
-          <div className="bg-[#D32F2F] text-white text-[9px] px-1.5 py-0.5 rounded font-black">HOT</div>
-          <span className="text-[#333] text-[10px] font-black uppercase border-b-2 border-[#D32F2F]">Community theqoo</span>
-        </div>
-        <h2 className="text-lg font-bold leading-tight text-gray-900 mb-3">{post.title}</h2>
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[10px] text-gray-400">
-          <span className="text-[#D32F2F] font-black">{post.category}</span>
-          <span className="flex items-center gap-1"><Eye className="w-3 h-3" /> {(post.viewsCount || 0).toLocaleString()}</span>
-          <span className="flex items-center gap-1"><Heart className="w-3 h-3" /> {(post.likesCount || 0).toLocaleString()}</span>
-          <span className="font-bold text-gray-600">Comments {post.commentsCount || 0}</span>
-        </div>
-      </div>
-      <div className="divide-y divide-[#F8F8F8]">
-        {post.comments.slice(0, 6).map((comment, idx) => (
-          <div key={idx} className="p-4 bg-white">
-            <div className="flex gap-3">
-              <div className="w-8 h-8 rounded-xl bg-[#E7E6F6] flex-shrink-0 flex items-center justify-center text-[#454F87] font-black text-xs">{idx + 1}</div>
-              <div className="flex-1">
-                <span className="text-[10px] font-black text-[#454F87]">@{comment.authorId}</span>
-                <p className="text-sm font-medium text-gray-800 mt-1 leading-relaxed">{comment.content}</p>
-                {comment.translation && <p className="text-[11px] text-gray-500 italic mt-1">{comment.translation}</p>}
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  </div>
-);
-
-const CharacterCardUI = ({ card }: any) => {
-  if (!card || typeof card !== 'object') return null;
-  return (
-    <div className="bg-white border border-[#DAD8EE] rounded-3xl overflow-hidden shadow-sm my-6 max-w-md mx-auto font-sans">
-      <div className="bg-[#5B6BB0] p-5 text-white text-center relative overflow-hidden">
-        <div className="absolute top-0 right-0 p-4 opacity-20"><Sparkles className="w-12 h-12" /></div>
-        <div className="text-[10px] font-black uppercase tracking-widest mb-1 opacity-80">Artist Profile</div>
-        <h3 className="text-xl font-bold">{card.name} {card.stageName ? `(${card.stageName})` : ''}</h3>
-      </div>
-      <div className="p-5 flex flex-col gap-4 text-left">
-        <div className="grid grid-cols-2 gap-3 text-xs">
-          <div className="bg-[#F3F2FA] p-3 rounded-2xl border border-[#DAD8EE]"><div className="text-[#454F87] font-black mb-1 uppercase text-[9px]">Group</div><div className="font-bold text-[#2A2A3D]">{card.group || '未知团体'}</div></div>
-          <div className="bg-[#F3F2FA] p-3 rounded-2xl border border-[#DAD8EE]"><div className="text-[#454F87] font-black mb-1 uppercase text-[9px]">Status</div><div className="font-bold text-[#2A2A3D]">{card.status || '活跃中'}</div></div>
-        </div>
-        {card.publicPersona && <div className="bg-[#F3F2FA] p-4 rounded-2xl border border-[#DAD8EE] text-xs"><span className="font-black text-[#5B6BB0] block uppercase text-[9px] mb-1">Public Persona</span><p className="text-[#2A2A3D] italic">"{card.publicPersona}"</p></div>}
-        {card.realPersonality && <div className="bg-[#F3F2FA] p-4 rounded-2xl border border-[#DAD8EE] text-xs"><span className="font-black text-[#454F87] block uppercase text-[9px] mb-1">Real Personality</span><p className="text-[#2A2A3D]">{card.realPersonality}</p></div>}
-        {Array.isArray(card.weaknesses) && card.weaknesses.length > 0 && (
-          <div className="flex flex-wrap gap-2">{card.weaknesses.map((item: string, i: number) => <span key={i} className="text-[10px] px-3 py-1 bg-[#E7E6F6] text-[#454F87] rounded-full border border-[#DAD8EE] font-bold"># {item}</span>)}</div>
-        )}
-        {card.hiddenStory && <div className="pt-2 border-t border-dashed border-[#DAD8EE]"><span className="font-black text-[#454F87] block uppercase text-[9px] mb-1">Hidden Story</span><p className="text-[11px] text-[#454F87] italic">{card.hiddenStory}</p></div>}
-      </div>
-    </div>
-  );
-};
-
-const MusicShowUI = ({ result }: { result: any }) => (
-  <div className="bg-white border border-[#DAD8EE] rounded-[2rem] overflow-hidden shadow-sm my-6 max-w-lg mx-auto font-sans">
-    <div className="bg-[#5B6BB0] p-5 text-white text-center relative">
-      <div className="text-[10px] font-black uppercase tracking-widest mb-1 opacity-80">Music Bank / Inkigayo</div>
-      <h3 className="text-xl font-black tracking-widest">WEEKLY CHAMPION</h3>
-      <div className="absolute top-2 right-4 opacity-30"><Sparkles className="w-8 h-8" /></div>
-    </div>
-    <div className="p-5 flex flex-col gap-4">
-      <div className="flex flex-col items-center py-4 bg-[#F3F2FA] rounded-3xl border border-[#DAD8EE]">
-        <div className="text-[10px] font-black text-[#454F87] uppercase mb-1">本次优胜 / Winner</div>
-        <div className="text-2xl font-black text-[#2A2A3D]">{result.winner}</div>
-        <div className="mt-2 flex gap-1">{[1,2,3].map(i => <Sparkles key={i} className="w-4 h-4 text-[#5B6BB0] animate-pulse" />)}</div>
-      </div>
-      <div className="flex flex-col gap-3">
-        {result.scores?.map((score: any, idx: number) => (
-          <div key={idx} className={`p-4 rounded-2xl border ${score.group === result.winner ? 'bg-[#E7E6F6] border-[#5B6BB0]' : 'bg-white border-[#DAD8EE]'}`}>
-            <div className="flex justify-between items-center mb-2"><span className="font-bold text-sm text-[#2A2A3D]">{score.group}</span><span className="font-black text-[#5B6BB0] text-sm">{score.total} pt</span></div>
-            <div className="grid grid-cols-5 gap-1">
-              {['digital','physical','sns','preVote','broadcast'].map((key, i) => (
-                <div key={i} className="text-center"><div className="text-[8px] text-[#454F87] font-bold uppercase truncate">{['音源','销量','SNS','投票','放送'][i]}</div><div className="text-[10px] font-bold text-[#2A2A3D]">{score[key]}</div></div>
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  </div>
-);
-
-const OptionsUI = ({ options, isLatest, lang, onPick, disabled }: { options: any[], isLatest: boolean, lang?: string, onPick?: (action: string) => void, disabled?: boolean }) => {
-  if (!options?.length) return null;
-  const l = lang || 'simplified';
-  // 最新一条 + 有回调 → 可点选（点了等于把这个行动发出去）；历史消息只读回顾
-  const clickable = isLatest && !!onPick;
-  return (
-    <div className="mt-4 rounded-2xl bg-white/[0.03] border border-white/10 p-4">
-      <div className="gold-caption mb-3 flex items-center gap-1.5"><span className="w-1 h-1 rounded-full bg-[#FF7A93]" />{clickable ? (l === "traditional" ? "選一個行動" : "选一个行动") : (l === "traditional" ? "當時的選擇" : "当时的选择")}</div>
-      <div className="flex flex-col gap-2">
-        {options.map((opt: any, i) => {
-          const raw = (typeof opt === 'string' ? opt : opt.text);
-          const action = (typeof opt === 'string' ? opt : (opt.action || opt.text));
-          const text = raw.replace(/^[A-Da-d][\.、。\)]\s*/, '');
-          const cls = "flex items-start gap-2.5 rounded-xl px-3 py-2.5 border text-left w-full transition-all";
-          if (clickable) {
-            return (
-              <button key={i} disabled={disabled} onClick={() => onPick!(action)}
-                className={cls + " bg-white/[0.03] border-white/[0.06] hover:border-[rgba(255,122,147,0.5)] hover:bg-white/[0.06] active:scale-[0.99] disabled:opacity-50"}>
-                <span className="mt-0.5 w-5 h-5 rounded-lg bg-[#E7E6F6] text-[#5B6BB0] text-[10px] font-black flex items-center justify-center flex-shrink-0">{'ABCD'[i] || '·'}</span>
-                <span className="text-[13px] text-[#F1ECFF] font-semibold leading-relaxed">{text}</span>
-              </button>
-            );
-          }
-          return (
-            <div key={i} className={cls + " bg-white/[0.03] border-white/[0.06]"}>
-              <span className="mt-0.5 w-5 h-5 rounded-lg bg-[#E7E6F6] text-[#5B6BB0] text-[10px] font-black flex items-center justify-center flex-shrink-0">{'ABCD'[i] || '·'}</span>
-              <span className="text-[13px] text-[#D8D4EE] font-semibold leading-relaxed">{text}</span>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-};
-
-const MobileDrawer = ({ gameState, onClose, onSave, onLoad, onDelete, saveSlots, wallpaper, onWallpaperUpload, onClearWallpaper }: { gameState: GameState, onClose: () => void, onSave: () => void, onLoad: (id: string) => void, onDelete: (id: string) => void, saveSlots: any[], wallpaper: string, onWallpaperUpload: (e: React.ChangeEvent<HTMLInputElement>) => void, onClearWallpaper: () => void }) => {
-  const targetMembers = gameState.members.filter(m => gameState.targets.includes(m.id));
-  const roundCount = gameState.history.filter(h => h.role === MessageRole.ASSISTANT).length;
-  const lang = (gameState as any).language || 'simplified';
-
-  return (
-    <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
-      transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-      className="fixed inset-x-0 bottom-0 z-50 rounded-t-[2rem] shadow-2xl border-t border-[rgba(201,162,39,0.25)] max-h-[70vh] overflow-y-auto ink-scroll" style={{ background: 'linear-gradient(180deg, #1C1830, #0E0C1C)' }}>
-      <div className="flex justify-center pt-3 pb-2"><div className="w-10 h-1 bg-white/15 rounded-full"></div></div>
-      <div className="flex items-center justify-between px-6 pb-4 border-b border-white/[0.06]">
-        <h3 className="gold-caption text-sm">{lang === 'traditional' ? '角色狀態' : '角色状态'}</h3>
-        <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-all"><X className="w-4 h-4 text-[#B7B2D9]" /></button>
-      </div>
-      <div className="p-5 flex flex-col gap-5">
-        {(
-          <div className="flex flex-col gap-3">
-            {targetMembers.map(member => (
-              <div key={member.id} className="bg-white/[0.03] p-4 rounded-2xl border border-white/10">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm font-bold text-[#F1ECFF]">{member.name}</span>
-                  <span className="text-[11px] text-[#C9A227] font-mono font-bold">{member.affection}/100</span>
-                </div>
-                <div className="h-[3px] bg-white/[0.08] rounded-full overflow-hidden mb-1">
-                  <motion.div animate={{ width: `${member.affection}%` }} className="h-full rounded-full" style={{ background: 'linear-gradient(90deg,#6C79C4,#C9A227)' }} />
-                </div>
-                <div className="text-[10px] text-[#8B86B8]">{member.status}</div>
-              </div>
-            ))}
-          </div>
-        )}
-        <div className="bg-white/[0.03] p-4 rounded-2xl border border-white/10 flex flex-col gap-2">
-          <div className="flex justify-between text-xs"><span className="text-[#8B86B8]">{lang === "traditional" ? "場景" : "场景"}</span><span className="font-bold text-[#F1ECFF]">{gameState.currentScene}</span></div>
-          <div className="flex justify-between text-xs"><span className="text-[#8B86B8]">Round</span><span className="font-bold text-[#C9A227]">{roundCount}</span></div>
-          {gameState.isComebackSetting && <div className="text-[10px] font-black text-[#C9A227] bg-white/[0.06] px-2 py-1 rounded-lg">{lang === "traditional" ? "回歸期進行中" : "回归期进行中"}</div>}
-        </div>
-        <div className="flex flex-col gap-2.5">
-          <div className="flex gap-2.5">
-            <button onClick={() => { onSave(); onClose(); }} className="flex-1 flex items-center justify-center gap-1.5 py-3 text-white rounded-2xl text-[11px] font-black active:scale-95 transition-all" style={{ background: 'linear-gradient(135deg,#6C79C4,#454F87)', boxShadow: '0 6px 16px -6px rgba(91,107,176,0.7)' }}><Save className="w-3.5 h-3.5" />{lang === "traditional" ? "存檔" : "存档"}</button>
-            <label className="flex-1 flex items-center justify-center gap-1.5 py-3 bg-white/[0.04] border border-white/10 text-[#B7B2D9] rounded-2xl text-[11px] font-black text-center cursor-pointer hover:bg-white/[0.09] active:scale-95 transition-all">
-              <Sparkles className="w-3.5 h-3.5" />{lang === "traditional" ? "換壁紙" : "换壁纸"}
-              <input type="file" accept="image/*" className="hidden" onChange={onWallpaperUpload} />
-            </label>
-          </div>
-          {wallpaper && <button onClick={onClearWallpaper} className="w-full py-2.5 text-[#8b90b8] rounded-2xl text-[10px] font-black hover:text-[#FF7A93] transition-all">{lang === "traditional" ? "移除壁紙" : "移除壁纸"}</button>}
-          {saveSlots.length > 0 && (
-            <div className="rounded-2xl bg-white/[0.03] border border-white/10 p-2.5 flex flex-col gap-2 mt-1">
-              <div className="gold-caption px-1 flex items-center gap-1.5"><FolderOpen className="w-3 h-3" />{lang === "traditional" ? "讀檔" : "读档"}</div>
-              {saveSlots.map((slot: any, si: number) => (
-                <div key={slot.id} className="bg-white/[0.03] border border-white/10 rounded-xl p-2.5 flex items-center gap-2.5 active:scale-[0.98] transition-all">
-                  <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#6C79C4] to-[#454F87] text-white flex items-center justify-center text-[11px] font-black flex-shrink-0">{saveSlots.length - si}</div>
-                  <button onClick={() => { onLoad(slot.id); onClose(); }} className="flex-1 min-w-0 text-left">
-                    <div className="text-[11px] font-black text-[#F1ECFF] truncate">{(slot as any).subject || slot.scene}</div>
-                    <div className="text-[9px] text-[#8B86B8] truncate mt-0.5">{slot.scene} · R{slot.round} · {slot.time}</div>
-                  </button>
-                  <button onClick={() => onDelete(slot.id)} className="w-7 h-7 rounded-lg text-[#8b90b8] hover:bg-[#FF7A93]/10 hover:text-[#FF7A93] flex items-center justify-center flex-shrink-0"><Trash2 className="w-3.5 h-3.5" /></button>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-    </motion.div>
-  );
-};
-
-// 手机：theqoo / KakaoTalk / Weverse / bubble 的专属入口
-const PHONE_APPS: { key: 'kkt' | 'weverse' | 'bubble' | 'theqoo'; label: string; icon: string; color: string; mono?: boolean }[] = [
-  { key: 'kkt', label: 'KakaoTalk', icon: '💬', color: '#FAE100' },
-  { key: 'weverse', label: 'Weverse', icon: '🌐', color: '#141420', mono: true },
-  { key: 'bubble', label: 'bubble', icon: '🫧', color: '#8ec7f0' },
-  { key: 'theqoo', label: 'theqoo', icon: '🔥', color: '#3b5998' },
-];
-
-const PhoneModal = ({ feed, onClose, lang, members, onSendDM, dmLeft }: {
-  feed: NonNullable<GameState['phoneFeed']>; onClose: () => void; lang?: string;
-  members: Member[]; onSendDM: (memberId: string, text: string) => void; dmLeft: number;
-}) => {
-  const tw = lang === 'traditional';
-  const [tab, setTab] = useState<'kkt' | 'weverse' | 'bubble' | 'theqoo'>(
-    () => [...feed].reverse().find(f => !f.read)?.type || 'kkt'
-  );
-  const items = feed.filter(f => f.type === tab).slice().reverse();
-  const [dmTo, setDmTo] = useState<string>(() => members[0]?.id || '');
-  const [dmText, setDmText] = useState('');
-  const canDM = tab === 'kkt' || tab === 'bubble';
-  const sendDM = () => {
-    const t = dmText.trim();
-    if (!t || dmLeft <= 0 || !dmTo) return;
-    setDmText('');
-    onSendDM(dmTo, t);
-  };
-  return (
-    <div className="fixed inset-0 z-[70] bg-black/60 backdrop-blur-sm flex items-center justify-center p-3" onClick={onClose}>
-      <motion.div
-        initial={{ opacity: 0, y: 40, scale: 0.94 }} animate={{ opacity: 1, y: 0, scale: 1 }}
-        className="relative w-full max-w-sm h-[88vh] bg-[#0c0a16] rounded-[2.8rem] p-2.5 shadow-2xl flex flex-col"
-        onClick={e => e.stopPropagation()}
-      >
-        <div className="bg-[#17131f] rounded-[2.4rem] overflow-hidden flex-1 flex flex-col min-h-0 relative">
-          {/* 刘海 */}
-          <div className="absolute top-2 left-1/2 -translate-x-1/2 w-20 h-4 bg-[#0c0a16] rounded-full z-20" />
-          {/* 状态栏 + 关闭 */}
-          <div className="px-6 pt-3 pb-1 flex items-center justify-between flex-shrink-0 relative z-10">
-            <span className="text-[10px] font-bold text-[#8B86B8]">9:41</span>
-            <button onClick={onClose} className="p-1.5 rounded-full hover:bg-white/10 text-[#B7B2D9]"><X className="w-4 h-4" /></button>
-          </div>
-          {/* App tabs */}
-          <div className="px-3 pb-2.5 pt-2 flex gap-1.5 flex-shrink-0">
-            {PHONE_APPS.map(app => {
-              const unread = feed.filter(f => f.type === app.key && !f.read).length;
-              const active = tab === app.key;
-              return (
-                <button key={app.key} onClick={() => setTab(app.key)}
-                  className="relative flex-1 flex flex-col items-center gap-1 py-2 rounded-2xl border transition-all"
-                  style={active
-                    ? { background: 'rgba(201,162,39,0.12)', borderColor: 'rgba(201,162,39,0.45)' }
-                    : { background: 'rgba(255,255,255,0.04)', borderColor: 'transparent' }}>
-                  <span className="w-[34px] h-[34px] rounded-[0.7rem] flex items-center justify-center text-lg shadow-sm" style={{ background: app.color, border: app.mono ? '1px solid rgba(255,255,255,0.25)' : 'none' }}>{app.icon}</span>
-                  <span className={`text-[9px] font-black ${active ? 'text-[#F1ECFF]' : 'text-[#8B86B8]'}`}>{app.label}</span>
-                  {unread > 0 && <span className="absolute top-1 right-2 min-w-[16px] h-4 px-1 rounded-full bg-[#FF3B30] text-white text-[9px] font-black flex items-center justify-center">{unread}</span>}
-                </button>
-              );
-            })}
-          </div>
-          {/* 内容流 */}
-          <div className="flex-1 overflow-y-auto ink-scroll px-2 pb-4 pt-2 min-h-0 bg-[#F1EFF7]">
-            {items.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-16 gap-2 text-[#454F87]/60">
-                <span className="text-3xl">{PHONE_APPS.find(a => a.key === tab)?.icon}</span>
-                <span className="text-[11px] font-bold">{tw ? '還沒有內容，劇情推進後這裡會收到更新' : '还没有内容，剧情推进后这里会收到更新'}</span>
-              </div>
-            ) : items.map(item => (
-              <div key={item.id} className="[&>div]:my-2 [&>div]:max-w-full">
-                {item.type === 'kkt' && <KKTMessageUI data={item.data} bare />}
-                {item.type === 'weverse' && <WeversePostUI data={item.data} />}
-                {item.type === 'bubble' && <BubbleMessageUI data={item.data} />}
-                {item.type === 'theqoo' && <TheqooPostUI post={item.data} />}
-              </div>
-            ))}
-          </div>
-          {/* 主动发消息：不占行动点，但每天有条数上限，发太勤会涨曝光度 */}
-          {canDM && (
-            <div className="flex-shrink-0 border-t border-black/10 bg-white px-2.5 py-2 flex flex-col gap-1.5">
-              <div className="flex items-center gap-1.5 overflow-x-auto">
-                {members.map(m => (
-                  <button key={m.id} onClick={() => setDmTo(m.id)}
-                    className={`flex-shrink-0 px-2 py-0.5 rounded-full text-[10px] font-black transition-all ${dmTo === m.id ? 'bg-[#5B6BB0] text-white' : 'bg-[#E7E6F6] text-[#454F87]'}`}>
-                    {m.name}
-                  </button>
-                ))}
-              </div>
-              <div className="flex gap-1.5">
-                <input
-                  value={dmText} onChange={e => setDmText(e.target.value)}
-                  onKeyDown={e => { if (e.key === 'Enter') sendDM(); }}
-                  placeholder={dmLeft > 0 ? (tw ? `發條消息…（今天還能發 ${dmLeft} 條）` : `发条消息…（今天还能发 ${dmLeft} 条）`) : (tw ? '今天發太多了，明天再說' : '今天发太多了，明天再说')}
-                  disabled={dmLeft <= 0}
-                  className="flex-1 min-w-0 bg-[#F1EFF7] border border-[#DAD8EE] rounded-full px-3 py-2 text-[12px] outline-none text-[#2A2A3D] disabled:opacity-50"
-                />
-                <button onClick={sendDM} disabled={dmLeft <= 0 || !dmText.trim()}
-                  className="px-3 rounded-full bg-[#5B6BB0] text-white disabled:opacity-40 flex items-center justify-center">
-                  <Send className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      </motion.div>
-    </div>
-  );
-};
-
-// Demo 一键开始用的原创角色：三个不同的女团（STELLA / HALO / LUMÉE），共 9 个性格各异的角色，方便录像/试玩
-const DEMO_CAST: any[] = [
-  {
-    id: 'demo_sole', name: '江予昭', group: 'STELLA', age: 2000, nationality: '韩国', role: '队长 / 主唱',
-    publicPersona: '沉稳可靠的门面担当，采访里滴水不漏，被粉丝称作"人间清醒"。',
-    realPersonality: `【底色】冰山掌控型。她把情绪管理当成一门技术活——不是没有情绪，是先算清楚说出来会不会给别人添麻烦，算不过就咽下去。作为队长，她习惯性地把所有人的状态扫描一遍，在没人注意的地方把问题解决掉，然后把功劳让出去。看似疏离，其实是全团最操心的人。
-【软处】只有在确定没人看的时候，她才会露出疲惫。她极不擅长接受别人的好意——你对她好，她第一反应是"我要怎么还"。真正走进她，不是靠热情，是靠让她相信"你不需要她回报"。`,
-    speechStyle: '句子短、逻辑清楚，很少用语气词。被戳中时会突然沉默两秒再回答。',
-    secret: '出道前最后一次月评差点被淘汰，是现在的忙内白露替她说了话才留下来的——这件事她谁都没提过。',
-    affection: 12,
-  },
-  {
-    id: 'demo_wildy', name: '温野', group: 'STELLA', age: 2003, nationality: '中国', role: '主舞 / Rapper',
-    publicPersona: '综艺感炸裂的气氛担当，舞台上极具攻击性，下台就变成话痨小狗。',
-    realPersonality: `【底色】热烈直球型，情绪全写在脸上，藏都藏不住——高兴了整个人发光，委屈了眼圈立刻红。她敢爱敢恨，想到什么做什么，是那种会第一个冲过来抱住你的人。但这团火底下压着强烈的不安：她怕自己"太多了"，怕热情吓跑别人，所以有时会突然收住，然后自己纠结半天。
-【软处】她给出去的都是真心，也因此特别容易受伤。她不会说"我需要你"，但会用行动疯狂暗示——反复找你、给你带吃的、记住你随口说的小事。你只要接住一次，她能记一辈子。`,
-    speechStyle: '语速快、语气词多（"诶！""真的假的""你听我说"），激动时会飙一两句中文。',
-    secret: '一个人在异国出道，最难的那阵子是靠每天给家里报"我很好"撑过来的，其实哭了很多次。',
-    affection: 38,
-  },
-  {
-    id: 'demo_dew', name: '白露', group: 'STELLA', age: 2005, nationality: '韩国', role: '忙内 / 副唱',
-    publicPersona: '慵懒厌世的忙内，表情包本包，一句话能把姐姐们噎住，粉丝爱她的毒舌。',
-    realPersonality: `【底色】慵懒毒舌天才型。能躺着绝不坐着，对大多数事情都是一副"随便吧"的懒散样，但脑子转得极快——毒舌背后全是精准的观察，她其实把每个人都看得透透的，只是懒得说破。她的冷淡是保护色：越在乎的事越装作不在乎。
-【软处】她的刀子嘴专门用来掩盖豆腐心。她会用最欠揍的语气做最温柔的事——嘴上嫌你烦，转头把你落下的东西默默收好。想让她卸下防备，别被她的话激到，看她做了什么。`,
-    speechStyle: '懒洋洋、爱用反问和吐槽，冷幽默，句尾常带一个拖长的"……啊"。',
-    secret: '其实是三人里最黏队长江予昭的那个，会偷偷观察她累不累，但打死不承认。',
-    affection: 25,
-  },
-
-  // ── HALO：暗色高级感四代团，概念冷冽疏离，公司主打"顶级门面" ──
-  {
-    id: 'demo_gutang', name: '顾樘', group: 'HALO', age: 2001, nationality: '中国', role: '队长 / 主唱',
-    publicPersona: '被称作"行走的高级感"，气场强到镜头都要让三分，采访金句频出。',
-    realPersonality: `【底色】优雅疏离型。她拥有极高的精神门槛，早就看透了这个行业的虚假与浮华。外表随和有礼，内心有一道很硬的墙——如果一个人的灵魂不够有趣，她只会保持礼貌的客气，绝不会多说一句。这不是高冷，是她真的不想把时间浪费在无聊的人身上。
-【软处】一旦她认定你"有意思"，那道墙会以肉眼可见的速度塌掉，露出底下意外孩子气、会为一部老电影熬夜的一面。想让她记住你，别讨好她，说点她没听过的东西。`,
-    speechStyle: '语速偏慢、用词讲究，喜欢反问和留白，很少把话说满。',
-    secret: '其实一直在偷偷写歌，抽屉里攒了十几首没给任何人听过，怕被说"偶像不安分"。',
-    affection: 8,
-  },
-  {
-    id: 'demo_zhiqiu', name: '叶知秋', group: 'HALO', age: 2002, nationality: '中国', role: '主舞 / Rapper',
-    publicPersona: '舞台上的"危险分子"，眼神杀一片，采访里常有让人捏把汗的直球发言。',
-    realPersonality: `【底色】危险直球型。她享受打破平衡的快感，会主动侵入对方的舒适区，就为了看对方真实的反应。说话极其直接，想什么说什么，从不拐弯抹角。最讨厌唯唯诺诺和敷衍——你要是想糊弄她，她会当场笑着点破，让你无处可躲。
-【软处】她的攻击性其实是一种测试：她在筛掉那些经不起真话的人。能接住她的直球、还敢回敬她的人，反而会被她高看一眼。她对"平等"有近乎执念的需求，怕的从来不是冲突，是被当成easy的人。`,
-    speechStyle: '短促有力、爱挑衅式反问，笑起来带钩子，常用"哦？""就这？"。',
-    secret: '这么刚的一个人，怕黑怕到要开小夜灯睡，只有同宿舍的顾樘知道。',
-    affection: 20,
-  },
-  {
-    id: 'demo_surui', name: '苏芮', group: 'HALO', age: 2004, nationality: '韩国', role: '忙内 / 副唱',
-    publicPersona: '团里的"氛围感忙内"，眼睛会说话，一个眼神就能上热搜。',
-    realPersonality: `【底色】敏感深情型。她的感知力强到有点辛苦——你三个月前随口提过一句喜欢的东西，她会一直记着，然后在某天默默递到你面前。她对外界评价高度敏感，一条负面评论能让她低落好几天，但她会假装没事，怕给团里添负担。
-【软处】她需要的是"被稳稳接住"的确定感。她会反复用小事试探你在不在意，一旦确认了，就会把全部真心交出来。对她最狠的不是骂她，是忽冷忽热——那会让她整夜整夜地想自己是不是做错了什么。`,
-    speechStyle: '轻声细语、句子偏软，爱用"…是不是""我在想"，紧张时会重复对方的话。',
-    secret: '悄悄把每个成员的生日、口味、过敏原都记在一个小本子上，从没说过。',
-    affection: 30,
-  },
-
-  // ── LUMÉE：明亮青春三代团，国民度高、综艺常客，概念元气甜 ──
-  {
-    id: 'demo_yinuo', name: '罗一诺', group: 'LUMÉE', age: 1999, nationality: '中国', role: '队长 / Lead Vocal',
-    publicPersona: '国民好感度担当，笑起来有治愈感，是那种"看到就心情变好"的队长。',
-    realPersonality: `【底色】元气感恩型ENFP。当年是被街头星探偶然发现才入行的，这个"意外的开始"让她比谁都懂得珍惜。她的感恩不是挂嘴上的，是藏在细节里——记得每一个帮过她的人，对每个工作机会都认真到较真。她天然没什么防备，情绪全挂脸上，高兴了全身发光，难过了也藏不住。
-【软处】总在照顾别人的人，最不会照顾自己。她习惯把"我没事"当口头禅，其实撑不住的时候特别需要有人一眼看穿、然后不由分说地拉她去休息。你要是能看见她笑容后面的累，她会当场绷不住。`,
-    speechStyle: '热情爽朗、语气词丰富（"哇""真的诶""谢谢你啊"），说话带笑音。',
-    secret: '手机里有个只进不出的存钱罐相册，存着出道以来每一个"想记住的瞬间"截图。',
-    affection: 42,
-  },
-  {
-    id: 'demo_chie', name: '千惠', group: 'LUMÉE', age: 2002, nationality: '日本', role: '主领舞 / 副唱',
-    publicPersona: '安静可靠的"团宠妈妈"，做事滴水不漏，粉丝叫她"人型自动整理仪"。',
-    realPersonality: `【底色】日系职业意识型。她极擅长观察他人的情绪，总能默默把周围的事情处理好，却几乎从不说出自己的需求。她是那种"房间里最安静、但每个人都被她照顾到"的人——只是没人意识到这一切是她做的，包括她自己都觉得理所当然。
-【软处】她把"不给别人添麻烦"刻进了骨子里，以至于连"我也想被照顾"这句话都说不出口。她不需要你为她做多大的事，只要你能注意到"她也会累"，并且认真地问一句"那你呢？"，就足以让她愣住。`,
-    speechStyle: '礼貌温柔、句子完整、常带敬语感，偶尔蹦出日语词，笑起来先捂嘴。',
-    secret: '其实很想有一次当"被宠的那个"，但每次话到嘴边又咽下去，怕显得任性。',
-    affection: 22,
-  },
-  {
-    id: 'demo_shenzhi', name: '沈芷', group: 'LUMÉE', age: 2006, nationality: '中国', role: '忙内 / Main Rapper',
-    publicPersona: '外表软萌的忙内，一开口却是全团最稳的rap担当，反差圈粉无数。',
-    realPersonality: `【底色】软萌外壳、辛辣内核。她拥有极其清晰的自我认知，一点都不满足于"可爱的妹妹"这个标签，她真正想要的是掌控舞台。她知道自己想要什么，也知道为此要付出什么代价，然后会非常平静地去付。别被她的娃娃脸骗了，她比谁都清醒。
-【软处】她把野心藏在软萌底下，其实很怕被人只当成"吉祥物"。真正打动她的，是有人认真对待她的实力和想法、把她当成一个"选手"而不是"妹妹"。你越把她当回事，她越会在你面前卸下那层可爱的壳。`,
-    speechStyle: '平时奶声奶气，聊到专业立刻切换成又快又稳的语气，落差极大。',
-    secret: '偷偷在做自己的beat，梦想是有一天整张专辑的词曲都由她包办。',
-    affection: 15,
-  },
-];
-
-const CharacterCreationWizard = ({ onComplete, members }: { onComplete: (data: any) => void, members: Member[] }) => {
-  const [stepIdx, setStepIdx] = useState(0);
-  const [selectedGroup, setSelectedGroup] = useState<string | null>(null);
-  const [showFace, setShowFace] = useState(false);
-  const [data, setData] = useState({
-    playerName: '', playerAge: 19, identity: [] as string[],
-    gameMode: 'romance' as string, targets: [] as string[],
-    playerApiKey: '', playerModel: 'deepseek-v4-flash', language: 'simplified',
-    playerAppearance: getPlayerAppearance('you') as Appearance,
-    customMembers: [] as any[],
-  });
-  // 自建角色（像 Tomodachi Life 那样把自己想要的人放进来）
-  const [ocDraft, setOcDraft] = useState<any | null>(null);
-  const [ocFace, setOcFace] = useState(false);
-  const [source, setSource] = useState<'girls' | 'boys' | 'oc' | 'demo'>('girls');
-  const [customIdentity, setCustomIdentity] = useState('');
-  const lang = data.language || 'simplified';
-
-  useEffect(() => {
-    if (!(window as any).OpenCC) return;
-    if (data.language === 'traditional') {
-      const converter = (window as any).OpenCC.Converter({ from: 'cn', to: 'twp' });
-      const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
-      const nodes: Text[] = [];
-      while (walker.nextNode()) nodes.push(walker.currentNode as Text);
-      nodes.forEach(node => {
-        if (node.parentElement?.tagName !== 'SCRIPT' && node.parentElement?.tagName !== 'STYLE') {
-          node.textContent = converter(node.textContent || '');
-        }
-      });
-    }
-  }, [data.language]);
-
-  // 身份精简为 5 个开局差异明显的原型（从哪开场 / 起始好感 / 能进哪些私密场所 / AI 怎么定位你）
-  const ids = ["圈内工作人员","普通粉丝","公寓同栋住户","青梅竹马","现任女友"];
-  const idDesc: Record<string, string> = {
-    "圈内工作人员": "妆造/助理/实习生 · 后台开场 · 能进练习室与宿舍 · 近水楼台但要守规矩",
-    "普通粉丝": "演唱会开场 · 只能在公开场合遇到她们 · 从零开始追",
-    "公寓同栋住户": "宿舍开场 · 进得去宿舍 · 生活流的日常暧昧",
-    "青梅竹马": "咖啡厅开场 · 从小认识，起始好感 40 · 一开始就有底子",
-    "现任女友": "宿舍开场 · 已在恋爱，起始好感 62 · 玩「维持」而不是「攻略」",
-  };
-  const cpIds = ["娱乐公司实习生","音乐节目工作人员","妆造师/发型助理","翻译/海外商务助理","娱乐记者/博主","普通粉丝","资深粉丝","韩国留学生","便利店/咖啡厅打工人","公寓同栋住户"];
-  const currentIds = ids;
-
-  const groups = Array.from(new Set(members.map(m => m.group)));
-  const groupedMembers: Record<string, Member[]> = {};
-  groups.forEach(g => { groupedMembers[g] = members.filter(m => m.group === g); });
-  const allGroups = groups;
-
-  const toggleTarget = (id: string, max?: number) => {
-    if (data.targets.includes(id)) {
-      setData({...data, targets: data.targets.filter(x => x !== id)});
-    } else {
-      if (max && data.targets.length >= max) return;
-      setData({...data, targets: [...data.targets, id]});
-    }
-  };
-
-  const MemberPicker = ({ max, label }: { max?: number, label: string }) => (
-    <div className="flex flex-col gap-3">
-      <label className="gold-caption">{label}{max === 1 ? '（选1人）' : max ? `（选${max}人）` : '（可多选）'}</label>
-      <div className="flex flex-wrap gap-2">
-        {allGroups.map(g => (
-          <button key={g} onClick={() => setSelectedGroup(selectedGroup === g ? null : g)}
-            className={`px-3 py-1.5 rounded-full text-[11px] font-bold border transition-all ${selectedGroup === g ? 'text-white border-transparent' : 'bg-white/[0.03] border-white/10 text-[#B7B2D9]'}`}
-            style={selectedGroup === g ? { background: 'linear-gradient(135deg,#6C79C4,#454F87)' } : undefined}>
-            {g}
-          </button>
-        ))}
-      </div>
-      {selectedGroup && (
-        <div className="grid grid-cols-2 gap-2 max-h-44 overflow-y-auto p-1 ink-scroll">
-          {(groupedMembers[selectedGroup] || []).map(m => {
-            const selected = data.targets.includes(m.id);
-            const disabled = !selected && !!max && data.targets.length >= max;
-            return (
-              <button key={m.id} onClick={() => !disabled && toggleTarget(m.id, max)}
-                className={`p-3 rounded-2xl border text-[11px] transition-all flex flex-col items-center gap-1 ${selected ? 'bg-[rgba(201,162,39,0.1)] border-[rgba(201,162,39,0.5)] text-[#F1ECFF] font-bold' : disabled ? 'bg-white/[0.02] border-white/[0.06] text-white/25 cursor-not-allowed' : 'bg-white/[0.03] border-white/10 text-[#B7B2D9]'}`}>
-                <div className="font-black text-xs">{m.name}</div>
-                <div className="text-[9px] opacity-60">{m.stageName}</div>
-              </button>
-            );
-          })}
-        </div>
-      )}
-      {data.targets.length > 0 && (
-        <div className="flex flex-wrap gap-1.5 pt-1">
-          {data.targets.map(id => {
-            const m = members.find(x => x.id === id);
-            return m ? (
-              <span key={id} className="text-[10px] bg-[rgba(201,162,39,0.1)] text-[#F1ECFF] px-2 py-1 rounded-full border border-[rgba(201,162,39,0.4)] font-bold flex items-center gap-1">
-                {m.name}<button onClick={() => toggleTarget(id)} className="text-[#C9A227] hover:text-[#F1ECFF]">×</button>
-              </span>
-            ) : null;
-          })}
-        </div>
-      )}
-    </div>
-  );
-
-  const flow: string[] = ['basics', 'face', 'identity', 'idols'];
-  const cur = flow[Math.min(stepIdx, flow.length - 1)];
-  const isLast = stepIdx >= flow.length - 1;
-  const go = (d: number) => setStepIdx(i => Math.max(0, Math.min(flow.length - 1, i + d)));
-  const T = (s: string, t: string) => (lang === 'traditional' ? t : s);
-  const inputCls = "w-full bg-white/[0.04] border border-white/10 rounded-2xl px-4 py-3.5 text-base focus:border-[#C9A227] focus:ring-4 focus:ring-[#C9A227]/10 outline-none text-[#F1ECFF] placeholder:text-[#8B86B8] transition-all";
-  const Label = ({ icon: Icon, children }: { icon: any; children: React.ReactNode }) => (
-    <label className="flex items-center gap-2 text-[13px] font-bold text-[#B7B2D9] mb-2.5"><Icon className="w-4 h-4 text-[#C9A227]" /> {children}</label>
-  );
-  const canNext = () => {
-    if (cur === 'basics') return !!data.playerName.trim();
-    if (cur === 'identity') return data.identity.length > 0 || !!customIdentity.trim();
-    if (cur === 'idols') return data.targets.length >= 1 || data.customMembers.length >= 1;
-    return true;
-  };
-  const finish = () => {
-    const val = customIdentity.trim();
-    const identity = val && !data.identity.includes(val) ? [...data.identity, val] : data.identity;
-    onComplete({ ...data, identity });
-  };
-
-  // Demo 一键开始：预置一套好角色 + 设定，直接进世界（录像/展示用）
-  const startDemo = () => {
-    // 一套原创角色（三人团 STELLA），不占用已有爱豆，直接进世界
-    const cast = DEMO_CAST.map(c => ({ ...c, appearance: getAppearance('demo-' + c.id) }));
-    onComplete({
-      ...data,
-      playerName: data.playerName.trim() || '林澄',
-      playerAge: 22,
-      gameMode: 'romance',
-      identity: ['圈内工作人员'],
-      targets: [],
-      customMembers: cast,
-      demoMode: true,
-      autoDemo: true,
-    });
-  };
-
-  return (
-    <div className="min-h-screen flex items-center justify-center p-6 sm:p-8 relative overflow-hidden" style={{ background: 'radial-gradient(120% 90% at 50% 0%, #0B0A14 0%, #05040a 70%)' }}>
-      <div className="absolute -top-24 -left-20 w-80 h-80 rounded-full blur-3xl opacity-25 pointer-events-none" style={{ background: 'radial-gradient(circle, #6C79C4, transparent 70%)' }} />
-      <div className="absolute -bottom-28 -right-16 w-96 h-96 rounded-full blur-3xl opacity-20 pointer-events-none" style={{ background: 'radial-gradient(circle, #C9A227, transparent 70%)' }} />
-      <div className="absolute top-1/3 right-1/4 w-56 h-56 rounded-full blur-3xl opacity-15 pointer-events-none" style={{ background: 'radial-gradient(circle, #FF7A93, transparent 70%)' }} />
-      {showFace && (
-        <FaceCustomizer appearance={data.playerAppearance} onChange={a => setData({ ...data, playerAppearance: a })} title={T('捏你的脸', '捏你的臉')} lang={lang} onClose={() => setShowFace(false)} />
-      )}
-      {/* 自建角色编辑器 */}
-      {ocDraft && (
-        <div className="fixed inset-0 z-[120] bg-black/75 backdrop-blur-md flex items-center justify-center p-4" onClick={() => setOcDraft(null)}>
-          <div className="ink-panel ink-scroll rounded-[22px] w-full max-w-md max-h-[92%] overflow-auto p-5" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-[14px] font-black text-[#F1ECFF]">{T('自建角色','自建角色')}</h3>
-              <button onClick={() => setOcDraft(null)} className="w-7 h-7 rounded-lg bg-white/[0.06] text-[#B7B2D9] flex items-center justify-center"><X className="w-4 h-4" /></button>
-            </div>
-            <div className="flex justify-center mb-4">
-              <div className="relative flex items-center justify-center rounded-2xl p-3" style={{ background: 'radial-gradient(50% 60% at 50% 40%, rgba(120,110,220,0.18), transparent 70%)' }}>
-                <div style={{ filter: 'drop-shadow(0 0 14px rgba(150,140,255,0.35))' }}><SpritePreview appearance={ocDraft.appearance} size={96} /></div>
-              </div>
-            </div>
-            <div className="flex flex-col gap-3">
-              <div>
-                <div className="gold-caption mb-1.5">{T('名字','名字')}</div>
-                <input value={ocDraft.name} onChange={e => setOcDraft({ ...ocDraft, name: e.target.value })} className={inputCls} placeholder={T('给他/她起个名字…','給他/她起個名字…')} />
-              </div>
-              <div>
-                <div className="gold-caption mb-1.5">{T('性格 / 设定','性格 / 設定')}</div>
-                <textarea value={ocDraft.realPersonality} onChange={e => setOcDraft({ ...ocDraft, realPersonality: e.target.value })}
-                  className={inputCls + ' h-24 resize-none'} placeholder={T('写几句他/她是什么样的人，AI 会照着演…','寫幾句他/她是什麼樣的人，AI 會照著演…')} />
-              </div>
-              <div className="flex gap-2">
-                <button onClick={() => setOcDraft({ ...ocDraft, appearance: getAppearance('oc-' + Math.random()) })}
-                  className="flex-1 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-[#B7B2D9] text-[12px] font-black">🔀 {T('随机外观','隨機外觀')}</button>
-                <button onClick={() => setOcFace(true)}
-                  className="flex-1 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-[#B7B2D9] text-[12px] font-black">🎨 {T('捏脸','捏臉')}</button>
-              </div>
-              <button
-                disabled={!ocDraft.name.trim()}
-                onClick={() => {
-                  const exists = data.customMembers.some((x: any) => x.id === ocDraft.id);
-                  setData({
-                    ...data,
-                    customMembers: exists
-                      ? data.customMembers.map((x: any) => (x.id === ocDraft.id ? ocDraft : x))
-                      : [...data.customMembers, ocDraft],
-                  });
-                  setOcDraft(null);
-                }}
-                className="w-full py-3 rounded-xl text-white text-[13px] font-black disabled:opacity-40 transition-all"
-                style={{ background: 'linear-gradient(135deg,#6C79C4,#454F87)' }}>
-                {T('保存','保存')}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-      {ocFace && ocDraft && (
-        <FaceCustomizer appearance={ocDraft.appearance} onChange={a => setOcDraft({ ...ocDraft, appearance: a })}
-          title={ocDraft.name ? `${T('捏','捏')}${ocDraft.name}` : T('捏这个角色','捏這個角色')} lang={lang} onClose={() => setOcFace(false)} />
-      )}
-      <motion.div initial={{ opacity: 0, scale: 0.95, y: 10 }} animate={{ opacity: 1, scale: 1, y: 0 }} className="relative rounded-[26px] shadow-[0_30px_70px_-20px_rgba(0,0,0,0.7)] w-full max-w-xl overflow-hidden flex flex-col border border-[rgba(201,162,39,0.25)]" style={{ background: 'linear-gradient(165deg, #1C1830, #0E0C1C)' }}>
-        <div className="relative px-6 py-6 text-white overflow-hidden border-b border-white/[0.06]" style={{ background: 'linear-gradient(135deg, #6C79C4 0%, #5B6BB0 55%, #7C6BAE 100%)' }}>
-          <div className="absolute inset-0 opacity-25 pointer-events-none" style={{ background: 'radial-gradient(circle at 18% 0%, white, transparent 45%)' }} />
-          <Sparkles className="absolute right-4 top-3 w-4 h-4 text-white/40" />
-          <Heart className="absolute right-10 top-8 w-3 h-3 text-white/25" />
-          <div className="relative flex items-center gap-3">
-            <div className="rounded-2xl bg-white/15 p-1 backdrop-blur-sm shadow-inner flex items-center justify-center flex-shrink-0"><SpritePreview appearance={data.playerAppearance} size={44} /></div>
-            <div className="min-w-0">
-              <h2 className="text-lg font-black tracking-wide leading-tight">爱豆收集梦想生活</h2>
-              <p className="text-[11px] text-white/75 font-bold mt-0.5 truncate">{T('捏个小人，走进她们的世界', '捏個小人，走進她們的世界')}</p>
-            </div>
-          </div>
-          <div className="relative flex justify-center gap-1.5 mt-4">
-            {flow.map((_, i) => <div key={i} className="h-[3px] rounded-full transition-all duration-300" style={{ width: i === stepIdx ? 28 : 22, background: i <= stepIdx ? '#C9A227' : 'rgba(255,255,255,0.12)' }} />)}
-          </div>
-        </div>
-        <div className="px-6 py-8 sm:px-9 sm:py-9 flex-1 overflow-y-auto max-h-[70vh] ink-scroll">
-          <AnimatePresence mode="wait">
-            <motion.div key={cur} initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -16 }} className="flex flex-col gap-7">
-              {cur === 'basics' && (<>
-                <div>
-                  <Label icon={Globe}>语言 / 語言</Label>
-                  <div className="grid grid-cols-2 gap-2.5">
-                    {[{id:'simplified',name:'简体中文'},{id:'traditional',name:'繁體中文'}].map(l => {
-                      const on = data.language === l.id;
-                      return (
-                        <button key={l.id} onClick={() => setData({...data, language: l.id})} className={`relative py-3.5 rounded-2xl border text-[13px] font-bold transition-all ${on ? 'bg-[rgba(201,162,39,0.1)] border-[rgba(201,162,39,0.5)] text-[#F1ECFF]' : 'bg-white/[0.03] border-white/10 text-[#B7B2D9] hover:border-white/25'}`}>
-                          {on && <Check className="absolute right-2 top-2 w-3.5 h-3.5" />}{l.name}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-                <div><Label icon={User}>{T('你的名字','您的名字')}</Label><input type="text" value={data.playerName} onChange={e => setData({...data, playerName: e.target.value})} className={inputCls} placeholder={T('请输入角色昵称...','請輸入角色暱稱...')} /></div>
-                <div><Label icon={Cake}>{T('年龄','年齡')}</Label><input type="number" value={data.playerAge} onChange={e => setData({...data, playerAge: parseInt(e.target.value)})} className={inputCls} /></div>
-                <div className="rounded-2xl bg-white/[0.03] border border-white/10 p-4 sm:p-5">
-                  <Label icon={KeyRound}>DeepSeek API Key（{T('可选','可選')}）</Label>
-                  <input type="password" value={data.playerApiKey} onChange={e => setData({...data, playerApiKey: e.target.value})} className={inputCls} placeholder={T('填入自己的key可免费无限玩～','填入自己的key可免費無限玩～')} />
-                  <p className="text-[10px] text-[#8B86B8] mt-2.5 pl-0.5 leading-relaxed">{T('不填则使用公共额度。key仅存于本地，不会上传。','不填則使用公共額度。key僅存於本地，不會上傳。')}</p>
-                  {data.playerApiKey && (
-                    <div className="grid grid-cols-2 gap-2 mt-2.5">
-                      {[{id:'deepseek-v4-flash',name:'Flash',desc:T('快速省钱','快速省錢')},{id:'deepseek-v3',name:'V3',desc:T('质量更好','品質更好')}].map(m => (
-                        <button key={m.id} onClick={() => setData({...data, playerModel: m.id})} className={`p-2.5 rounded-xl border-2 text-left transition-all ${data.playerModel === m.id ? 'bg-[rgba(201,162,39,0.1)] border-[rgba(201,162,39,0.5)] text-[#F1ECFF]' : 'bg-white/[0.03] border-white/10 text-[#B7B2D9]'}`}><div className="font-black text-[11px]">{m.name}</div><div className="text-[10px] opacity-60">{m.desc}</div></button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </>)}
-
-              {cur === 'face' && (
-                <div className="flex flex-col items-center gap-4 py-2">
-                  <div className="gold-caption self-start">{T('捏你的脸','捏你的臉')}</div>
-                  <div className="relative rounded-2xl p-4 flex items-center justify-center" style={{ background: 'radial-gradient(50% 60% at 50% 40%, rgba(120,110,220,0.18), transparent 70%)' }}>
-                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-24 h-4 rounded-full bg-black/40 blur-[4px]" />
-                    <div className="relative" style={{ filter: 'drop-shadow(0 0 18px rgba(150,140,255,0.35))' }}><SpritePreview appearance={data.playerAppearance} size={128} /></div>
-                  </div>
-                  <button onClick={() => setShowFace(true)} className="px-6 py-2.5 rounded-xl text-white text-sm font-black transition-all flex items-center gap-2" style={{ background: 'linear-gradient(135deg,#6C79C4,#454F87)', boxShadow: '0 8px 20px -6px rgba(91,107,176,0.7)' }}><Sparkles className="w-4 h-4" /> {T('开始捏脸','開始捏臉')}</button>
-                  <p className="text-[10px] text-[#8B86B8] text-center">{T('爱豆的样子进世界后可在「关系」面板里逐个捏。','愛豆的樣子進世界後可在「關係」面板裡逐個捏。')}</p>
-                </div>
-              )}
-
-              {cur === 'identity' && (<>
-                <label className="gold-caption">{T('选择你的身份（可多选）','選擇您的身份（可複選）')}</label>
-                <div className="flex flex-col gap-2">{currentIds.map(i => (
-                  <button key={i} onClick={() => setData({...data, identity: data.identity.includes(i) ? data.identity.filter(x => x !== i) : [...data.identity, i]})} className={`p-3 rounded-xl border text-left transition-all ${data.identity.includes(i) ? 'bg-[rgba(201,162,39,0.1)] border-[rgba(201,162,39,0.5)]' : 'bg-white/[0.03] border-white/10 hover:border-white/25'}`}>
-                    <div className={`text-[12.5px] font-black ${data.identity.includes(i) ? 'text-[#F1ECFF]' : 'text-[#D8D4EE]'}`}>{i}</div>
-                    {idDesc[i] && <div className="text-[10px] text-[#8B86B8] mt-1 leading-relaxed">{idDesc[i]}</div>}
-                  </button>
-                ))}</div>
-                <input type="text" value={customIdentity} onChange={e => setCustomIdentity(e.target.value)} placeholder={T('或手动输入自定义身份...','或手動輸入自訂身份...')} className="w-full bg-white/[0.04] border border-white/10 rounded-xl p-3 text-base focus:ring-1 focus:ring-[#C9A227] outline-none text-[#F1ECFF] placeholder:text-[#8B86B8]" onKeyDown={(e) => { if (e.key === 'Enter') { const val = customIdentity.trim(); if (val && !data.identity.includes(val)) { setData({...data, identity: [...data.identity, val]}); setCustomIdentity(''); } e.preventDefault(); } }} />
-                {(() => {
-                  const chosen = [...data.identity, ...(customIdentity.trim() ? [customIdentity.trim()] : [])];
-                  if (chosen.length === 0) return null;
-                  const s = identitySummary(chosen);
-                  return (
-                    <div className="rounded-2xl bg-white/[0.03] border border-[rgba(201,162,39,0.2)] p-3.5 flex flex-col gap-2.5">
-                      <div className="gold-caption flex items-center gap-1.5"><Sparkles className="w-3 h-3" /> {T('这个身份意味着','這個身份意味著')}</div>
-                      <div className="flex items-start gap-2 text-[12px] text-[#D8D4EE]">
-                        <MapPin className="w-3.5 h-3.5 text-[#C9A227] mt-0.5 flex-shrink-0" />
-                        {(() => {
-                          const extra = s.unlocked.filter(l => l !== s.startLabel);
-                          const tail = extra.length > 0
-                            ? T(`；还能进入 ${extra.join('、')}`, `；還能進入 ${extra.join('、')}`)
-                            : s.unlocked.length === 0
-                              ? T('；只能在公开场合接触她们', '；只能在公開場合接觸她們')
-                              : '';
-                          return <span>{T('从','從')}<b className="text-[#5B6BB0]">{s.startLabel}</b>{T('开始','開始')}{tail}</span>;
-                        })()}
-                      </div>
-                      <div className="flex items-start gap-2 text-[12px] text-[#D8D4EE]">
-                        <Heart className="w-3.5 h-3.5 text-[#FF7A93] mt-0.5 flex-shrink-0" />
-                        <span>{s.affFloor > 0
-                          ? <>{T('你们本来就认识，起始好感 ','你們本來就認識，起始好感 ')}<b className="text-[#FF7A93]">{s.affFloor}</b></>
-                          : T('从陌生人开始，好感需要慢慢积累', '從陌生人開始，好感需要慢慢累積')}</span>
-                      </div>
-                      {s.affFloor > 0 && (
-                        <div className="flex items-start gap-2 text-[11px] text-[#8B86B8] leading-relaxed pt-0.5 border-t border-white/5 mt-0.5">
-                          <Users className="w-3.5 h-3.5 text-[#C9A227] mt-0.5 flex-shrink-0" />
-                          <span>{T('这段关系会落在你下一步选择的自担身上 —— 选谁，就是「谁的青梅竹马 / 现任女友」。','這段關係會落在你下一步選擇的自擔身上 —— 選誰，就是「誰的青梅竹馬 / 現任女友」。')}</span>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })()}
-              </>)}
-
-              {cur === 'idols' && (<>
-                <div className="flex gap-2">
-                  {[{ k: 'girls', n: T('女团','女團') }, { k: 'boys', n: T('男团','男團') }, { k: 'oc', n: T('自建','自建') }, { k: 'demo', n: 'Demo' }].map(o => (
-                    <button key={o.k} onClick={() => setSource(o.k as any)}
-                      className={`flex-1 py-2.5 rounded-xl border text-[12px] font-black transition-all ${source === o.k ? (o.k === 'demo' ? 'bg-[rgba(201,162,39,0.16)] border-[rgba(201,162,39,0.7)] text-[#F1ECFF]' : 'bg-[rgba(201,162,39,0.1)] border-[rgba(201,162,39,0.5)] text-[#F1ECFF]') : 'bg-white/[0.03] border-white/10 text-[#B7B2D9]'}`}>
-                      {o.k === 'demo' ? `🎬 ${o.n}` : o.n}
-                    </button>
-                  ))}
-                </div>
-                {source === 'demo' ? (
-                  <div className="flex flex-col gap-3">
-                    <div className="rounded-2xl bg-[rgba(201,162,39,0.06)] border border-[rgba(201,162,39,0.3)] p-4 flex flex-col gap-2.5">
-                      <div className="text-[13px] font-black text-[#F1ECFF]">{T('一键开始 · 三团九人','一鍵開始 · 三團九人')}</div>
-                      <div className="text-[11px] text-[#B7B2D9] leading-relaxed">
-                        {T('预置三个性格各异的原创女团，直接进世界 —— 免建号、适合录像 / 试玩：','預置三個性格各異的原創女團，直接進世界 —— 免建號、適合錄像 / 試玩：')}
-                      </div>
-                      <div className="flex flex-col gap-1.5 text-[11px] text-[#8B86B8]">
-                        <div><b className="text-[#D8D4EE]">STELLA</b> · {T('江予昭 / 温野 / 白露','江予昭 / 溫野 / 白露')}</div>
-                        <div><b className="text-[#D8D4EE]">HALO</b> · {T('顾樘 / 叶知秋 / 苏芮','顧樘 / 葉知秋 / 蘇芮')}</div>
-                        <div><b className="text-[#D8D4EE]">LUMÉE</b> · {T('罗一诺 / 千惠 / 沈芷','羅一諾 / 千惠 / 沈芷')}</div>
-                      </div>
-                      <div className="text-[10px] text-[#8B86B8] leading-relaxed">{T('进世界后可在底部开「自动演示」，让它自己巡演给你录。','進世界後可在底部開「自動演示」，讓它自己巡演給你錄。')}</div>
-                    </div>
-                    <button onClick={startDemo}
-                      className="w-full py-3 rounded-2xl text-[13px] font-black flex items-center justify-center gap-2 text-white transition-all hover:-translate-y-0.5"
-                      style={{ background: 'linear-gradient(135deg,#C9A227,#a9861d)', boxShadow: '0 10px 26px -10px rgba(201,162,39,0.7)' }}>
-                      🎬 {T('一键开始 Demo','一鍵開始 Demo')}
-                    </button>
-                  </div>
-                ) : source === 'girls' ? <MemberPicker label={T('请选择','請選擇')} /> : source === 'boys' ? (
-                  <div className="rounded-2xl bg-white/[0.03] border border-white/10 p-6 text-center flex flex-col items-center gap-2">
-                    <div className="text-3xl">🚧</div>
-                    <div className="text-[13px] font-black text-[#F1ECFF]">{T('男团即将开放','男團即將開放')}</div>
-                    <div className="text-[11px] text-[#8B86B8] leading-relaxed">{T('现在先玩女团，或者去「自己创造」捏一个你想要的角色～','現在先玩女團，或者去「自己創造」捏一個你想要的角色～')}</div>
-                  </div>
-                ) : (
-                  <div className="flex flex-col gap-3">
-                    <p className="text-[10px] text-[#8B86B8] leading-relaxed">
-                      {T('自己创建角色：起名、写性格、捏脸。他们会和爱豆一样有作息、会走动、能攻略也能被撮合。',
-                         '自己創建角色：起名、寫性格、捏臉。他們會和愛豆一樣有作息、會走動、能攻略也能被撮合。')}
-                    </p>
-                    {data.customMembers.map((o: any) => (
-                      <div key={o.id} className="flex items-center gap-3 rounded-xl bg-white/[0.03] border border-white/10 p-2.5">
-                        <div className="rounded-lg bg-white/[0.05] p-0.5 flex-shrink-0"><SpritePreview appearance={o.appearance} size={36} /></div>
-                        <div className="flex-1 min-w-0">
-                          <div className="text-[12px] font-black text-[#F1ECFF] truncate">{o.name}</div>
-                          <div className="text-[10px] text-[#8B86B8] truncate">{o.realPersonality || T('未填性格','未填性格')}</div>
-                        </div>
-                        <button onClick={() => setOcDraft({ ...o })} className="px-2 py-1 rounded-lg bg-white/[0.06] text-[#B7B2D9] text-[10px] font-black">{T('编辑','編輯')}</button>
-                        <button onClick={() => setData({ ...data, customMembers: data.customMembers.filter((x: any) => x.id !== o.id) })}
-                          className="w-7 h-7 rounded-lg text-[#8b90b8] hover:text-[#FF7A93] flex items-center justify-center"><Trash2 className="w-3.5 h-3.5" /></button>
-                      </div>
-                    ))}
-                    <button
-                      onClick={() => setOcDraft({ id: 'oc_' + Math.random().toString(36).slice(2, 8), name: '', realPersonality: '', group: '自建', appearance: getAppearance('oc-' + Math.random()) })}
-                      className="w-full py-3 rounded-xl border border-dashed border-white/20 text-[#B7B2D9] text-[12px] font-black hover:border-[rgba(201,162,39,0.5)] transition-all">
-                      + {T('新建一个角色','新建一個角色')}
-                    </button>
-                  </div>
-                )}
-              </>)}
-            </motion.div>
-          </AnimatePresence>
-        </div>
-        <div className="p-5 sm:p-6 border-t border-white/[0.06] flex gap-3">
-          {stepIdx > 0 && <button onClick={() => go(-1)} className="flex-1 py-3.5 bg-white/[0.04] text-[#B7B2D9] rounded-2xl text-sm font-black border border-white/10 hover:bg-white/[0.09] transition-all">← {T('上一步','上一步')}</button>}
-          <button onClick={() => isLast ? finish() : go(1)} disabled={!canNext()} style={{ background: canNext() ? 'linear-gradient(135deg, #6C79C4, #454F87)' : 'rgba(255,255,255,0.08)', boxShadow: canNext() ? '0 10px 24px -8px rgba(91,107,176,0.8)' : 'none' }} className="flex-[2] py-3.5 rounded-2xl text-white text-sm font-black hover:-translate-y-0.5 disabled:opacity-50 disabled:translate-y-0 disabled:text-white/50 transition-all flex items-center justify-center gap-1.5">
-            {isLast ? <><Sparkles className="w-4 h-4" /> {T('开始！','開始！')}</> : <>{T('下一步','下一步')} <ArrowRight className="w-4 h-4" /></>}
-          </button>
-        </div>
-      </motion.div>
-    </div>
-  );
-};
-
-
-type ContentBlock =
-  | { type: 'text'; content: string }
-  | { type: 'kkt'; data: any }
-  | { type: 'weverse'; data: any }
-  | { type: 'bubble'; data: any }
-  | { type: 'theqoo'; data: any }
-  | { type: 'card'; data: any }
-  | { type: 'musicshow'; data: any };
-
-function parseContentBlocks(text: string): ContentBlock[] {
-  const blocks: ContentBlock[] = [];
-  const tags = [
-    { start: 'KKTMSG_START', end: 'KKTMSG_END', type: 'kkt' },
-    { start: 'WEVERSE_START', end: 'WEVERSE_END', type: 'weverse' },
-    { start: 'BUBBLE_START', end: 'BUBBLE_END', type: 'bubble' },
-    { start: 'THEQOO_START', end: 'THEQOO_END', type: 'theqoo' },
-    { start: 'CARD_START', end: 'CARD_END', type: 'card' },
-    { start: 'MUSICSHOW_START', end: 'MUSICSHOW_END', type: 'musicshow' },
-  ];
-
-  let remaining = text;
-  while (remaining.length > 0) {
-    let earliest = { index: Infinity, tag: null as any };
-    for (const tag of tags) {
-      const idx = remaining.indexOf(tag.start);
-      if (idx !== -1 && idx < earliest.index) earliest = { index: idx, tag };
-    }
-
-    if (earliest.tag === null) {
-      const cleaned = remaining
-        .replace(/^\*{0,2}[A-D]\.\*{0,2}.+$/gm, '')
-        .replace(/^[A-D][\.、。\s].+$/gm, '')
-        .replace(/\[.*?\]/g, '')
-        .replace(/^---+$/gm, '')
-        .replace(/\n{3,}/g, '\n\n').trim();
-      if (cleaned) blocks.push({ type: 'text', content: cleaned });
-      break;
-    }
-
-    if (earliest.index > 0) {
-      const textBefore = remaining.slice(0, earliest.index)
-        .replace(/^\*{0,2}[A-D]\.\*{0,2}.+$/gm, '')
-        .replace(/^[A-D][\.、。\s].+$/gm, '')
-        .replace(/\[.*?\]/g, '')
-        .replace(/^---+$/gm, '')
-        .replace(/\n{3,}/g, '\n\n').trim();
-      if (textBefore) blocks.push({ type: 'text', content: textBefore });
-    }
-
-    const endIdx = remaining.indexOf(earliest.tag.end, earliest.index);
-    if (endIdx === -1) break;
-    const content = remaining.slice(earliest.index + earliest.tag.start.length, endIdx).trim();
-    try {
-      blocks.push({ type: earliest.tag.type as any, data: JSON.parse(content) });
-    } catch(e) {}
-    remaining = remaining.slice(endIdx + earliest.tag.end.length);
-  }
-
-  return blocks;
-}
-
-function extractBlock(text: string, startTag: string, endTag: string): { content: string; remaining: string } | null {
-  const start = text.indexOf(startTag);
-  if (start === -1) return null;
-  const end = text.indexOf(endTag, start + startTag.length);
-  if (end === -1) return null;
-  const content = text.slice(start + startTag.length, end).trim();
-  const remaining = text.slice(0, start) + text.slice(end + endTag.length);
-  return { content, remaining };
-}
-
-// 回归期由日历决定（不由 AI 说了算）：攻略目标所在团在当天是否处于回归/打歌期
-function comebackOnDay(members: Member[], targets: string[] | undefined, day: number): boolean {
-  const g = members.find(m => (targets || []).includes(m.id))?.group;
-  const p = g ? phaseAt(g, day) : null;
-  return !!p && (p.kind === 'comeback' || p.kind === 'promo');
-}
-
-function parseOptions(text: string): { text: string; action: string }[] {
-  const abcdPattern = /^\*{0,2}([A-C])[\.、。\s]\*{0,2}\s*(.+)$/gm;
-  const options: { text: string; action: string }[] = [];
-  let match;
-  while ((match = abcdPattern.exec(text)) !== null) {
-    const content = match[2].trim();
-    if (content.length > 2 && !content.includes('自由行动')) {
-      options.push({ text: `${match[1]}. ${content}`, action: content });
-    }
-  }
-  if (options.length >= 2) return options;
-  const numberedPattern = /^\d+[\.、]\s*(.+)$/gm;
-  const numbered: { text: string; action: string }[] = [];
-  while ((match = numberedPattern.exec(text)) !== null) {
-    const content = match[1].trim();
-    if (content.length > 2) numbered.push({ text: content, action: content });
-  }
-  if (numbered.length >= 2) return numbered;
-  return [];
-}
-
-export type ScriptEntry = { kind: 'narration'; text: string } | { kind: 'line'; speaker: string; text: string };
-
-// 把叙事正文解析成"旁白/台词"序列，做 VN 演出用；AI 不守格式时优雅降级为整段旁白
-export function parseScript(text: string): ScriptEntry[] {
-  const out: ScriptEntry[] = [];
-  const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
-  for (let line of lines) {
-    if (/^\*{0,2}[A-C][\.、。]/.test(line)) continue;       // 选项行
-    if (/^【.*】/.test(line)) continue;                     // 【本轮可选行动】等标题
-    if (/^-{3,}$/.test(line)) continue;
-    line = line.replace(/^\*+/, '').replace(/\*+$/, '').trim();
-    let m = line.match(/^(旁白|旁白君|N|narration)[：:]\s*(.+)$/i);
-    if (m) { out.push({ kind: 'narration', text: m[2].trim() }); continue; }
-    // 角色名：「台词」
-    m = line.match(/^([^\s：:，。！？、]{1,8})[：:]\s*[「"“](.+?)[」"”]?$/);
-    if (m) { out.push({ kind: 'line', speaker: m[1].trim(), text: m[2].replace(/[」"”]\s*$/, '').trim() }); continue; }
-    // 角色名：台词（无引号，名字较短）
-    m = line.match(/^([^\s：:，。！？、]{2,6})[：:]\s*(.+)$/);
-    if (m) { out.push({ kind: 'line', speaker: m[1].trim(), text: m[2].trim() }); continue; }
-    out.push({ kind: 'narration', text: line });
-  }
-  return out.length ? out : [{ kind: 'narration', text: text.trim() }];
-}
-
-const MarkdownBlock = ({ content }: { content: string }) => (
-  <Markdown components={{
-    p: ({children}) => {
-      const text = String(children);
-      const isOption = /^[A-C][\.、。]/.test(text);
-      return <p className={isOption ? 'text-[#5B6BB0] font-bold' : ''}>{children}</p>;
-    }
-  }}>{content}</Markdown>
-);
-
-// 闲聊：本地模板生成（不调 AI、不涨好感），用于本时段行动点已用完时
-const CHITCHAT = [
-  (n: string) => `${n}朝你点了下头，没停下手里的事。`,
-  (n: string) => `${n}：「等下还有事，回头聊。」`,
-  (n: string) => `你和${n}打了个招呼，她笑了一下就走开了。`,
-  (n: string) => `${n}：「嗯……先这样，我这边还没弄完。」`,
-  (n: string) => `${n}摆摆手，看起来今天没什么空。`,
-];
-const CHITCHAT_TW = [
-  (n: string) => `${n}朝你點了下頭，沒停下手裡的事。`,
-  (n: string) => `${n}：「等下還有事，回頭聊。」`,
-  (n: string) => `你和${n}打了個招呼，她笑了一下就走開了。`,
-  (n: string) => `${n}：「嗯……先這樣，我這邊還沒弄完。」`,
-  (n: string) => `${n}擺擺手，看起來今天沒什麼空。`,
-];
-function chitchatLine(m: Member, ctx: { activity?: Activity } | undefined, tw: boolean): string {
-  const pool = tw ? CHITCHAT_TW : CHITCHAT;
-  const pick = pool[Math.floor(Math.random() * pool.length)](m.name);
-  const mood = ctx?.activity ? (tw ? `（正${ctx.activity.label}）` : `（正${ctx.activity.label}）`) : '';
-  return pick + mood;
-}
-
-// 剧情回顾里的正文：旁白 + 台词分行呈现（与 VN 同一套解析）
-const StoryText = ({ content }: { content: string }) => {
-  const script = parseScript(content);
-  return (
-    <div className="flex flex-col gap-3 text-[15.5px] leading-[1.95] text-[#E7E6F6]">
-      {script.map((s, i) => s.kind === 'narration'
-        ? <p key={i} className="text-[#B0ABD4] italic tracking-[0.01em]">{s.text}</p>
-        : <p key={i} className="pl-3.5 border-l-2 border-[rgba(201,162,39,0.45)]">
-            <span className="font-black text-[#C6BAF3]">{s.speaker}</span>
-            <span className="text-[#C9A227] mx-0.5">「</span><span className="text-[#F1ECFF]">{s.text}</span><span className="text-[#C9A227]">」</span>
-          </p>
-      )}
-    </div>
-  );
-};
 
 export default function App() {
   const getInitialGameState = (): GameState => ({
@@ -1111,8 +37,11 @@ export default function App() {
   });
 
   const [gameState, setGameState] = useState<GameState>(() => {
-    const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
-    if (saved) { try { const p = JSON.parse(saved); return { ...p, collectedCards: p.collectedCards || [], playerImpact: p.playerImpact || { albumImpact: 0, voteImpact: 0 } }; } catch(e) {} }
+    try {
+      migrateStoredSecrets(localStorage);
+      const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
+      if (saved) return restoreGame(JSON.parse(saved), getInitialGameState());
+    } catch {}
     return getInitialGameState();
   });
 
@@ -1130,7 +59,22 @@ export default function App() {
   const [worldMode, setWorldMode] = useState(true); // 俯视世界视图 ⟷ 剧情对话（临时UI，不持久化）
   const [toasts, setToasts] = useState<{ id: string; text: string; kind: string }[]>([]);
   const [customizing, setCustomizing] = useState<{ kind: 'player' } | { kind: 'idol'; id: string } | null>(null);
-  const [scene, setScene] = useState<{ ids: string[]; anchor: number } | null>(null);
+  const [scene, setScene] = useState<{ ids: string[]; anchor: number; key?: string } | null>(null);
+  const [requestProgress, setRequestProgress] = useState<RequestProgress | null>(null);
+  const [requestError, setRequestError] = useState<string | null>(null);
+  const [showAISettings, setShowAISettings] = useState(false);
+  const [keyDraft, setKeyDraft] = useState('');
+  const requestRef = useRef<{ controller: AbortController; state: GameState; text: string; id: number } | null>(null);
+  const requestVersion = useRef(0);
+  const [retryRequest, setRetryRequest] = useState<{ text: string; state: GameState } | null>(null);
+  const cancelRequest = () => {
+    const pending = requestRef.current;
+    requestVersion.current++;
+    pending?.controller.abort(); requestRef.current = null;
+    setIsLoading(false); setRequestProgress(null);
+    if (pending) { setInput(pending.text); setRetryRequest({ text: pending.text, state: pending.state }); setRequestError('已取消等待，刚才的行动已保留。'); }
+  };
+  useEffect(() => () => { requestVersion.current++; requestRef.current?.controller.abort(); }, []);
   const worldDay = gameState.worldDay ?? 1;
   const worldSlot = gameState.worldSlot ?? 0;
   const worldLocation = gameState.worldLocation ?? 'practice_room';
@@ -1191,8 +135,8 @@ export default function App() {
     const newSlots = [slot, ...saveSlots].slice(0, 10);
     setSaveSlots(newSlots);
     localStorage.setItem('save_slots', JSON.stringify(newSlots));
-    localStorage.setItem(`save_data_${id}`, JSON.stringify(gameState));
-    alert('存档成功！');
+    localStorage.setItem(`save_data_${id}`, serializeGame(gameState));
+    pushToast('存档成功', 'friendly');
   };
 
   const loadGame = (id: string) => {
@@ -1201,7 +145,8 @@ export default function App() {
       try {
         const p = JSON.parse(data);
         // 存档存的是完整 gameState（所有新字段都在）；这里补几个旧存档可能缺的默认值，避免读回后报错
-        setGameState({ ...p, collectedCards: p.collectedCards || [], playerImpact: p.playerImpact || { albumImpact: 0, voteImpact: 0 } });
+        cancelRequest(); setScene(null); setRetryRequest(null); setRequestError(null); setInput('');
+        setGameState(restoreGame(p, getInitialGameState()));
         setShowSaveSlots(false);
       } catch {}
     }
@@ -1224,7 +169,7 @@ export default function App() {
   const chatEndRef = useRef<HTMLDivElement>(null);
   const prevTypesRef = useRef<Record<string, string> | null>(null);
 
-  useEffect(() => { localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(gameState)); }, [gameState]);
+  useEffect(() => { try { localStorage.setItem(LOCAL_STORAGE_KEY, serializeGame(gameState)); } catch { setRequestError('自动存档失败：浏览器存储空间不足，请清理旧存档。'); } }, [gameState]);
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [gameState.history]);
   // 密钥现由服务端持有，前端不再探测（真缺失时由 /api/chat 报错提示）
 
@@ -1251,7 +196,7 @@ export default function App() {
     if (scene) {
       const hist = gameState.history;
       let msg: any = null;
-      for (let i = hist.length - 1; i >= scene.anchor; i--) { if (hist[i].role === MessageRole.ASSISTANT) { msg = hist[i]; break; } }
+      for (let i = hist.length - 1; i >= 0; i--) { if (hist[i].role === MessageRole.ASSISTANT && (scene.key ? hist[i].encounterKey === scene.key : i >= scene.anchor)) { msg = hist[i]; break; } }
       const rounds = hist.slice(scene.anchor).filter(h => h.role === MessageRole.ASSISTANT).length;
       const opts: { text: string; action: string }[] = msg?.options || [];
       if (rounds >= 3) {
@@ -1345,6 +290,9 @@ export default function App() {
   }, [gameState.worldRelations, gameState.members, gameState.relationIntents, gameState.matchmakes, gameState.setupStep]);
 
   const handleCreationComplete = (data: any) => {
+    setSessionApiKey(data.playerApiKey || '');
+    const { playerApiKey: _secret, ...publicData } = data;
+    data = publicData;
     const targetNames = INITIAL_MEMBERS.filter(m => data.targets.includes(m.id)).map(m => m.name);
 
     let summary = `我的名字是 ${data.playerName}，`;
@@ -1391,25 +339,44 @@ export default function App() {
       },
     } as any;
     setGameState(newState);
-    handleAIStep(summary, newState);
+    const opening = { ...newState, history: [{ role: MessageRole.USER, content: summary, timestamp: Date.now() }] };
+    setGameState(opening);
+    void handleAIStep(summary, opening);
   };
 
   const handleAIStep = async (userContent: string, stateToUse: GameState): Promise<boolean> => {
+    if (requestRef.current) return false;
+    const controller = new AbortController();
+    const id = ++requestVersion.current;
+    requestRef.current = { controller, state: stateToUse, text: userContent, id };
+    setIsLoading(true); setRequestError(null); setRetryRequest(null);
     try {
-      // 超时与重试已在 callGeminiAPI 内部处理（60s + abort + 自动重试）；
-      // 不要在外层再套一个 Promise.race —— 它会在慢生成/重试完成前先判超时，
-      // 底层请求随后又成功，就出现"AI 明明返回了、界面却报错"。
-      const response = await callGeminiAPI(stateToUse.history.slice(-10), stateToUse);
+      const history = stateToUse.activeEncounterKey
+        ? stateToUse.history.filter(m => m.encounterKey === stateToUse.activeEncounterKey)
+        : stateToUse.history;
+      const response = await callGeminiAPI(history.slice(-10), stateToUse, {
+        signal: controller.signal,
+        onProgress: progress => { if (requestVersion.current === id) setRequestProgress(progress); },
+      });
+      if (requestVersion.current !== id || controller.signal.aborted) return false;
       processAIResponse(response, stateToUse);
       return true;
-    } catch(e) {
-      setGameState(prev => ({ ...prev, history: [...prev.history, { role: MessageRole.ASSISTANT, content: `抱歉，出现错误。\n错误信息: ${e instanceof Error ? e.message : String(e)}`, timestamp: Date.now() }] }));
+    } catch (error) {
+      if (requestVersion.current !== id) return false;
+      setInput(userContent);
+      setRetryRequest({ text: userContent, state: stateToUse });
+      setRequestError(error instanceof Error ? error.message : String(error));
       return false;
-    } finally { setIsLoading(false); }
+    } finally {
+      if (requestVersion.current === id) {
+        requestRef.current = null; setIsLoading(false); setRequestProgress(null);
+      }
+    }
   };
+  const retryLastRequest = () => { if (retryRequest && !requestRef.current) void handleAIStep(retryRequest.text, retryRequest.state); };
 
   const handleReset = () => setShowConfirmReset(true);
-  const executeReset = () => { localStorage.removeItem(LOCAL_STORAGE_KEY); setShowConfirmReset(false); setGameState(getInitialGameState()); setInput(''); setIsLoading(false); };
+  const executeReset = () => { cancelRequest(); setScene(null); setRetryRequest(null); setRequestError(null); localStorage.removeItem(LOCAL_STORAGE_KEY); setShowConfirmReset(false); setGameState(getInitialGameState()); setInput(''); setIsLoading(false); };
 
   const processAIResponse = (response: string, stateAtCall: GameState) => {
     let remaining = response;
@@ -1421,7 +388,7 @@ export default function App() {
     let snapshot: any = null;
     let musicResult: any = null;
     const snapshotBlock = extractBlock(remaining, 'SNAPSHOT_START', 'SNAPSHOT_END');
-    if (snapshotBlock) { remaining = snapshotBlock.remaining; try { snapshot = JSON.parse(snapshotBlock.content); } catch(e) {} }
+    if (snapshotBlock) { remaining = snapshotBlock.remaining; try { snapshot = validateSnapshot(JSON.parse(snapshotBlock.content)); } catch(e) {} }
     // 好感变化飘字：满足需求 / 有来有往的即时爽感（攻略/自由世界模式）
     if (snapshot?.members && stateAtCall.gameMode !== 'CPCP' && stateAtCall.gameMode !== 'mom') {
       snapshot.members.forEach((sm: any) => {
@@ -1496,10 +463,7 @@ export default function App() {
           isComebackSetting: inWorld ? next.isComebackSetting : (snapshot.isComebackSetting ?? false),
           groupHeats: snapshot.groupHeats ?? next.groupHeats,
           currentMusicShow: inWorld ? next.currentMusicShow : (musicResult || next.currentMusicShow),
-          members: next.members.map((m: Member) => {
-            const u = snapshot.members?.find((sm: any) => sm.id === m.id);
-            return u ? { ...m, ...u } : m;
-          })
+          members: applyMemberSnapshot(next.members, snapshot.members)
         };
       }
       // 好感度只跟 AI 的 SNAPSHOT 走 —— 不再"没实质进展也硬 +1"（避免没接触也涨好感）。
@@ -1514,15 +478,17 @@ export default function App() {
         const clampR = (v: number) => (v < 0 ? 0 : v > 100 ? 100 : v);
         const rels = { ...(next.worldRelations || {}) };
         for (const p of relDeltas.pairs) {
-          if (!p || !p.a || !p.b) continue;
+          if (!p || typeof p.a !== 'string' || typeof p.b !== 'string') continue;
           const a = p.a === 'player' ? PLAYER : p.a;
           const b = p.b === 'player' ? PLAYER : p.b;
+          if (a === b || ![a, b].every(id => id === PLAYER || next.members.some((m: Member) => m.id === id))) continue;
+          const delta = (v: unknown) => typeof v === 'number' && Number.isFinite(v) ? Math.max(-5, Math.min(5, v)) : 0;
           const k = pairKey(a, b);
           const cur = rels[k] || { affinity: 0, tension: 0 };
           rels[k] = {
             ...cur,
-            affinity: clampR((cur.affinity || 0) + (Number(p.affinity) || 0)),
-            tension: clampR((cur.tension || 0) + (Number(p.tension) || 0)),
+            affinity: clampR((cur.affinity || 0) + delta(p.affinity)),
+            tension: clampR((cur.tension || 0) + delta(p.tension)),
             ...(p.memory ? { note: String(p.memory) } : {}),
           };
         }
@@ -1602,6 +568,7 @@ export default function App() {
         ...next,
         history: [...next.history, {
           role: MessageRole.ASSISTANT,
+          encounterKey: stateAtCall.activeEncounterKey,
           content: (next.language === 'traditional' && (window as any).OpenCC)
             ? (window as any).OpenCC.Converter({ from: 'cn', to: 'twp' })(textContent + optionsText)
             : textContent + optionsText,
@@ -1618,42 +585,60 @@ export default function App() {
   const handleSend = async (content?: any, opts?: { focusIds?: string[]; consumeFor?: string[]; vignette?: any }) => {
     const textToSend = typeof content === 'string' ? content : input;
     if (!textToSend || !textToSend.trim()) return;
-    if (isLoading) return;
+    if (isLoading || requestRef.current) return;
     setInput(''); setIsLoading(true);
     let nextState: GameState = { ...gameState };
     // 本场登场的人：走近/围观时显式传入；同一场景内后续对话沿用当前 scene
     const focus = opts?.focusIds ?? scene?.ids;
     nextState.sceneFocusIds = focus && focus.length ? focus : undefined;
+    if (focus?.length) {
+      const key = scene?.key && !opts?.focusIds ? scene.key : encounterKey(worldDay, worldSlot, worldLocation, focus);
+      nextState.activeEncounterKey = key;
+      nextState.encounters = { ...nextState.encounters, [key]: nextState.encounters?.[key] || {
+        ids: focus, location: worldLocation, day: worldDay, slot: worldSlot,
+        ...(opts?.vignette ? { need: opts.vignette } : {}),
+      } };
+    }
+    const rememberedNeed = nextState.activeEncounterKey ? nextState.encounters?.[nextState.activeEncounterKey]?.need : undefined;
+    if (!opts?.vignette) nextState.vignetteNeed = rememberedNeed || null;
     // 碎片剧场需求：开场带上（handleTalkTo 传 vignette）；新开的非碎片场景清掉；
     // 续聊/主输入（无 focusIds）沿用当前 scene 的需求不动。
     if (opts?.vignette !== undefined) nextState.vignetteNeed = opts.vignette;
-    else if (opts?.focusIds) nextState.vignetteNeed = null;
-    nextState.history = [...nextState.history, { role: MessageRole.USER, content: textToSend, timestamp: Date.now() }];
+    else if (opts?.focusIds && !rememberedNeed) nextState.vignetteNeed = null;
+    if (focus?.some(id => (nextState.completedNeeds || []).includes(needKey(worldDay, worldSlot, id)))) nextState.vignetteNeed = null;
+    nextState.history = [...nextState.history, { role: MessageRole.USER, content: textToSend, timestamp: Date.now(), encounterKey: nextState.activeEncounterKey }];
     setGameState(nextState);
     const ok = await handleAIStep(textToSend, nextState);
     // F7：行动点只在 AI 成功返回后才扣（每人每时段一次）；失败不烧机会
     if (ok && opts?.consumeFor?.length) {
       const pfx = `${nextState.worldDay ?? 1}-${nextState.worldSlot ?? 0}:`;
-      setGameState(prev => ({ ...prev, usedActions: [...(prev.usedActions || []), ...opts.consumeFor!.map(id => pfx + id)] }));
+      setGameState(prev => ({ ...prev, usedActions: Array.from(new Set([...(prev.usedActions || []), ...opts.consumeFor!.map(id => pfx + id)])) }));
     }
   };
 
   // 从俯视世界点击爱豆 → 切回剧情，预填带场景/心情语境的“走近”动作交给 DeepSeek
   const handleTalkTo = (m: Member, ctx?: { location: WorldLocation; activity: Activity; need?: Need }) => {
     const isTw = (gameState as any).language === 'traditional';
-    // 这一时段已深入互动过“这个人” → 只能闲聊（其他爱豆仍可正常互动，F6 每人每时段一次）
-    if (isActionUsed(m.id)) {
-      pushToast(chitchatLine(m, ctx, isTw), 'friendly');
+    const key = encounterKey(worldDay, worldSlot, worldLocation, [m.id]);
+    if (requestRef.current && requestRef.current.state.activeEncounterKey !== key) { pushToast('请先等当前回应完成，或取消等待', 'friendly'); return; }
+    setScene({ ids: [m.id], anchor: gameState.history.length, key });
+    setRequestError(null); setRetryRequest(null); setInput('');
+    if (gameState.history.some(h => h.encounterKey === key && h.role === MessageRole.ASSISTANT)) return;
+    const last = gameState.history.filter(h => h.encounterKey === key).at(-1);
+    if (last?.role === MessageRole.USER && !requestRef.current) {
+      void handleAIStep(last.content, { ...gameState, activeEncounterKey: key,
+        sceneFocusIds: gameState.encounters?.[key]?.ids, vignetteNeed: gameState.encounters?.[key]?.need || null });
       return;
     }
+    if (isLoading || requestRef.current) return;
     const where = ctx ? `在${ctx.location.label}` : '';
     // 碎片剧场：点了带需求气泡的爱豆 → 走精简 vignette，seed 一句带上她此刻的小状态
-    const need = ctx?.need;
+    const need = (gameState.completedNeeds || []).includes(needKey(worldDay, worldSlot, m.id)) ? undefined : ctx?.need;
     if (need) {
       const seedLine = isTw
         ? `（我${where}走近${m.name}——看她${need.label}的样子）`
         : `（我${where}走近${m.name}——看她${need.label}的样子）`;
-      setScene({ ids: [m.id], anchor: gameState.history.length });
+      setScene({ ids: [m.id], anchor: gameState.history.length, key });
       handleSend(seedLine, {
         focusIds: [m.id], consumeFor: [m.id],
         vignette: { kind: need.kind, label: need.label, seed: need.seed, quickHints: need.quickHints, targetName: need.targetName },
@@ -1664,7 +649,7 @@ export default function App() {
     const line = isTw
       ? `（我${where}走近${m.name}，和ta打個招呼）${doing}`
       : `（我${where}走近${m.name}，和ta打个招呼）${doing}`;
-    setScene({ ids: [m.id], anchor: gameState.history.length });
+    setScene({ ids: [m.id], anchor: gameState.history.length, key });
     handleSend(line, { focusIds: [m.id], consumeFor: [m.id] });
   };
 
@@ -1672,43 +657,27 @@ export default function App() {
   const DM_PER_DAY = 3;
   const dmSentToday = (gameState as any).dmSentAt === `d${worldDay}` ? ((gameState as any).dmCount || 0) : 0;
   const dmLeft = Math.max(0, DM_PER_DAY - dmSentToday);
-  const handleSendDM = (memberId: string, text: string) => {
-    const m = gameState.members.find(x => x.id === memberId);
-    if (!m || dmLeft <= 0) return;
-    const isTw = (gameState as any).language === 'traditional';
-    const activity = getActivity(m.id, worldDay, worldSlot, m.group);
-    const busy = !activity.available;
-    const n = dmSentToday + 1;
-    setGameState(prev => ({
-      ...prev,
-      dmSentAt: `d${worldDay}`, dmCount: n,
-      // 发得越勤，越容易被工作人员注意到
-      exposureLevel: Math.min(100, (prev.exposureLevel || 0) + (n >= 3 ? 3 : 1)),
-      phoneFeed: [...(prev.phoneFeed || []), {
-        id: `dm-${Date.now()}`, type: 'kkt' as const, ts: Date.now(), read: true,
-        data: { sender: m.name, avatar: '👤', messages: [{ text, time: '방금', isRead: true, translation: '' }] },
-      }],
-    }));
-    // 她不一定秒回：忙的时候更慢，回复用本地模板（不烧 token）
-    const delay = busy ? 2600 : 1200 + Math.random() * 1200;
-    setTimeout(() => {
-      const aff = m.affection || 0;
-      const pool = busy
-        ? (isTw ? ['現在在外地，回頭說', '在忙…晚點回你'] : ['现在在外地，回头说', '在忙…晚点回你'])
-        : aff >= 60
-          ? (isTw ? ['剛看到，今天好累', '嗯，我在', '想你了（打錯了）'] : ['刚看到，今天好累', '嗯，我在', '想你了（打错了）'])
-          : aff >= 30
-            ? (isTw ? ['嗯嗯', '剛結束，怎麼了', '哈哈好'] : ['嗯嗯', '刚结束，怎么了', '哈哈好'])
-            : (isTw ? ['嗯', '好的', '收到'] : ['嗯', '好的', '收到']);
-      const reply = pool[Math.floor(Math.random() * pool.length)];
-      setGameState(prev => ({
-        ...prev,
+  const handleSendDM = (memberId: string, action: DMAction) => {
+    const choice = DM_ACTIONS.find(a => a.id === action);
+    if (!choice) return;
+    setGameState(prev => {
+      const m = prev.members.find(x => x.id === memberId);
+      const day = prev.worldDay ?? 1;
+      const count = prev.dmSentAt === 'd' + day ? prev.dmCount || 0 : 0;
+      if (!m || count >= DM_PER_DAY) return prev;
+      const busy = !getActivity(m.id, day, prev.worldSlot ?? 0, m.group).available;
+      const now = Date.now();
+      return {
+        ...prev, dmSentAt: 'd' + day, dmCount: count + 1,
         phoneFeed: [...(prev.phoneFeed || []), {
-          id: `dmr-${Date.now()}`, type: 'kkt' as const, ts: Date.now(), read: false,
-          data: { sender: m.name, avatar: '👤', messages: [{ text: reply, time: '방금', isRead: false, translation: '' }] },
-        }],
-      }));
-    }, delay);
+          id: 'dm-' + now + '-' + count, type: 'kkt' as const, ts: now, read: true,
+          data: { sender: prev.playerName || '你', avatar: '💬', messages: [{ text: choice.text, time: '刚刚', isRead: true, translation: '' }] },
+        }, {
+          id: 'dm-reply-' + now + '-' + count, type: 'kkt' as const, ts: now + 1, read: false,
+          data: { sender: m.name, avatar: '👤', messages: [{ text: dmReply(action, m, busy), time: '刚刚', isRead: false, translation: '' }] },
+        }].slice(-100),
+      };
+    });
   };
 
   // 应援打投：占用本时段行动点，累积到打歌成绩（回归期才有）
@@ -1732,15 +701,23 @@ export default function App() {
     const k = pairKey(a.id, b.id);
     const isMatch = (gameState.matchmakes || []).includes(k);
     const isTw = (gameState as any).language === 'traditional';
-    if (isActionUsed(a.id) && isActionUsed(b.id)) {
-      pushToast(isTw ? '她們這個時段都聊過了，先推進時段吧' : '她们这个时段都聊过了，先推进时段吧', 'friendly');
+    const key = encounterKey(worldDay, worldSlot, worldLocation, [a.id, b.id]);
+    if (requestRef.current && requestRef.current.state.activeEncounterKey !== key) { pushToast('请先等当前回应完成，或取消等待', 'friendly'); return; }
+    setScene({ ids: [a.id, b.id], anchor: gameState.history.length, key });
+    setRequestError(null); setRetryRequest(null); setInput('');
+    if (gameState.history.some(h => h.encounterKey === key && h.role === MessageRole.ASSISTANT)) return;
+    const last = gameState.history.filter(h => h.encounterKey === key).at(-1);
+    if (last?.role === MessageRole.USER && !requestRef.current) {
+      void handleAIStep(last.content, { ...gameState, activeEncounterKey: key,
+        sceneFocusIds: gameState.encounters?.[key]?.ids, vignetteNeed: gameState.encounters?.[key]?.need || null });
       return;
     }
+    if (isLoading || requestRef.current) return;
     const hint = isMatch ? '（我想撮合她们，留意有没有暧昧的火花）' : '';
     const line = isTw
       ? `（我在${ctx.location.label}，看到 ${a.name} 和 ${b.name} 湊在一起，我在旁邊靜靜觀察她們的互動）${hint}`
       : `（我在${ctx.location.label}，看到 ${a.name} 和 ${b.name} 凑在一起，我在旁边静静观察她们的互动）${hint}`;
-    setScene({ ids: [a.id, b.id], anchor: gameState.history.length });
+    setScene({ ids: [a.id, b.id], anchor: gameState.history.length, key });
     handleSend(line, { focusIds: [a.id, b.id], consumeFor: [a.id, b.id] });
   };
 
@@ -1756,6 +733,8 @@ export default function App() {
   };
 
   const handleAdvanceTime = () => {
+    if (requestRef.current) return;
+    setScene(null); setRetryRequest(null); setInput(''); setRequestError(null);
     setGameState(prev => {
       const day = prev.worldDay ?? 1, slot = prev.worldSlot ?? 0;
       const here = prev.worldLocation ?? 'practice_room';
@@ -1763,6 +742,7 @@ export default function App() {
       const feed = [...(prev.worldFeed || [])];
       const tmembers = prev.members.filter(m => (prev.targets || []).includes(m.id));
       const bigNews: { text: string; kind: string }[] = [];
+      const settled = new Set(prev.relationshipEvents || []);
       for (const L of WORLD_LOCATIONS) {
         if (L.id === here) continue; // 你在的地方已经现场结算过
         const present = idolsAt(tmembers, L.id, day, slot);
@@ -1770,23 +750,15 @@ export default function App() {
           for (let j = i + 1; j < present.length; j++) {
             // 私密地点（练习室/天台/宿舍/演唱会）不同公司/团不同屏，不产生跨单位相遇
             if (unitKeyOf(L.id, present[i]) !== unitKeyOf(L.id, present[j])) continue;
-            if (Math.random() > 0.6) continue;
             const a = present[i], b = present[j], k = pairKey(a.id, b.id);
-            const match = (prev.matchmakes || []).includes(k);
             const cur = rels[k] || { affinity: 0, tension: 0 };
-            const oldAff = cur.affinity || 0;
-            const newAff = Math.min(100, oldAff + (match ? 2 : 1));
-            rels[k] = {
-              ...cur,
-              affinity: newAff,
-              tension: Math.max(0, (cur.tension || 0) + ((cur.tension || 0) >= 50 ? (match ? -1 : 1) : 0)),
-            };
-            // 有画面的日常动态
-            const line = pairNews(a.name, b.name, L.label, newAff, cur.tension || 0, match, `${k}-${day}-${slot}`);
-            feed.unshift({ id: `${k}-${day}-${slot}-${Math.random().toString(36).slice(2, 6)}`, text: line.text, kind: line.kind, day, slot });
-            // 跨过关系门槛 → 大新闻（进手机 + toast）
-            const cross = crossingNews(a.name, b.name, oldAff, newAff, match);
-            if (cross) { feed.unshift({ id: `x-${k}-${day}`, text: cross.text, kind: cross.kind, day, slot }); bigNews.push({ text: cross.text, kind: cross.kind }); }
+            const event = socialEvent(a, b, cur, L.label, day);
+            if (!event || settled.has(event.id)) continue;
+            settled.add(event.id);
+            rels[k] = { ...cur, affinity: Math.max(0, Math.min(100, cur.affinity + event.affinity)),
+              tension: Math.max(0, Math.min(100, cur.tension + event.tension)), note: event.text };
+            feed.unshift({ id: event.id, text: event.text, kind: event.kind, day, slot });
+            bigNews.push({ text: event.text, kind: event.kind });
           }
           // 单人心情动态（稀疏），让没互动的人也活着
           const mood = soloMood(present[i].name, present[i].realPersonality || present[i].publicPersona || '', `${present[i].id}-mood-${day}-${slot}`);
@@ -1794,7 +766,7 @@ export default function App() {
         }
       }
       const nt = nextTime(day, slot);
-      let next: any = { ...prev, worldRelations: rels, worldFeed: feed.slice(0, 30), worldDay: nt.day, worldSlot: nt.slot };
+      let next: any = { ...prev, worldRelations: rels, worldFeed: feed.slice(0, 30), worldDay: nt.day, worldSlot: nt.slot, relationshipEvents: [...settled].slice(-2000), usedActions: [], activeEncounterKey: undefined, vignetteNeed: null };
       // 回归期由日历决定（推进到新的一天时刷新）
       next.isComebackSetting = comebackOnDay(prev.members, prev.targets, nt.day);
       // F9：曝光度被动回落 —— 每推进一个时段低调无事就自然降 1，不再是一路奔 BE 的棘轮
@@ -1879,19 +851,21 @@ export default function App() {
     });
   };
   // 爱豆两两相遇 → 按撮合意图/既有张力结算关系
-  const handleIdolEncounter = (aId: string, bId: string, kind: 'romance' | 'tension' | 'friendly') => {
+  const handleIdolEncounter = (aId: string, bId: string, _kind: 'romance' | 'tension' | 'friendly') => {
     setGameState(prev => {
-      const rels = { ...(prev.worldRelations || {}) };
-      const k = pairKey(aId, bId);
-      const rel = rels[k] || { affinity: 0, tension: 0 };
-      const affGain = kind === 'romance' ? 2 : kind === 'tension' ? 0 : 1;
-      const tenDelta = kind === 'romance' ? -1 : kind === 'tension' ? 1 : 0;
-      rels[k] = {
-        ...rel,
-        affinity: Math.min(100, (rel.affinity || 0) + affGain),
-        tension: Math.max(0, Math.min(100, (rel.tension || 0) + tenDelta)),
+      const a = prev.members.find(m => m.id === aId), b = prev.members.find(m => m.id === bId);
+      if (!a || !b) return prev;
+      const day = prev.worldDay ?? 1, slot = prev.worldSlot ?? 0, key = pairKey(aId, bId);
+      const rel = prev.worldRelations?.[key] || { affinity: 0, tension: 0 };
+      const event = socialEvent(a, b, rel, prev.currentScene, day);
+      if (!event || prev.relationshipEvents?.includes(event.id)) return prev;
+      return { ...prev,
+        relationshipEvents: [...(prev.relationshipEvents || []), event.id].slice(-2000),
+        worldRelations: { ...prev.worldRelations, [key]: { ...rel,
+          affinity: Math.max(0, Math.min(100, rel.affinity + event.affinity)),
+          tension: Math.max(0, Math.min(100, rel.tension + event.tension)), note: event.text } },
+        worldFeed: [{ id: event.id, text: event.text, kind: event.kind, day, slot }, ...(prev.worldFeed || [])].slice(0, 30),
       };
-      return { ...prev, worldRelations: rels };
     });
   };
 
@@ -1955,6 +929,7 @@ export default function App() {
   ).map(m => ({ name: m.name, appearance: normalizeAppearance(gameState.appearances?.[m.id], getDefaultAppearance(m.id)) }));
 
   // VN 场景数据：取本次相遇（anchor 之后）的最新一条 AI 回复
+  let sceneMessageTimestamp = 0;
   let sceneScript: ScriptEntry[] = [];
   let sceneOptions: { text: string; action: string }[] = [];
   if (scene) {
@@ -1962,6 +937,7 @@ export default function App() {
     let msg: any = null;
     for (let i = hist.length - 1; i >= scene.anchor; i--) { if (hist[i].role === MessageRole.ASSISTANT) { msg = hist[i]; break; } }
     if (msg) {
+      sceneMessageTimestamp = msg.timestamp;
       const txt = (msg.contentBlocks || []).filter((b: any) => b.type === 'text').map((b: any) => b.content).join('\n') || msg.content || '';
       sceneScript = parseScript(txt);
       sceneOptions = msg.options || [];
@@ -1969,13 +945,18 @@ export default function App() {
   }
   const sceneMembers = scene ? gameState.members.filter(m => scene.ids.includes(m.id)) : [];
   const sceneLoc = getLocation(parseLocKey(worldLocation).base);
-  // 强制脱出：一次相遇最多聊 MAX_SCENE_ROUNDS 轮，之后只给「结束本次互动」
-  // （原来 3 太小——聊 2 次就被切断，选项和自由行动一起消失，像"不回复了"。放宽到 12。）
-  const MAX_SCENE_ROUNDS = 12;
-  const sceneRounds = scene
-    ? gameState.history.slice(scene.anchor).filter(h => h.role === MessageRole.ASSISTANT).length
-    : 0;
-  const sceneCanContinue = sceneRounds < MAX_SCENE_ROUNDS;
+  const sceneRecord = scene?.key ? gameState.encounters?.[scene.key] : undefined;
+  const sceneRounds = scene ? gameState.history.filter(h => h.role === MessageRole.ASSISTANT &&
+    (scene.key ? h.encounterKey === scene.key : false)).length : 0;
+  const sceneNeedDone = !!scene?.ids.length && scene.ids.every(id =>
+    (gameState.completedNeeds || []).includes(needKey(worldDay, worldSlot, id)));
+  const completeSceneNeed = () => {
+    if (!sceneRecord?.need || sceneRounds < 2 || isLoading || !scene) return;
+    setGameState(prev => ({ ...prev, completedNeeds: Array.from(new Set([
+      ...(prev.completedNeeds || []), ...scene.ids.map(id => needKey(worldDay, worldSlot, id)),
+    ])), vignetteNeed: null }));
+    pushToast('这次的小心愿已完成，随时可以回来聊天', 'friendly');
+  };
 
   const lang = (gameState as any).language || 'simplified';
   const sidebarLabel = lang === 'traditional' ? '角色狀態' : '角色状态';
@@ -1984,16 +965,7 @@ export default function App() {
   const sceneConfig = getSceneConfig(gameState.currentScene);
 
   return (
-    <div className="flex h-screen overflow-hidden relative">
-      {/* 手机竖屏：提示横屏游玩 */}
-      <div className="rotate-gate fixed inset-0 z-[300] bg-[#1b1830] flex-col items-center justify-center gap-5 px-8 text-center">
-        <div className="w-16 h-24 rounded-xl border-[3px] border-[#8f9bd6] relative animate-[tilt_1.8s_ease-in-out_infinite]">
-          <div className="absolute inset-x-3 top-2 h-1 rounded bg-[#8f9bd6]/70" />
-          <div className="absolute inset-x-4 bottom-2 h-1.5 rounded-full bg-[#8f9bd6]/70" />
-        </div>
-        <div className="text-white font-black text-base">{lang === 'traditional' ? '請橫過手機遊玩' : '请横过手机游玩'}</div>
-        <div className="text-[#b6bde6] text-xs leading-relaxed">{lang === 'traditional' ? '這個世界是寬螢幕的，橫屏才能完整看到場景' : '这个世界是宽屏的，横屏才能完整看到场景'}</div>
-      </div>
+    <div className="flex h-dvh overflow-hidden relative">
       {/* 新手引导：首次进世界 */}
       {showIntro && worldMode && (
         <div className="fixed inset-0 z-[200] bg-black/70 backdrop-blur-sm flex items-center justify-center p-5" onClick={dismissIntro}>
@@ -2022,6 +994,19 @@ export default function App() {
           </div>
         </div>
       )}
+      <button onClick={() => { setKeyDraft(getSessionApiKey()); setShowAISettings(true); }} className="fixed bottom-3 right-3 z-[170] min-h-11 rounded-full bg-[#342d4c] border border-white/20 px-4 text-xs text-white shadow-lg">AI 设置</button>
+      {showAISettings && <div className="fixed inset-0 z-[220] bg-black/70 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label="AI 设置">
+        <div className="w-full max-w-md rounded-3xl bg-[#211b34] border border-white/20 p-6 text-white">
+          <h2 className="text-lg font-bold">AI 连接设置</h2>
+          <p className="text-sm text-white/70 my-3">Key 只用于当前页面，刷新后需重新填写，不会写入存档。留空则使用网站提供的服务。API 用量按服务商计费。</p>
+          <input aria-label="DeepSeek API Key" type="password" autoComplete="off" value={keyDraft} onChange={e => setKeyDraft(e.target.value)} className="w-full rounded-xl bg-white/10 p-3 border border-white/20" />
+          <div className="mt-4 flex gap-3"><button className="min-h-11 px-4 rounded-xl bg-[#6C79C4]" onClick={() => { setSessionApiKey(keyDraft); setKeyDraft(''); setShowAISettings(false); }}>保存本次设置</button><button className="min-h-11 px-4" onClick={() => { setKeyDraft(''); setShowAISettings(false); }}>取消</button></div>
+        </div>
+      </div>}
+      {!scene && (isLoading || requestError) && <div className="fixed bottom-16 inset-x-3 mx-auto max-w-lg z-[165] rounded-2xl bg-[#211b34] border border-white/20 text-white p-4 text-sm" role="status">
+        <p>{isLoading ? requestProgress?.phase === 'retrying' ? '连接较慢，正在重试…' : '正在生成回应…' : requestError}</p>
+        {isLoading ? <button className="min-h-11" onClick={cancelRequest}>取消等待</button> : <button className="min-h-11" onClick={retryLastRequest}>重试刚才的行动</button>}
+      </div>}
       {/* VN 相遇场景 */}
       {scene && (
         <SceneView
@@ -2032,13 +1017,28 @@ export default function App() {
           sceneBg={getSceneConfig(sceneLoc?.id === 'hangang' ? (worldSlot === 2 ? 'hangang_night' : 'hangang_day') : (sceneLoc?.sceneKey || 'practice_room')).bg}
           sceneLabel={sceneLoc?.label || ''}
           script={sceneScript}
-          options={sceneCanContinue ? sceneOptions : []}
-          canContinue={sceneCanContinue}
+          options={sceneOptions}
+          initialIndex={sceneRecord?.messageTimestamp === sceneMessageTimestamp ? sceneRecord.cursor || 0 : 0}
+          onProgress={cursor => {
+            if (scene.key) setGameState(prev => ({ ...prev, encounters: { ...prev.encounters,
+              [scene.key!]: { ...(prev.encounters?.[scene.key!] || { ids: scene.ids, location: worldLocation, day: worldDay, slot: worldSlot }),
+                cursor, messageTimestamp: sceneMessageTimestamp },
+            } }));
+          }}
+          requestProgress={requestProgress}
+          requestError={requestError}
+          draft={input}
+          onCancel={cancelRequest}
+          onRetry={retryLastRequest}
+          needLabel={sceneRecord?.need?.label}
+          needDone={sceneNeedDone}
+          canCompleteNeed={sceneRounds >= 2}
+          onCompleteNeed={completeSceneNeed}
           isLoading={isLoading}
           lang={lang}
           onChoose={(a) => handleSend(a)}
           onSend={(t) => handleSend(t)}
-          onLeave={() => setScene(null)}
+          onLeave={() => { setScene(null); setInput(''); }}
         />
       )}
       {/* 捏脸器 */}
@@ -2214,36 +1214,24 @@ export default function App() {
               onClick={() => setWorldMode(v => !v)}
               className={`flex items-center gap-1.5 text-[11px] font-black px-3 py-1.5 rounded-xl border transition-all ${worldMode ? 'text-white border-transparent' : 'bg-white/[0.06] text-[#B7B2D9] border-white/10 hover:bg-white/[0.12]'}`}
               style={worldMode ? { background: 'linear-gradient(135deg,#6C79C4,#454F87)' } : undefined}
-              title={lang === 'traditional' ? '切換俯視世界 / 劇情' : '切换俯视世界 / 剧情'}
+              title={lang === 'traditional' ? '切換世界 / 回憶' : '切换世界 / 回忆'}
             >
               {worldMode ? <Zap className="w-3.5 h-3.5" /> : <Users className="w-3.5 h-3.5" />}
-              {worldMode ? (lang === 'traditional' ? '劇情' : '剧情') : (lang === 'traditional' ? '世界' : '世界')}
+              {worldMode ? (lang === 'traditional' ? '回憶' : '回忆') : (lang === 'traditional' ? '世界' : '世界')}
             </button>
             <button
               onClick={() => {
-                const newVal = !isTraditional;
+                const newVal = gameState.language !== 'traditional';
                 setIsTraditional(newVal);
-                if ((window as any).OpenCC) {
-                  const converter = newVal
-                    ? (window as any).OpenCC.Converter({ from: 'cn', to: 'twp' })
-                    : (window as any).OpenCC.Converter({ from: 'tw', to: 'cn' });
-                  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
-                  const nodes: Text[] = [];
-                  while (walker.nextNode()) nodes.push(walker.currentNode as Text);
-                  nodes.forEach(node => {
-                    if (node.parentElement?.tagName !== 'SCRIPT' && node.parentElement?.tagName !== 'STYLE') {
-                      node.textContent = converter(node.textContent || '');
-                    }
-                  });
-                }
+                setGameState(prev => ({ ...prev, language: newVal ? 'traditional' : 'simplified' }));
               }}
               className="text-[10px] font-black text-[#B7B2D9] bg-white/[0.06] px-2 py-1 rounded-lg border border-white/10 hover:bg-white/[0.12] transition-all"
             >
-              {isTraditional ? '简' : '繁'}
+              {gameState.language === 'traditional' ? '简' : '繁'}
             </button>
             <div className="text-right">
-              <div className="text-[10px] text-[#8B86B8] font-bold uppercase">Round</div>
-              <div className="text-sm font-bold text-[#C9A227]">{roundCount}</div>
+              <div className="text-[10px] text-[#8B86B8] font-bold">第 {worldDay} 天</div>
+              <div className="text-sm font-bold text-[#C9A227]">{['上午', '下午', '晚上'][worldSlot]}</div>
             </div>
           </div>
         </header>
@@ -2258,6 +1246,7 @@ export default function App() {
             locationId={worldLocation}
             identity={gameState.identity || []}
             usedActionIds={usedThisSlot}
+            completedNeedIds={(gameState.completedNeeds || []).filter(k => k.startsWith(slotPrefix)).map(k => k.slice(slotPrefix.length))}
             supportUsed={supportUsed}
             onSupport={handleSupport}
             endingReady={!!ending || isYearEnd}
@@ -2332,11 +1321,8 @@ export default function App() {
                       if (block.type === 'musicshow') return isLatest ? <MusicShowUI key={bi} result={block.data} /> : null;
                       return null;
                     }) : <StoryText content={msg.content || '（剧情推进中...）'} />}
-                    {msg.options && <OptionsUI options={msg.options} isLatest={isLatest} lang={(gameState as any).language} onPick={(a) => handleSend(a)} disabled={isLoading} />}
-                    {msg.content?.includes('错误信息') && (
-                      <button onClick={() => { let j = -1; for (let k = i-1; k >= 0; k--) { if (gameState.history[k].role === MessageRole.USER) { j = k; break; } } if (j !== -1) { const c = gameState.history[j].content; setGameState(prev => ({ ...prev, history: prev.history.slice(0, i) })); handleSend(c); } }}
-                        className="self-start flex items-center gap-2 text-xs font-black text-[#B7A9E8] bg-white/[0.04] px-3 py-2 rounded-xl border border-white/10 hover:bg-white/[0.09]"><RefreshCw className="w-3 h-3" /> {lang === "traditional" ? "重試" : "重试"}</button>
-                    )}
+                    {msg.options && <div className="text-xs text-[#b9aed0] border-t border-white/10 pt-3">当时的选择：{msg.options.map(o => o.text).join(' / ')}</div>}
+
                   </div>
                 </motion.div>
               );
@@ -2353,15 +1339,8 @@ export default function App() {
           </div>
         </div>
 
-        <div className="p-4 md:p-6 border-t border-white/[0.06] flex-shrink-0" style={{ background: 'rgba(14,12,28,0.85)' }}>
-          <div className="max-w-3xl mx-auto flex gap-3">
-            <textarea value={input} onChange={e => setInput(e.target.value)}
-              onKeyDown={e => { if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
-              placeholder={lang === "traditional" ? "輸入您的行動..." : "输入你的行动..."}
-              className="flex-1 bg-white/[0.04] border border-white/10 rounded-3xl px-6 py-4 text-base focus:ring-2 focus:ring-[#C9A227]/40 resize-none h-14 ink-scroll outline-none text-[#F1ECFF] placeholder:text-[#8B86B8]"
-              disabled={isLoading} />
-            <button onClick={() => handleSend()} disabled={isLoading || !input.trim()} className="text-white px-5 rounded-3xl active:scale-95 disabled:opacity-50 flex-shrink-0 transition-all" style={{ background: 'linear-gradient(135deg,#6C79C4,#454F87)' }}><Send className="w-5 h-5" /></button>
-          </div>
+        <div className="p-4 border-t border-white/10 text-center text-sm text-[#c5bbdc]">
+          回忆只记录已经发生的故事。<button className="min-h-11 px-4 text-[#e9d2a3] underline" onClick={() => setWorldMode(true)}>回到世界继续生活</button>
         </div>
         </>
         )}

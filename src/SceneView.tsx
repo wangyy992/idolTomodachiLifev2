@@ -1,171 +1,110 @@
 import React, { useEffect, useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { X, Send, ChevronDown, MessageSquareText } from 'lucide-react';
+import { X, Send, ChevronDown, MessageSquareText, Check, RotateCcw } from 'lucide-react';
 import { Member } from './types';
 import { getPlayerAppearance, getDefaultAppearance, normalizeAppearance, type Appearance } from './spriteUtils';
 import { SpritePreview } from './FaceCustomizer';
 import type { ScriptEntry } from './App';
+import type { RequestProgress } from './chatClient';
 
 export default function SceneView({
   members, playerName, appearances, playerAppearance, sceneBg, sceneLabel,
-  script, options, isLoading, lang, onChoose, onSend, onLeave, canContinue = true,
+  script, options, isLoading, lang, onChoose, onSend, onLeave,
+  initialIndex = 0, onProgress, requestProgress, requestError, onCancel, onRetry,
+  draft = '', needLabel, needDone, canCompleteNeed, onCompleteNeed,
 }: {
-  members: Member[];
-  playerName: string;
-  appearances: Record<string, Appearance>;
-  playerAppearance?: Appearance;
-  sceneBg: string;
-  sceneLabel: string;
-  script: ScriptEntry[];
-  options: { text: string; action: string }[];
-  isLoading: boolean;
-  lang: string;
-  canContinue?: boolean;
-  onChoose: (action: string) => void;
-  onSend: (text: string) => void;
-  onLeave: () => void;
+  members: Member[]; playerName: string; appearances: Record<string, Appearance>;
+  playerAppearance?: Appearance; sceneBg: string; sceneLabel: string;
+  script: ScriptEntry[]; options: { text: string; action: string }[];
+  isLoading: boolean; lang: string;
+  onChoose: (action: string) => void; onSend: (text: string) => void; onLeave: () => void;
+  initialIndex?: number; onProgress?: (index: number) => void;
+  requestProgress?: RequestProgress | null; requestError?: string | null;
+  onCancel: () => void; onRetry: () => void; draft?: string;
+  needLabel?: string; needDone?: boolean; canCompleteNeed?: boolean; onCompleteNeed?: () => void;
 }) {
   const tw = lang === 'traditional';
-  const [idx, setIdx] = useState(0);
+  const [idx, setIdx] = useState(initialIndex);
   const [typed, setTyped] = useState('');
-  const [input, setInput] = useState('');
+  const [input, setInput] = useState(draft);
   const [showInput, setShowInput] = useState(false);
-
+  const [elapsed, setElapsed] = useState(0);
   const scriptKey = script.map(s => (s.kind === 'line' ? s.speaker + ':' : '') + s.text).join('|');
-  useEffect(() => { setIdx(0); }, [scriptKey]);
-
+  useEffect(() => { setIdx(Math.min(initialIndex, Math.max(0, script.length - 1))); }, [scriptKey]);
+  useEffect(() => { if (draft) { setInput(draft); setShowInput(true); } }, [draft]);
+  useEffect(() => {
+    if (!isLoading) { setElapsed(0); return; }
+    const timer = setInterval(() => setElapsed(s => s + 1), 1000);
+    return () => clearInterval(timer);
+  }, [isLoading]);
   const entry = script[idx];
   const atEnd = idx >= script.length - 1;
-
-  // 打字机
+  const [skipTyping, setSkipTyping] = useState(false);
+  useEffect(() => { setSkipTyping(false); }, [idx, scriptKey]);
   useEffect(() => {
     setTyped('');
     if (!entry) return;
-    const full = entry.text; let i = 0;
-    const t = setInterval(() => { i++; setTyped(full.slice(0, i)); if (i >= full.length) clearInterval(t); }, 16);
-    return () => clearInterval(t);
-  }, [idx, scriptKey]);
-
-  const isTyping = !!entry && typed.length < entry.text.length;
-  const onBox = () => { if (isTyping && entry) setTyped(entry.text); else if (idx < script.length - 1) setIdx(i => i + 1); };
-
-  // 说话人 → 外观
-  const you = { key: '__you__', name: playerName || '你', appearance: normalizeAppearance(playerAppearance, getPlayerAppearance(playerName || 'you')), isPlayer: true };
-  const cast = [...members.map(m => ({ key: m.id, name: m.name, appearance: normalizeAppearance(appearances[m.id], getDefaultAppearance(m.id)), isPlayer: false })), you];
-  const activeSpeaker = entry?.kind === 'line' ? entry.speaker : null;
-  const isActive = (c: typeof cast[number]) => !!activeSpeaker && (c.name === activeSpeaker || activeSpeaker.includes(c.name) || c.name.includes(activeSpeaker));
-  const activeIdx = cast.findIndex(isActive);
-
-  const send = () => { const t = input.trim(); if (!t || isLoading) return; setInput(''); setShowInput(false); onSend(t); };
-
+    if (skipTyping || window.matchMedia('(prefers-reduced-motion: reduce)').matches) { setTyped(entry.text); return; }
+    let n = 0;
+    const timer = setInterval(() => {
+      n += 2; setTyped(entry.text.slice(0, n));
+      if (n >= entry.text.length) clearInterval(timer);
+    }, 24);
+    return () => clearInterval(timer);
+  }, [idx, scriptKey, skipTyping]);
+  const typing = !!entry && typed.length < entry.text.length;
+  const advance = () => {
+    if (typing) { setSkipTyping(true); return; }
+    if (!atEnd) { setIdx(i => i + 1); onProgress?.(idx + 1); }
+  };
+  const cast = [
+    ...members.map(m => ({ id: m.id, name: m.name, appearance: normalizeAppearance(appearances[m.id], getDefaultAppearance(m.id)) })),
+    { id: '__player__', name: playerName || '你', appearance: normalizeAppearance(playerAppearance, getPlayerAppearance(playerName || 'you')) },
+  ];
+  const send = () => { if (!input.trim() || isLoading) return; onSend(input.trim()); setInput(''); setShowInput(false); };
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="absolute inset-0 z-[60] flex flex-col overflow-hidden select-none" style={{ background: sceneBg }}>
-      {/* 氛围：聚光 + 暗角 */}
-      <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(70% 55% at 50% 42%, rgba(255,245,225,0.14), transparent 70%)' }} />
-      <div className="absolute inset-0 pointer-events-none" style={{ boxShadow: 'inset 0 0 180px 40px rgba(10,6,25,0.6)' }} />
-
-      {/* 顶栏 */}
-      <div className="relative z-20 flex items-center justify-between p-3">
-        <div className="px-3 py-1.5 rounded-full bg-black/35 backdrop-blur-md text-white/95 text-xs font-black tracking-wide border border-white/10">{sceneLabel}</div>
-        <button onClick={onLeave} className="px-3.5 py-1.5 rounded-full bg-white/90 text-[#2A2A3D] text-xs font-black flex items-center gap-1 hover:bg-white shadow-lg transition-all"><X className="w-3.5 h-3.5" /> {tw ? '離開' : '离开'}</button>
-      </div>
-
-      {/* 舞台 */}
-      <div className="relative z-10 flex-1 flex items-end justify-center gap-4 sm:gap-10 pb-3 px-4" onClick={onBox}>
-        {cast.map((c, i) => {
-          const active = isActive(c);
-          const dim = !!activeSpeaker && !active;
-          return (
-            <motion.div
-              key={c.key}
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: dim ? 0.45 : 1, y: 0, scale: active ? 1.14 : 1 }}
-              transition={{ type: 'spring', stiffness: 220, damping: 22 }}
-              className="relative flex flex-col items-center"
-              style={{ filter: dim ? 'grayscale(0.55) brightness(0.8)' : 'none', zIndex: active ? 5 : 1 }}
-            >
-              {/* 聚光 */}
-              {active && <div className="absolute -bottom-2 w-32 h-10 rounded-full" style={{ background: 'radial-gradient(ellipse, rgba(255,240,210,0.35), transparent 70%)', filter: 'blur(6px)' }} />}
-              <AnimatePresence>
-                {active && entry?.kind === 'line' && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 8, scale: 0.92 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }}
-                    className="absolute bottom-full mb-4 max-w-[64vw] sm:max-w-[17rem] px-5 py-3.5 rounded-[1.6rem] rounded-bl-lg bg-white text-[#2A2A3D] text-[14px] leading-[1.7] font-medium shadow-[0_10px_30px_rgba(30,20,60,0.32)]"
-                  >
-                    {typed}<span className={isTyping ? 'opacity-100' : 'opacity-0'}>▍</span>
-                    <div className="absolute top-full left-7 -mt-1.5 w-3.5 h-3.5 bg-white rotate-45 rounded-sm" />
-                  </motion.div>
-                )}
-              </AnimatePresence>
-              {/* 影子 */}
-              <div className="absolute bottom-0 w-16 h-3 rounded-full bg-black/35 blur-[3px]" />
-              <SpritePreview appearance={c.appearance} size={120} />
-              <div className={`mt-1 px-2.5 py-0.5 rounded-full text-[10px] font-black transition-colors ${active ? 'bg-[#5B6BB0] text-white shadow-lg' : 'bg-black/35 text-white/80'}`}>{c.isPlayer ? (tw ? '你' : '你') : c.name}</div>
-            </motion.div>
-          );
-        })}
-      </div>
-
-      {/* 底部：选项 + 剧情框 */}
-      <div className="relative z-20 px-4 sm:px-6 pt-3 pb-5 sm:pb-7">
-        {/* 强制脱出：一次相遇聊够轮数后，只给「结束本次互动」 */}
-        {atEnd && !isLoading && !canContinue && (
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="max-w-3xl mx-auto mb-4 flex flex-col items-center gap-2">
-            <div className="text-[11px] text-white/60 font-bold">{tw ? '這次見面到這裡了' : '这次见面到这里了'}</div>
-            <button
-              onClick={onLeave}
-              className="px-7 py-3 rounded-2xl text-white text-[14px] font-black transition-all hover:-translate-y-0.5"
-              style={{ background: 'linear-gradient(135deg,#6C79C4,#454F87)', boxShadow: '0 10px 24px -8px rgba(91,107,176,0.8)' }}
-            >
-              {tw ? '結束本次互動' : '结束本次互动'}
-            </button>
-          </motion.div>
-        )}
-        <AnimatePresence>
-          {atEnd && !isLoading && canContinue && (showInput || options.length > 0) && (
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="max-w-3xl mx-auto mb-4 flex flex-col gap-2.5">
-              {showInput ? (
-                <div className="flex gap-2.5">
-                  <input autoFocus value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') send(); }} placeholder={tw ? '自由行動…' : '自由行动…'} className="flex-1 bg-white/95 rounded-2xl px-5 py-3.5 text-[15px] outline-none border border-white/40 text-[#2A2A3D] shadow-lg" />
-                  <button onClick={send} className="px-5 rounded-2xl bg-[#5B6BB0] text-white shadow-lg active:scale-95"><Send className="w-4 h-4" /></button>
-                </div>
-              ) : options.map((o, i) => (
-                <motion.button
-                  key={i} initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.06 }}
-                  onClick={() => onChoose(o.action)}
-                  className="group w-full text-left pl-4 pr-5 py-3.5 rounded-2xl bg-white/95 text-[#2A2A3D] text-[14.5px] leading-relaxed font-bold border border-white/50 shadow-[0_6px_18px_rgba(30,20,60,0.25)] hover:bg-white hover:border-[#FF7A93] hover:-translate-y-0.5 transition-all flex items-center gap-3"
-                >
-                  <span className="w-7 h-7 rounded-xl bg-[#E7E6F6] text-[#5B6BB0] text-[12px] font-black flex items-center justify-center group-hover:bg-[#FF7A93] group-hover:text-white transition-colors flex-shrink-0">{'ABC'[i] || '·'}</span>
-                  <span className="flex-1">{o.text.replace(/^[A-C][\.、。]\s*/, '')}</span>
-                </motion.button>
-              ))}
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* 剧情框 */}
-        <div onClick={onBox} className="relative max-w-3xl mx-auto rounded-[1.9rem] p-[1.5px] cursor-pointer shadow-[0_14px_48px_rgba(10,6,25,0.55)]" style={{ background: 'linear-gradient(135deg, rgba(123,133,201,0.9), rgba(201,162,39,0.55))' }}>
-          <div className="relative rounded-[1.8rem] bg-[#141127]/88 backdrop-blur-md px-7 sm:px-10 pt-5 pb-5 min-h-[120px] sm:min-h-[132px]">
-            {/* 名牌 */}
-            {entry?.kind === 'line' && (
-              <div className="inline-flex items-center mb-2.5 px-3.5 py-1 rounded-xl text-white text-[12.5px] font-black shadow-[0_4px_12px_-3px_rgba(91,107,176,0.8)] border border-white/15" style={{ background: 'linear-gradient(90deg,#6C79C4,#6C79C4 60%,#C9A227)' }}>{entry.speaker}</div>
-            )}
-            {isLoading && atEnd ? (
-              <div className="flex gap-1.5 items-center py-3 text-white/70"><span className="w-2 h-2 bg-white/70 rounded-full animate-bounce" /><span className="w-2 h-2 bg-white/70 rounded-full animate-bounce [animation-delay:0.15s]" /><span className="w-2 h-2 bg-white/70 rounded-full animate-bounce [animation-delay:0.3s]" /></div>
-            ) : entry ? (
-              <div className={`text-[16px] sm:text-[17px] leading-[2] tracking-[0.015em] pr-2 ${entry.kind === 'narration' ? 'italic text-white/80' : 'text-white/95'}`}>{typed}<span className={isTyping ? 'opacity-90' : 'opacity-0'}>▍</span></div>
-            ) : <div className="text-white/50 text-[15px] py-3">…</div>}
-
-            <div className="flex items-center justify-between mt-5 pt-3 border-t border-white/10">
-              <div className="text-[10px] text-white/35 font-mono tracking-widest">{script.length > 1 ? `${Math.min(idx + 1, script.length)} / ${script.length}` : ''}</div>
-              {!atEnd && <div className="flex items-center gap-1.5 text-white/55 text-[11px]"><span>{tw ? '點擊繼續' : '点击继续'}</span><ChevronDown className="w-3.5 h-3.5 animate-bounce" /></div>}
-              {atEnd && !isLoading && canContinue && (
-                <button onClick={e => { e.stopPropagation(); setShowInput(v => !v); }} className="flex items-center gap-1.5 text-white/75 text-[11px] font-bold hover:text-white transition-colors"><MessageSquareText className="w-3.5 h-3.5" /> {tw ? '自由行動' : '自由行动'}</button>
-              )}
-            </div>
-          </div>
+    <section className="dialogue-screen fixed inset-0 z-[160] flex flex-col text-white" style={{ background: sceneBg }} role="dialog" aria-modal="true" aria-label="当前对话">
+      <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-[#171326]/40 via-transparent to-[#171326]/90" />
+      <header className="relative flex items-center justify-between gap-3 p-3 sm:p-5 shrink-0">
+        <span className="rounded-full bg-black/40 px-4 py-2 text-sm">{sceneLabel}</span>
+        <button onClick={onLeave} className="min-h-11 px-4 rounded-full bg-white/90 text-[#29233e] flex items-center gap-2 text-sm"><X size={16} />{tw ? '暫別 · 進度保留' : '暂别 · 进度保留'}</button>
+      </header>
+      <div className="relative flex-1 min-h-0 overflow-y-auto dialogue-content px-4 pb-4 sm:px-6">
+        <div className="dialogue-cast flex justify-center items-end gap-3 sm:gap-10 py-3">
+          {cast.map(c => {
+            const active = entry?.kind === 'line' && (entry.speaker.includes(c.name) || c.name.includes(entry.speaker));
+            return <div key={c.id} className={`flex flex-col items-center transition-opacity ${entry?.kind === 'line' && !active ? 'opacity-55' : ''}`}>
+              <div className="dialogue-sprite"><SpritePreview appearance={c.appearance} size={96} /></div>
+              <span className={`text-xs px-3 py-1 rounded-full ${active ? 'bg-[#6C79C4]' : 'bg-black/40'}`}>{c.id === '__player__' ? '你' : c.name}</span>
+            </div>;
+          })}
         </div>
+        <div className="max-w-3xl mx-auto rounded-3xl bg-[#18142b]/95 border border-[#a69bd1]/40 shadow-xl p-5 sm:p-7">
+          {needLabel && <div className="mb-3 text-xs text-[#d9ceaa]">{needDone ? '✓ 已完成照顾' : '这次的小心愿'} · {needLabel}</div>}
+          <button onClick={advance} className="block w-full text-left min-h-24" aria-label={typing ? '显示完整文字' : !atEnd ? '阅读下一段' : '当前对话'}>
+            {entry?.kind === 'line' && <span className="block text-sm font-bold text-[#c7bcf4] mb-3">{entry.speaker}</span>}
+            <span className="block text-base sm:text-lg leading-relaxed whitespace-pre-wrap">{entry ? typed : isLoading ? '正在等待回应…' : '可以继续刚才的话题。'}</span>
+            {!atEnd && <span className="flex justify-end items-center gap-1 text-xs text-white/60 mt-4">点击继续 <ChevronDown size={14}/></span>}
+          </button>
+          <div className="mt-4 pt-3 border-t border-white/10 flex items-center justify-between text-xs text-white/60">
+            <span>{script.length ? `${Math.min(idx + 1, script.length)} / ${script.length}` : ''}</span>
+            {atEnd && !isLoading && <button className="min-h-11 px-2 flex items-center gap-2 text-white/85" onClick={() => setShowInput(v => !v)}><MessageSquareText size={16}/>{showInput ? '返回选项' : '自己说点什么'}</button>}
+          </div>
+          {isLoading && <div role="status" aria-live="polite" className="mt-3 flex flex-wrap justify-between gap-3 items-center text-sm text-[#d5cbea]">
+            <span>{requestProgress?.phase === 'retrying' ? `连接较慢，正在重试（${requestProgress.attempt}/3）` : elapsed >= 15 ? '回应还在生成，可以稍等或取消' : '正在回应…'} <span className="text-white/50">{elapsed}s</span></span>
+            <button onClick={onCancel} className="min-h-11 px-4 rounded-xl border border-white/25">取消等待</button>
+          </div>}
+          {requestError && !isLoading && <div role="alert" className="mt-3 p-3 rounded-xl bg-[#4f2938]/60 text-sm"><p>{requestError}</p><button onClick={onRetry} className="min-h-11 flex gap-2 items-center"><RotateCcw size={15}/>重试刚才的行动</button></div>}
+        </div>
+        {atEnd && !typing && !isLoading && <div className="max-w-3xl mx-auto mt-3 grid gap-2">
+          {showInput ? <form onSubmit={e => { e.preventDefault(); send(); }} className="flex gap-2">
+            <input aria-label="自由对话" value={input} onChange={e => setInput(e.target.value)} placeholder="想说什么，或想做什么？" className="min-w-0 flex-1 rounded-2xl bg-white text-[#29233e] px-4 py-3 text-base" />
+            <button aria-label="发送" disabled={!input.trim()} className="min-w-12 rounded-2xl bg-[#6C79C4] p-3 disabled:opacity-40"><Send size={18}/></button>
+          </form> : options.map((o, i) => <button key={i} onClick={() => onChoose(o.action)} className="flex gap-3 items-center min-h-12 bg-[#f5f1ff] text-[#29233e] text-left px-4 py-3 rounded-2xl text-sm sm:text-base hover:bg-white">
+            <span className="text-[#72638c] font-bold">{String.fromCharCode(65+i)}</span>{o.text.replace(/^[A-C][.、。]\s*/, '')}
+          </button>)}
+          {needLabel && !needDone && canCompleteNeed && <button onClick={onCompleteNeed} className="min-h-11 rounded-xl border border-[#c9b67b]/50 text-[#eee0ad] text-sm flex items-center justify-center gap-2"><Check size={16}/>这件事已经办好 · 完成照顾</button>}
+        </div>}
       </div>
-    </motion.div>
+    </section>
   );
 }

@@ -171,7 +171,7 @@ export function getStartLocation(identity?: string[]): string {
     const m = IDENTITY_START.find(r => r.test.test(id));
     if (m) return m.loc;
   }
-  return 'practice_room';
+  return 'cafe';
 }
 
 // 关系型身份 → 起始好感度下限：让"你们本来就认识"变成真实数值，而非从陌生人开始

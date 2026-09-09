@@ -1,3 +1,4 @@
+import { getSessionApiKey, requestChat, type RequestOptions } from './chatClient';
 import { ChatMessage, MessageRole, GameState, SetupStep } from './types';
 import { PLAYER } from './relations';
 
@@ -7,8 +8,8 @@ import { pendingMilestone, quietPlaceNow } from './milestones';
 
 const TIME_SLOT_CN = ['上午', '下午', '晚上'];
 
-export async function callGeminiAPI(messages: ChatMessage[], gameState: GameState) {
-  const playerApiKey = (gameState as any).playerApiKey || '';
+export async function callGeminiAPI(messages: ChatMessage[], gameState: GameState, requestOptions: RequestOptions = {}) {
+  const playerApiKey = getSessionApiKey();
   const playerModel = (gameState as any).playerModel || 'deepseek-v4-flash';
   // 密钥不在前端保存：玩家自填则随请求带上，否则由服务端 /api/chat 用环境变量补上
   const modelToUse = playerApiKey ? playerModel : 'deepseek-v4-flash';
@@ -562,53 +563,7 @@ SNAPSHOT_END
       apiKey: playerApiKey || undefined,
     });
 
-    // 单次请求（60 秒超时，与服务端对齐）
-    const once = async (): Promise<string> => {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 60000);
-      try {
-        const resp = await fetch('/api/chat', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: payload, signal: controller.signal,
-        });
-        if (!resp.ok) {
-          const msg = resp.status === 401 ? 'API Key 无效。'
-            : resp.status === 429 ? '请求过于频繁，请稍后再试。'
-            : resp.status === 402 ? 'DeepSeek 余额不足，请充值。'
-            : `DeepSeek API 错误 (${resp.status})`;
-          const err: any = new Error(msg);
-          err.status = resp.status;
-          throw err;
-        }
-        const ddata = await resp.json();
-        return ddata?.choices?.[0]?.message?.content || '';
-      } finally {
-        clearTimeout(timeoutId);
-      }
-    };
-
-    // 超时 / 网络&TLS 错误（Failed to fetch → TypeError，含 ERR_SSL_PROTOCOL_ERROR）/ 5xx
-    // → 自动重试，指数退避 0.8s/2s/4s，让偶发的传输层抖动自己恢复；401/402/429 等业务错误不重试。
-    const retriable = (e: any) => e?.name === 'AbortError' || e?.name === 'TypeError' || (typeof e?.status === 'number' && e.status >= 500);
-    const backoffs = [800, 2000, 4000];
-    let text = '';
-    let lastErr: any = null;
-    for (let attempt = 0; attempt <= backoffs.length; attempt++) {
-      try {
-        text = await once();
-        lastErr = null;
-        break;
-      } catch (e: any) {
-        lastErr = e;
-        if (!retriable(e) || attempt === backoffs.length) throw e;
-        await new Promise(r => setTimeout(r, backoffs[attempt]));
-      }
-    }
-    if (lastErr) throw lastErr;
-
-    if (!text || text.trim() === '') throw new Error('AI 返回内容为空。');
-    console.log('🤖 AI原始返回：\n', text);
-    return text;
+    return await requestChat(payload, requestOptions);
 
   } catch (error) {
     if (error instanceof Error && error.name === 'AbortError') throw new Error('通讯超时，请重试。');

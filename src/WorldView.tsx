@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import CityMap from './CityMap';
 import { MessageCircle, Clock, CalendarDays, ChevronRight, X, Users, Rss, Palette, Lock, Smartphone, CalendarRange, Megaphone, Map as MapIcon } from 'lucide-react';
 import { buildYearPhases, phaseAt, weekOf, dayInWeek, isMusicShowDay, WEEKS_PER_YEAR } from './calendar';
 import { SpritePreview } from './FaceCustomizer';
@@ -85,13 +86,14 @@ function moveToward(e: Entity, speed: number, dt: number): boolean {
 export default function WorldView({
   members, playerName, day, slot, locationId, identity, usedActionIds, supportUsed, onSupport, endingReady, onOpenEnding, onTravel, onAdvanceTime, onTalk, lang,
   relations, intents, matchmakes, onSetIntent, onToggleMatchmake, onSetPairAffinity, onConfess, onIdolEncounter, worldFeed, onWatchEncounter,
-  appearances, playerAppearance, onCustomize, phoneUnread, onOpenPhone, pendingMilestones,
+  appearances, playerAppearance, onCustomize, phoneUnread, onOpenPhone, pendingMilestones, completedNeedIds = [],
 }: {
   members: Member[];
   playerName: string;
   day: number; slot: number; locationId: string;
   identity: string[];
   usedActionIds: string[];   // 本时段已深入互动过的爱豆 id（每人每时段 1 次）
+  completedNeedIds?: string[];
   supportUsed: boolean;      // 本时段应援打投是否已用
   onSupport: () => void;
   endingReady?: boolean;
@@ -183,7 +185,7 @@ export default function WorldView({
   // 身份 → 可进入地点；进不去的地点上锁
   const accessible = React.useMemo(() => getAccessibleLocations(identity), [identity.join('|')]);
   const tryTravel = (locId: string) => {
-    if (accessible.has(locId)) { onTravel(locId); return; }
+    if (accessible.has(parseLocKey(locId).base)) { onTravel(locId); return; }
     setLockToast(lockReason(locId, tw));
   };
   useEffect(() => {
@@ -406,13 +408,13 @@ export default function WorldView({
         {/* 私密地点：选团/选公司抽屉（跨公司/跨团不同屏，各用各的房间）*/}
         {scope !== 'shared' && localUnits.length > 1 && (
           <div className="flex items-center gap-1 px-1.5 py-1 rounded-full" style={{ background: 'rgba(8,6,16,0.55)', backdropFilter: 'blur(6px)' }}>
-            <span className="text-[9px] text-white/50 font-bold pl-1">{scope === 'company' ? (tw ? '選公司' : '选公司') : (tw ? '選團' : '选团')}</span>
+            <span className="text-[11px] text-white/50 font-bold pl-1">{scope === 'company' ? (tw ? '選公司' : '选公司') : (tw ? '選團' : '选团')}</span>
             {localUnits.map(u => {
               const on = u.unit === effUnit;
               return (
                 <button key={u.unit} onClick={() => onTravel(`${baseLoc}@${u.unit}`)}
                   className={`px-2.5 py-1 rounded-full text-[10px] font-black flex items-center gap-1 transition-all ${on ? 'bg-white text-[#211D33]' : 'bg-white/15 text-white hover:bg-white/25'}`}>
-                  {u.label}<span className={`min-w-[13px] h-[13px] px-0.5 rounded-full text-[8px] flex items-center justify-center ${on ? 'bg-[#5B6BB0] text-white' : 'bg-white/25 text-white'}`}>{u.count}</span>
+                  {u.label}<span className={`min-w-[13px] h-[13px] px-0.5 rounded-full text-[11px] flex items-center justify-center ${on ? 'bg-[#5B6BB0] text-white' : 'bg-white/25 text-white'}`}>{u.count}</span>
                 </button>
               );
             })}
@@ -424,7 +426,7 @@ export default function WorldView({
       <div className="absolute top-3 right-3 z-30 flex gap-1.5 flex-wrap justify-end">
         <button onClick={onOpenPhone} title={tw ? '手機' : '手机'} className="relative w-8 h-8 rounded-xl flex items-center justify-center text-[#F1ECFF] transition-all hover:bg-white/10" style={{ background: 'rgba(14,11,26,0.6)', backdropFilter: 'blur(6px)', border: '1px solid rgba(255,255,255,0.1)' }}>
           <Smartphone className="w-4 h-4" />
-          {phoneUnread > 0 && <span className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 px-1 rounded-full bg-[#FF3B30] text-white text-[9px] font-black flex items-center justify-center shadow animate-pulse">{phoneUnread}</span>}
+          {phoneUnread > 0 && <span className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 px-1 rounded-full bg-[#FF3B30] text-white text-[11px] font-black flex items-center justify-center shadow animate-pulse">{phoneUnread}</span>}
         </button>
         <button onClick={() => setShowFacePick(true)} title={tw ? '捏臉' : '捏脸'} className="w-8 h-8 rounded-xl flex items-center justify-center text-[#F1ECFF] transition-all hover:bg-white/10" style={{ background: 'rgba(14,11,26,0.6)', backdropFilter: 'blur(6px)', border: '1px solid rgba(255,255,255,0.1)' }}>
           <Palette className="w-4 h-4" />
@@ -434,7 +436,7 @@ export default function WorldView({
         </button>
         <button onClick={() => setShowFeed(true)} title={tw ? '動態' : '动态'} className="relative w-8 h-8 rounded-xl flex items-center justify-center text-[#F1ECFF] transition-all hover:bg-white/10" style={{ background: 'rgba(14,11,26,0.6)', backdropFilter: 'blur(6px)', border: '1px solid rgba(255,255,255,0.1)' }}>
           <Rss className="w-4 h-4" />
-          {worldFeed.length > 0 && <span className="absolute -top-1 -right-1 min-w-[15px] h-[15px] px-1 rounded-full bg-[#FF7A93] text-white text-[8px] flex items-center justify-center">{worldFeed.length}</span>}
+          {worldFeed.length > 0 && <span className="absolute -top-1 -right-1 min-w-[15px] h-[15px] px-1 rounded-full bg-[#FF7A93] text-white text-[11px] flex items-center justify-center">{worldFeed.length}</span>}
         </button>
         <button onClick={() => setShowMap(true)} title={tw ? '地圖 · 選位置' : '地图 · 选位置'} className="w-8 h-8 rounded-xl flex items-center justify-center text-[#F1ECFF] transition-all hover:bg-white/10" style={{ background: 'rgba(14,11,26,0.6)', backdropFilter: 'blur(6px)', border: '1px solid rgba(255,255,255,0.1)' }}>
           <MapIcon className="w-4 h-4" />
@@ -468,50 +470,55 @@ export default function WorldView({
           const activity = e.member ? getActivity(e.member.id, day, slot, e.member.group) : null;
           const ms = !e.isPlayer && e.member ? pendMs[e.member.id] : undefined;
           // 需求气泡（大节点 ⚡ 优先，没有大节点时才冒日常需求；都没有就冒个心情表情）
-          const need = (!e.isPlayer && e.member && !ms && activity)
+          const need = (!e.isPlayer && e.member && !ms && activity && !completedNeedIds.includes(e.member.id))
             ? getNeed(e.member, day, slot, activity.available, present.filter(x => x.id !== e.member!.id).map(x => ({ id: x.id, name: x.name })))
             : null;
           const mood = (!e.isPlayer && e.member && !ms && !need && activity?.available) ? getMoodEmoji(e.member.id, day, slot) : null;
           return (
             <div
               key={e.id}
+              role={e.isPlayer ? undefined : 'button'}
+              tabIndex={e.isPlayer ? undefined : 0}
+              aria-label={e.isPlayer ? undefined : '与' + e.name + '交谈'}
+              onKeyDown={ev => { if (!e.isPlayer && e.member && (ev.key === 'Enter' || ev.key === ' ')) { ev.preventDefault(); onTalk(e.member, { location, activity: getActivity(e.member.id, day, slot, e.member.group), need: need || undefined }); } }}
               className="absolute"
               style={{ left: `${e.x}%`, top: `${e.y}%`, transform: 'translate(-50%, -100%)', zIndex: Math.round(e.y) + (e.isPlayer ? 1 : 0) }}
               onClick={(ev) => { if (!e.isPlayer && e.member) { ev.stopPropagation(); onTalk(e.member, { location, activity: getActivity(e.member.id, day, slot, e.member.group), need: need || undefined }); } }}
             >
               <div className="absolute left-1/2 -translate-x-1/2" style={{ bottom: -4, width: SPRITE * 0.5, height: SPRITE * 0.16, borderRadius: '50%', background: 'rgba(0,0,0,0.35)', filter: 'blur(2px)' }} />
               <div className="absolute left-1/2 -translate-x-1/2 -top-6 flex flex-col items-center gap-0.5 whitespace-nowrap">
-                {ms && (
-                  <div className="mb-0.5 px-2 py-0.5 rounded-full text-[9px] font-black flex items-center gap-1 shadow-lg animate-pulse"
+                {!e.isPlayer && !isNear && <span className="text-sm rounded-full bg-black/50 px-1.5">{completedNeedIds.includes(e.id) ? '✓' : ms ? '⚡' : need ? need.emoji : ''}</span>}
+                {ms && isNear && (
+                  <div className="mb-0.5 px-2 py-0.5 rounded-full text-[11px] font-black flex items-center gap-1 shadow-lg animate-pulse"
                     style={{ background: 'linear-gradient(135deg,#C9A227,#E6C34A)', color: '#1a1408' }}>
                     ⚡ {ms.omen}
                   </div>
                 )}
-                {mood && (
+                {mood && isNear && (
                   <div className="need-bob text-[12px] leading-none mb-0.5 select-none" style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.6))' }}>{mood}</div>
                 )}
-                {need && (
+                {need && isNear && (
                   <div className="need-bob mb-1 flex flex-col items-center">
                     <div className="px-2 py-1 rounded-2xl flex items-center gap-1 shadow-[0_6px_14px_-4px_rgba(0,0,0,0.7)] border"
                       style={{ background: 'linear-gradient(165deg, rgba(40,34,66,0.96), rgba(20,17,38,0.96))', borderColor: 'rgba(201,162,39,0.45)' }}>
                       <span className="text-[14px] leading-none">{need.emoji}</span>
-                      <span className="text-[9px] font-black text-[#F1ECFF]">{need.label}</span>
+                      <span className="text-[11px] font-black text-[#F1ECFF]">{need.label}</span>
                     </div>
                     <div className="w-2 h-2 -mt-1 rotate-45 border-r border-b" style={{ background: 'rgba(20,17,38,0.96)', borderColor: 'rgba(201,162,39,0.45)' }} />
                   </div>
                 )}
                 {isNear && (
                   <div
-                    className={`mb-0.5 px-2 py-0.5 rounded-full text-white text-[9px] font-black flex items-center gap-1 shadow-lg ${(usedActionIds || []).includes(e.member!.id) ? '' : 'animate-bounce'}`}
+                    className={`mb-0.5 px-2 py-0.5 rounded-full text-white text-[11px] font-black flex items-center gap-1 shadow-lg ${(usedActionIds || []).includes(e.member!.id) ? '' : 'animate-bounce'}`}
                     style={{ background: (usedActionIds || []).includes(e.member!.id) ? 'rgba(8,6,16,0.7)' : '#5B6BB0' }}
                   >
-                    <MessageCircle className="w-2.5 h-2.5" /> {(usedActionIds || []).includes(e.member!.id) ? (tw ? '閒聊' : '闲聊') : (tw ? '對話' : '对话')}
+                    <MessageCircle className="w-2.5 h-2.5" /> {(usedActionIds || []).includes(e.member!.id) ? (tw ? '續聊' : '续聊') : (tw ? '對話' : '对话')}
                   </div>
                 )}
-                <div className={`px-1.5 py-0.5 rounded text-[9px] font-black ${e.isPlayer ? 'bg-white/90 text-[#2A2A3D]' : 'bg-black/45 text-white'}`}>
+                <div className={`px-1.5 py-0.5 rounded text-[11px] font-black ${e.isPlayer ? 'bg-white/90 text-[#2A2A3D]' : 'bg-black/45 text-white'}`}>
                   {e.isPlayer ? (tw ? '你' : '你') : e.name}
                 </div>
-                {!e.isPlayer && activity && <div className="px-1 rounded text-[8px] text-white/80 bg-black/30">{activity.mood.split('、')[0]}</div>}
+                {!e.isPlayer && activity && isNear && <div className="px-1 rounded text-[11px] text-white/80 bg-black/30">{activity.mood.split('、')[0]}</div>}
               </div>
               <div className={!e.isPlayer ? 'cursor-pointer' : ''} style={{ filter: ms ? 'drop-shadow(0 0 12px rgba(230,195,74,0.95)) drop-shadow(0 0 4px rgba(255,230,150,0.9))' : isNear ? 'drop-shadow(0 0 9px rgba(201,162,39,0.85)) drop-shadow(0 3px 4px rgba(0,0,0,0.5))' : 'drop-shadow(0 3px 4px rgba(0,0,0,0.45))' }}>
                 <PixelSprite sheet={stripsRef.current[e.id] ?? null} facing={e.facing} frame={e.frame} size={SPRITE} />
@@ -556,39 +563,8 @@ export default function WorldView({
       )}
 
       {/* 地图：选位置（右上角「地图」图标打开，取代原底部地点栏） */}
-      {showMap && (
-        <div className="absolute inset-0 z-40 bg-black/70 backdrop-blur-md flex items-center justify-center p-4" onClick={() => setShowMap(false)}>
-          <div className="ink-panel ink-scroll rounded-[18px] p-5 max-w-md w-full max-h-[85%] overflow-auto" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-[14px] font-black text-[#F1ECFF] flex items-center gap-2"><MapIcon className="w-4 h-4 text-[#C9A227]" /> {tw ? '去哪裡' : '去哪里'}</h3>
-              <button onClick={() => setShowMap(false)} className="w-7 h-7 rounded-lg bg-white/[0.06] hover:bg-white/[0.12] text-[#B7B2D9] flex items-center justify-center transition-colors"><X className="w-4 h-4" /></button>
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              {WORLD_LOCATIONS.map(loc => {
-                const n = countAt(loc.id);
-                const active = loc.id === baseLoc;
-                const locked = !accessible.has(loc.id);
-                return (
-                  <button
-                    key={loc.id}
-                    onClick={() => { if (!locked) { tryTravel(loc.id); setShowMap(false); } else { tryTravel(loc.id); } }}
-                    title={locked ? lockReason(loc.id, tw) : undefined}
-                    className={`relative px-3 py-3 rounded-2xl text-[12px] font-black flex items-center gap-2 border transition-all ${active ? 'bg-white text-[#211D33] border-transparent' : locked ? 'bg-white/[0.03] text-white/35 border-white/[0.06]' : 'bg-white/[0.06] text-white border-white/10 hover:bg-white/[0.14]'}`}
-                  >
-                    <span className={`text-[16px] ${locked ? 'grayscale opacity-70' : ''}`}>{loc.icon}</span>
-                    <span className="flex-1 text-left">{loc.label}</span>
-                    {locked
-                      ? <Lock className="w-3 h-3" />
-                      : n > 0 && <span className="min-w-[16px] h-[16px] px-1 rounded-full text-[9px] flex items-center justify-center bg-[#5B6BB0] text-white">{n}</span>}
-                    {active && <span className="text-[9px] font-black text-[#5B6BB0]">{tw ? '在這' : '在这'}</span>}
-                  </button>
-                );
-              })}
-            </div>
-            <p className="text-[10px] text-[#8B86B8] mt-3 flex items-center gap-1 flex-wrap"><Lock className="w-2.5 h-2.5" /> {tw ? '=你的身份進不去；數字=現在有幾位在那裡。' : '=你的身份进不去；数字=现在有几位在那里。'}</p>
-          </div>
-        </div>
-      )}
+      {showMap && <CityMap members={members} day={day} slot={slot} locationId={locationId} identity={identity}
+        lang={lang} onTravel={tryTravel} onClose={() => setShowMap(false)} />}
 
       {/* 世界动态流 */}
       {showFeed && (
@@ -606,7 +582,7 @@ export default function WorldView({
                   <div key={f.id} className="flex items-center gap-2.5 bg-white/[0.03] rounded-[10px] px-3 py-2.5">
                     <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: f.kind === 'romance' ? '#FF7A93' : f.kind === 'tension' ? '#C9A227' : '#6C79C4' }} />
                     <span className="text-[11px] text-[#F1ECFF] flex-1">{f.text}</span>
-                    <span className="text-[9px] text-[#8B86B8] whitespace-nowrap">D{f.day}·{TIME_SLOTS[f.slot]}</span>
+                    <span className="text-[11px] text-[#8B86B8] whitespace-nowrap">D{f.day}·{TIME_SLOTS[f.slot]}</span>
                   </div>
                 ))}
               </div>
@@ -682,7 +658,7 @@ export default function WorldView({
                         : 'rgba(255,255,255,0.06)';
                       return (
                         <div key={w} title={`第${w}周${p ? ' · ' + p.label : ''}`}
-                          className="h-6 rounded flex items-center justify-center text-[8px] font-bold"
+                          className="h-6 rounded flex items-center justify-center text-[11px] font-bold"
                           style={{ background: bg, color: p ? '#F1ECFF' : '#6b6790', outline: isNow ? '2px solid #C9A227' : 'none' }}>
                           {p ? p.icon : w % 4 === 1 ? w : ''}
                         </div>
@@ -700,7 +676,7 @@ export default function WorldView({
                           <span className="text-base">{p.icon}</span>
                           <span className="text-[12px] font-black text-[#F1ECFF] flex-1">{p.label}</span>
                           <span className="text-[10px] text-[#8B86B8]">{tw ? `第 ${p.startWeek}-${p.endWeek} 週` : `第 ${p.startWeek}-${p.endWeek} 周`}</span>
-                          {now && <span className="text-[9px] font-black text-[#C9A227]">{tw ? '進行中' : '进行中'}</span>}
+                          {now && <span className="text-[11px] font-black text-[#C9A227]">{tw ? '進行中' : '进行中'}</span>}
                         </div>
                       );
                     })}
@@ -742,7 +718,7 @@ export default function WorldView({
                   <tr key={`g-${g}`}>
                     <td colSpan={TIME_SLOTS.length + 1} className="pt-3 pb-1 px-2">
                       <span className="gold-caption">{g}</span>
-                      <span className="ml-2 text-[9px] font-bold" style={{ color: isGroupDay(g, day) ? '#C9A227' : '#8B86B8' }}>
+                      <span className="ml-2 text-[11px] font-bold" style={{ color: isGroupDay(g, day) ? '#C9A227' : '#8B86B8' }}>
                         {isGroupDay(g, day) ? (tw ? '· 團體行程日（白天同行，晚上各自休息）' : '· 团体行程日（白天同行，晚上各自休息）') : (tw ? '· 休息日（各自散開，好約）' : '· 休息日（各自散开，好约）')}
                       </span>
                     </td>
@@ -761,7 +737,7 @@ export default function WorldView({
                             {loc && <span className={gated ? 'grayscale opacity-70' : ''}>{loc.icon}</span>}
                             <span className="font-bold">{a.label}</span>
                             {gated && <Lock className="w-2.5 h-2.5 text-[#5b5678]" />}
-                            {here && i === slot && <span className="text-[8px] text-[#C9A227] font-black">· 在这</span>}
+                            {here && i === slot && <span className="text-[11px] text-[#C9A227] font-black">· 在这</span>}
                           </div>
                         </td>
                       );
