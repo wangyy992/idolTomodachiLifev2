@@ -27,7 +27,7 @@ export default function WorldPanel({
   return (
     <div className="flex flex-col gap-5">
       {/* 玩家卡片 */}
-      <div className="rounded-2xl p-3 text-white shadow-lg relative overflow-hidden border border-[rgba(201,162,39,0.35)]" style={{ background: 'linear-gradient(135deg, #6C79C4, #454F87)' }}>
+      <div className="rounded-2xl p-3 text-white shadow-lg relative overflow-hidden border border-[rgba(240,197,88,0.35)]" style={{ background: 'linear-gradient(135deg, #7B87D0, #505C99)' }}>
         <div className="absolute -right-6 -top-6 w-24 h-24 rounded-full bg-white/10" />
         <div className="relative flex items-center gap-2.5">
           <div className="rounded-2xl bg-white/15 p-1 flex items-center justify-center" style={{ imageRendering: 'pixelated' }}><SpritePreview appearance={playerA} size={46} /></div>
@@ -49,22 +49,22 @@ export default function WorldPanel({
             const type = deriveType(m.affection || 0, 0, { romance, confessed });
             const intent = intents[m.id] || 'none';
             return (
-              <button key={m.id} onClick={() => onCustomize({ kind: 'idol', id: m.id })} className="group w-full flex items-center gap-2.5 p-2 rounded-2xl bg-white/[0.03] border border-[rgba(201,162,39,0.15)] hover:border-[rgba(201,162,39,0.45)] transition-all">
-                <div className="rounded-xl bg-white/[0.05] p-0.5 flex-shrink-0"><SpritePreview appearance={normalizeAppearance(appearances[m.id], getDefaultAppearance(m.id))} size={36} /></div>
+              <button key={m.id} onClick={() => onCustomize({ kind: 'idol', id: m.id })} className="group w-full flex items-center gap-2.5 p-2 rounded-2xl bg-white/[0.10] border border-[rgba(240,197,88,0.15)] hover:border-[rgba(240,197,88,0.45)] transition-all">
+                <div className="rounded-xl bg-white/[0.09] p-0.5 flex-shrink-0"><SpritePreview appearance={normalizeAppearance(appearances[m.id], getDefaultAppearance(m.id))} size={36} /></div>
                 <div className="flex-1 min-w-0 text-left">
                   <div className="flex items-center gap-1.5">
                     <span className="text-[11px] font-black text-[#F1ECFF] truncate">{m.name}</span>
-                    <span className="text-[8px] font-black text-[#C9A227] uppercase tracking-[0.05em] whitespace-nowrap">{type}</span>
-                    {intent !== 'none' && <span className="text-[9px]" style={{ color: intent === 'romance' ? '#FF7A93' : '#B7A9E8' }}>{INTENT_ICON[intent]}</span>}
+                    <span className="text-[8px] font-black text-[#F0C558] uppercase tracking-[0.05em] whitespace-nowrap">{type}</span>
+                    {intent !== 'none' && <span className="text-[9px]" style={{ color: intent === 'romance' ? '#FF7A93' : '#C6BAF2' }}>{INTENT_ICON[intent]}</span>}
                   </div>
-                  <div className="h-[3px] bg-white/[0.08] rounded-full overflow-hidden mt-1.5"><div className="h-full rounded-full transition-all" style={{ width: `${m.affection || 0}%`, background: 'linear-gradient(90deg,#6C79C4,#C9A227)' }} /></div>
+                  <div className="h-[3px] bg-white/[0.08] rounded-full overflow-hidden mt-1.5"><div className="h-full rounded-full transition-all" style={{ width: `${m.affection || 0}%`, background: 'linear-gradient(90deg,#7B87D0,#F0C558)' }} /></div>
                 </div>
-                <span className="text-[9px] font-mono font-bold text-[#8B86B8] flex-shrink-0">{m.affection || 0}</span>
+                <span className="text-[9px] font-mono font-bold text-[#A6A1CC] flex-shrink-0">{m.affection || 0}</span>
               </button>
             );
           })}
         </div>
-        <p className="text-[9px] text-[#8B86B8]/70 mt-2.5 px-1">{tw ? '點頭像捏臉；進世界走近她們觸發劇情。' : '点头像捏脸；进世界走近她们触发剧情。'}</p>
+        <p className="text-[9px] text-[#A6A1CC]/70 mt-2.5 px-1">{tw ? '點頭像捏臉；進世界走近她們觸發劇情。' : '点头像捏脸；进世界走近她们触发剧情。'}</p>
       </div>
     </div>
   );

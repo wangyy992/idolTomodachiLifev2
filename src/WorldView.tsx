@@ -54,6 +54,7 @@ interface Entity {
 }
 
 const BOUND = { minX: 8, maxX: 92, minY: 44, maxY: 88 };
+const DOCK_MAX_X = 60;   // 右上浮层展开时人物能走到的最右侧
 const SPRITE = 76;
 const TALK_DIST = 9;
 const IDOL_SPEED = 7;
@@ -82,6 +83,13 @@ function moveToward(e: Entity, speed: number, dt: number): boolean {
   const f = faceFrom(dx, dy); if (f) e.facing = f;
   e.moving = true; return false;
 }
+
+type DockTab = 'feed' | 'schedule' | 'calendar';
+const DOCK_TABS: { id: DockTab; cn: string; tw: string; icon: any }[] = [
+  { id: 'feed', cn: '动态', tw: '動態', icon: Rss },
+  { id: 'schedule', cn: '日程', tw: '日程', icon: CalendarDays },
+  { id: 'calendar', cn: '年历', tw: '年曆', icon: CalendarRange },
+];
 
 export default function WorldView({
   members, playerName, day, slot, locationId, identity, usedActionIds, supportUsed, onSupport, endingReady, onOpenEnding, onTravel, onAdvanceTime, onTalk, lang,
@@ -159,10 +167,9 @@ export default function WorldView({
   const [, setTick] = useState(0);
   const [nearId, setNearId] = useState<string | null>(null);
   const [watchable, setWatchable] = useState<{ aId: string; bId: string } | null>(null);
-  const [showPlanner, setShowPlanner] = useState(false);       // 日程 + 年历 合一
-  const [plannerTab, setPlannerTab] = useState<'schedule' | 'calendar'>('schedule');
+  // 右上浮层：世界动态 / 日程 / 年历 三选一，默认开在「动态」
   const [showRelations, setShowRelations] = useState(false);
-  const [showFeed, setShowFeed] = useState(false);
+  const [dock, setDock] = useState<DockTab | null>('feed');
   const [showMap, setShowMap] = useState(false);               // 地图（选位置）
   const [showFacePick, setShowFacePick] = useState(false);
   const [lockToast, setLockToast] = useState<string | null>(null);
@@ -198,6 +205,17 @@ export default function WorldView({
   // 让主循环拿到最新的 props（循环用空依赖挂载）
   const encRef = useRef({ matchmakes, relations, onIdolEncounter });
   encRef.current = { matchmakes, relations, onIdolEncounter };
+
+  // 右侧浮层开着的时候把活动范围收窄，人物不会走到面板后面点不到
+  const boundRef = useRef({ ...BOUND });
+  useEffect(() => {
+    boundRef.current = { ...BOUND, maxX: dock ? DOCK_MAX_X : BOUND.maxX };
+    const max = boundRef.current.maxX;
+    for (const e of entitiesRef.current) {
+      if (e.x > max) { e.x = max; }
+      if (e.tx > max) { e.tx = max; }
+    }
+  }, [dock]);
 
   // 重建当前地点在场的实体（换地点/换时段/换成员时）
   useEffect(() => {
@@ -267,7 +285,7 @@ export default function WorldView({
           if (keys.has('s') || keys.has('arrowdown')) dy += 1;
           if (dx || dy) {
             const len = Math.hypot(dx, dy) || 1;
-            e.x = clamp(e.x + (dx / len) * PLAYER_SPEED * dt, BOUND.minX, BOUND.maxX);
+            e.x = clamp(e.x + (dx / len) * PLAYER_SPEED * dt, BOUND.minX, boundRef.current.maxX);
             e.y = clamp(e.y + (dy / len) * PLAYER_SPEED * dt, BOUND.minY, BOUND.maxY);
             e.tx = e.x; e.ty = e.y; { const f = faceFrom(dx, dy); if (f) e.facing = f; } e.moving = true;
           } else moveToward(e, PLAYER_SPEED, dt);
@@ -280,10 +298,10 @@ export default function WorldView({
               const others = ents.filter(x => !x.isPlayer && x !== e);
               if (others.length && Math.random() < 0.5) {
                 const o = others[Math.floor(Math.random() * others.length)];
-                e.tx = clamp(o.x + rand(-5, 5), BOUND.minX, BOUND.maxX);
+                e.tx = clamp(o.x + rand(-5, 5), BOUND.minX, boundRef.current.maxX);
                 e.ty = clamp(o.y + rand(-5, 5), BOUND.minY, BOUND.maxY);
               } else {
-                e.tx = rand(BOUND.minX, BOUND.maxX); e.ty = rand(BOUND.minY, BOUND.maxY);
+                e.tx = rand(BOUND.minX, boundRef.current.maxX); e.ty = rand(BOUND.minY, BOUND.maxY);
               }
               e.moving = true;
             }
@@ -349,7 +367,7 @@ export default function WorldView({
     const px = ((ev.clientX - rect.left) / rect.width) * 100;
     const py = ((ev.clientY - rect.top) / rect.height) * 100;
     const player = entitiesRef.current.find(e => e.isPlayer);
-    if (player) { player.tx = clamp(px, BOUND.minX, BOUND.maxX); player.ty = clamp(py, BOUND.minY, BOUND.maxY); player.moving = true; }
+    if (player) { player.tx = clamp(px, BOUND.minX, boundRef.current.maxX); player.ty = clamp(py, BOUND.minY, BOUND.maxY); player.moving = true; }
   };
 
   // 每个地点当前时段的可约人数（导航用）
@@ -362,7 +380,7 @@ export default function WorldView({
   const SCENE_RATIO = (sceneConfig as any).ratio || 1920 / 1072;
 
   return (
-    <div className="relative w-full h-full overflow-hidden select-none flex items-center justify-center" style={{ background: sceneConfig.sceneBase || '#14121f' }}>
+    <div className="relative w-full h-full overflow-hidden select-none flex items-center justify-center" style={{ background: sceneConfig.sceneBase || '#1B202A' }}>
       {/* 留白处：同图放大模糊，视觉上满铺 */}
       <div
         className="absolute inset-0 pointer-events-none"
@@ -377,20 +395,20 @@ export default function WorldView({
       <div className="absolute inset-0" style={{ background: sceneConfig.overlay }} />
       {/* 时段氛围 + 暗角 */}
       <div className="absolute inset-0 pointer-events-none transition-all duration-700" style={{ background: TIME_TINT[slot] || TIME_TINT[1] }} />
-      <div className="absolute inset-0 pointer-events-none" style={{ boxShadow: 'inset 0 0 140px 30px rgba(10,6,25,0.35)' }} />
+      <div className="absolute inset-0 pointer-events-none" style={{ boxShadow: 'inset 0 0 140px 30px rgba(12,15,22,0.35)' }} />
 
       {/* 顶部：时间 + 地点 + 日程按钮 */}
-      <div className="absolute top-14 sm:top-3 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center gap-1.5 max-w-[calc(100%-1.5rem)]">
+      <div className="absolute top-14 lg:top-3 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center gap-1.5 max-w-[calc(100%-1.5rem)]">
         <div className="flex items-center justify-center flex-wrap gap-2">
-          <div className="px-3 py-1.5 rounded-full text-[#F1ECFF] text-xs font-black flex items-center gap-1.5" style={{ background: 'rgba(14,11,26,0.6)', backdropFilter: 'blur(6px)', border: '1px solid rgba(255,255,255,0.1)' }}>
+          <div className="px-3 py-1.5 rounded-full text-[#F1ECFF] text-xs font-black flex items-center gap-1.5" style={{ background: 'rgba(19,22,32,0.6)', backdropFilter: 'blur(6px)', border: '1px solid rgba(255,255,255,0.1)' }}>
             <Clock className="w-3.5 h-3.5" /> {tw ? '第' : '第'}{day}{tw ? '天' : '天'} · {TIME_SLOTS[slot]}
           </div>
-          <div className="px-3 py-1.5 rounded-full bg-white/95 text-[#211D33] text-xs font-black flex items-center gap-1.5">
-            <span>{location.icon}</span> {location.label}{effUnitLabel && <span className="text-[#5B6BB0]">· {effUnitLabel}</span>}
+          <div className="px-3 py-1.5 rounded-full bg-white/95 text-[#1A1E28] text-xs font-black flex items-center gap-1.5">
+            <span>{location.icon}</span> {location.label}{effUnitLabel && <span className="text-[#6A79C0]">· {effUnitLabel}</span>}
           </div>
           {curPhase && (
             <div className="px-3 py-1.5 rounded-full text-xs font-black flex items-center gap-1.5"
-              style={{ background: showDay ? 'rgba(201,162,39,0.9)' : 'rgba(201,162,39,0.2)', color: showDay ? '#211D33' : '#F1ECFF', border: '1px solid rgba(201,162,39,0.5)' }}>
+              style={{ background: showDay ? 'rgba(240,197,88,0.9)' : 'rgba(240,197,88,0.2)', color: showDay ? '#1A1E28' : '#F1ECFF', border: '1px solid rgba(240,197,88,0.5)' }}>
               <span>{curPhase.icon}</span>{showDay ? (tw ? '今天打歌' : '今天打歌') : curPhase.label}
             </div>
           )}
@@ -399,22 +417,22 @@ export default function WorldView({
           className="px-3 py-1 rounded-full text-[10px] font-bold pointer-events-none flex items-center gap-1.5"
           style={allHereUsed
             ? { background: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.6)' }
-            : { background: 'rgba(201,162,39,0.18)', color: '#F1ECFF', border: '1px solid rgba(201,162,39,0.45)' }}
+            : { background: 'rgba(240,197,88,0.18)', color: '#F1ECFF', border: '1px solid rgba(240,197,88,0.45)' }}
         >
           {allHereUsed
             ? (tw ? '這裡的人都聊過了 —— 推進時段或去別處' : '这里的人都聊过了 —— 推进时段或去别处')
-            : <><span className="text-[#C9A227]">●</span>{tw ? '走近愛豆互動（每人每時段 1 次）' : '走近爱豆互动（每人每时段 1 次）'}</>}
+            : <><span className="text-[#F0C558]">●</span>{tw ? '走近愛豆互動（每人每時段 1 次）' : '走近爱豆互动（每人每时段 1 次）'}</>}
         </div>
         {/* 私密地点：选团/选公司抽屉（跨公司/跨团不同屏，各用各的房间）*/}
         {scope !== 'shared' && localUnits.length > 1 && (
-          <div className="flex items-center gap-1 px-1.5 py-1 rounded-full" style={{ background: 'rgba(8,6,16,0.55)', backdropFilter: 'blur(6px)' }}>
+          <div className="flex items-center gap-1 px-1.5 py-1 rounded-full" style={{ background: 'rgba(19,22,32,0.55)', backdropFilter: 'blur(6px)' }}>
             <span className="text-[11px] text-white/50 font-bold pl-1">{scope === 'company' ? (tw ? '選公司' : '选公司') : (tw ? '選團' : '选团')}</span>
             {localUnits.map(u => {
               const on = u.unit === effUnit;
               return (
                 <button key={u.unit} onClick={() => onTravel(`${baseLoc}@${u.unit}`)}
-                  className={`px-2.5 py-1 rounded-full text-[10px] font-black flex items-center gap-1 transition-all ${on ? 'bg-white text-[#211D33]' : 'bg-white/15 text-white hover:bg-white/25'}`}>
-                  {u.label}<span className={`min-w-[13px] h-[13px] px-0.5 rounded-full text-[11px] flex items-center justify-center ${on ? 'bg-[#5B6BB0] text-white' : 'bg-white/25 text-white'}`}>{u.count}</span>
+                  className={`px-2.5 py-1 rounded-full text-[10px] font-black flex items-center gap-1 transition-all ${on ? 'bg-white text-[#1A1E28]' : 'bg-white/15 text-white hover:bg-white/25'}`}>
+                  {u.label}<span className={`min-w-[13px] h-[13px] px-0.5 rounded-full text-[11px] flex items-center justify-center ${on ? 'bg-[#6A79C0] text-white' : 'bg-white/25 text-white'}`}>{u.count}</span>
                 </button>
               );
             })}
@@ -424,24 +442,24 @@ export default function WorldView({
 
       {/* 右上：快捷入口（毛玻璃图标） + 推进时段（主操作） */}
       <div className="absolute top-3 right-3 z-30 flex gap-1.5 flex-wrap justify-end">
-        <button onClick={onOpenPhone} title={tw ? '手機' : '手机'} className="relative w-8 h-8 rounded-xl flex items-center justify-center text-[#F1ECFF] transition-all hover:bg-white/10" style={{ background: 'rgba(14,11,26,0.6)', backdropFilter: 'blur(6px)', border: '1px solid rgba(255,255,255,0.1)' }}>
+        <button onClick={onOpenPhone} title={tw ? '手機' : '手机'} className="relative w-8 h-8 rounded-xl flex items-center justify-center text-[#F1ECFF] transition-all hover:bg-white/10" style={{ background: 'rgba(19,22,32,0.6)', backdropFilter: 'blur(6px)', border: '1px solid rgba(255,255,255,0.1)' }}>
           <Smartphone className="w-4 h-4" />
           {phoneUnread > 0 && <span className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 px-1 rounded-full bg-[#FF3B30] text-white text-[11px] font-black flex items-center justify-center shadow animate-pulse">{phoneUnread}</span>}
         </button>
-        <button onClick={() => setShowFacePick(true)} title={tw ? '捏臉' : '捏脸'} className="w-8 h-8 rounded-xl flex items-center justify-center text-[#F1ECFF] transition-all hover:bg-white/10" style={{ background: 'rgba(14,11,26,0.6)', backdropFilter: 'blur(6px)', border: '1px solid rgba(255,255,255,0.1)' }}>
+        <button onClick={() => setShowFacePick(true)} title={tw ? '捏臉' : '捏脸'} className="w-8 h-8 rounded-xl flex items-center justify-center text-[#F1ECFF] transition-all hover:bg-white/10" style={{ background: 'rgba(19,22,32,0.6)', backdropFilter: 'blur(6px)', border: '1px solid rgba(255,255,255,0.1)' }}>
           <Palette className="w-4 h-4" />
         </button>
-        <button onClick={() => setShowRelations(true)} title={tw ? '關係' : '关系'} className="w-8 h-8 rounded-xl flex items-center justify-center text-[#F1ECFF] transition-all hover:bg-white/10" style={{ background: 'rgba(14,11,26,0.6)', backdropFilter: 'blur(6px)', border: '1px solid rgba(255,255,255,0.1)' }}>
+        <button onClick={() => setShowRelations(true)} title={tw ? '關係' : '关系'} className="w-8 h-8 rounded-xl flex items-center justify-center text-[#F1ECFF] transition-all hover:bg-white/10" style={{ background: 'rgba(19,22,32,0.6)', backdropFilter: 'blur(6px)', border: '1px solid rgba(255,255,255,0.1)' }}>
           <Users className="w-4 h-4" />
         </button>
-        <button onClick={() => setShowFeed(true)} title={tw ? '動態' : '动态'} className="relative w-8 h-8 rounded-xl flex items-center justify-center text-[#F1ECFF] transition-all hover:bg-white/10" style={{ background: 'rgba(14,11,26,0.6)', backdropFilter: 'blur(6px)', border: '1px solid rgba(255,255,255,0.1)' }}>
+        <button onClick={() => setDock(d => d === 'feed' ? null : 'feed')} aria-pressed={dock === 'feed'} title={tw ? '動態' : '动态'} className="relative w-8 h-8 rounded-xl flex items-center justify-center text-[#F1ECFF] transition-all hover:bg-white/10" style={{ background: 'rgba(19,22,32,0.6)', backdropFilter: 'blur(6px)', border: '1px solid rgba(255,255,255,0.1)' }}>
           <Rss className="w-4 h-4" />
           {worldFeed.length > 0 && <span className="absolute -top-1 -right-1 min-w-[15px] h-[15px] px-1 rounded-full bg-[#FF7A93] text-white text-[11px] flex items-center justify-center">{worldFeed.length}</span>}
         </button>
-        <button onClick={() => setShowMap(true)} aria-label={tw ? '地圖' : '地图'} title={tw ? '地圖 · 選位置' : '地图 · 选位置'} className="w-8 h-8 rounded-xl flex items-center justify-center text-[#F1ECFF] transition-all hover:bg-white/10" style={{ background: 'rgba(14,11,26,0.6)', backdropFilter: 'blur(6px)', border: '1px solid rgba(255,255,255,0.1)' }}>
+        <button onClick={() => setShowMap(true)} aria-label={tw ? '地圖' : '地图'} title={tw ? '地圖 · 選位置' : '地图 · 选位置'} className="w-8 h-8 rounded-xl flex items-center justify-center text-[#F1ECFF] transition-all hover:bg-white/10" style={{ background: 'rgba(19,22,32,0.6)', backdropFilter: 'blur(6px)', border: '1px solid rgba(255,255,255,0.1)' }}>
           <MapIcon className="w-4 h-4" />
         </button>
-        <button onClick={() => { setPlannerTab('schedule'); setShowPlanner(true); }} title={tw ? '日程 / 年曆' : '日程 / 年历'} className="w-8 h-8 rounded-xl flex items-center justify-center text-[#F1ECFF] transition-all hover:bg-white/10" style={{ background: 'rgba(14,11,26,0.6)', backdropFilter: 'blur(6px)', border: '1px solid rgba(255,255,255,0.1)' }}>
+        <button onClick={() => setDock(d => d === 'schedule' || d === 'calendar' ? null : 'schedule')} aria-pressed={dock === 'schedule' || dock === 'calendar'} title={tw ? '日程 / 年曆' : '日程 / 年历'} className="w-8 h-8 rounded-xl flex items-center justify-center text-[#F1ECFF] transition-all hover:bg-white/10" style={{ background: 'rgba(19,22,32,0.6)', backdropFilter: 'blur(6px)', border: '1px solid rgba(255,255,255,0.1)' }}>
           <CalendarDays className="w-4 h-4" />
         </button>
         {isPromo && (
@@ -454,11 +472,11 @@ export default function WorldView({
         {endingReady && onOpenEnding && (
           <button onClick={onOpenEnding} title={tw ? '可以收尾了' : '可以收尾了'}
             className="px-3 py-1.5 rounded-xl text-white text-[11px] font-black flex items-center gap-1 transition-all animate-pulse"
-            style={{ background: 'linear-gradient(135deg,#C9A227,#9a7b1d)', boxShadow: '0 6px 16px -6px rgba(201,162,39,0.9)' }}>
+            style={{ background: 'linear-gradient(135deg,#F0C558,#9a7b1d)', boxShadow: '0 6px 16px -6px rgba(240,197,88,0.9)' }}>
             ✦ {tw ? '結局' : '结局'}
           </button>
         )}
-        <button onClick={onAdvanceTime} className={`px-3 py-1.5 rounded-xl text-white text-[11px] font-black flex items-center gap-1 transition-all border-none ${allHereUsed ? 'animate-pulse' : ''}`} style={{ background: 'linear-gradient(135deg,#6C79C4,#454F87)', boxShadow: allHereUsed ? '0 6px 20px -4px rgba(201,162,39,0.9)' : '0 6px 16px -6px rgba(91,107,176,0.8)' }}>
+        <button onClick={onAdvanceTime} className={`px-3 py-1.5 rounded-xl text-white text-[11px] font-black flex items-center gap-1 transition-all border-none ${allHereUsed ? 'animate-pulse' : ''}`} style={{ background: 'linear-gradient(135deg,#7B87D0,#505C99)', boxShadow: allHereUsed ? '0 6px 20px -4px rgba(240,197,88,0.9)' : '0 6px 16px -6px rgba(106,121,192,0.8)' }}>
           {tw ? '推進時段' : '推进时段'} <ChevronRight className="w-3.5 h-3.5" />
         </button>
       </div>
@@ -490,7 +508,7 @@ export default function WorldView({
                 {!e.isPlayer && completedNeedIds.includes(e.id) && <span className="text-[11px] font-black text-[#c9e7b8] bg-black/50 rounded-full px-1.5">✓</span>}
                 {ms && (
                   <div className="mb-0.5 px-2 py-0.5 rounded-full text-[11px] font-black flex items-center gap-1 shadow-lg animate-pulse"
-                    style={{ background: 'linear-gradient(135deg,#C9A227,#E6C34A)', color: '#1a1408' }}>
+                    style={{ background: 'linear-gradient(135deg,#F0C558,#FFDB86)', color: '#1a1408' }}>
                     ⚡ {ms.omen}
                   </div>
                 )}
@@ -500,17 +518,17 @@ export default function WorldView({
                 {need && (
                   <div className="need-bob mb-1 flex flex-col items-center">
                     <div className="px-2 py-1 rounded-2xl flex items-center gap-1 shadow-[0_6px_14px_-4px_rgba(0,0,0,0.7)] border"
-                      style={{ background: 'linear-gradient(165deg, rgba(40,34,66,0.96), rgba(20,17,38,0.96))', borderColor: 'rgba(201,162,39,0.45)' }}>
+                      style={{ background: 'linear-gradient(165deg, rgba(45,52,64,0.96), rgba(32,37,47,0.96))', borderColor: 'rgba(240,197,88,0.45)' }}>
                       <span className="text-[14px] leading-none">{need.emoji}</span>
                       <span className="text-[11px] font-black text-[#F1ECFF]">{need.label}</span>
                     </div>
-                    <div className="w-2 h-2 -mt-1 rotate-45 border-r border-b" style={{ background: 'rgba(20,17,38,0.96)', borderColor: 'rgba(201,162,39,0.45)' }} />
+                    <div className="w-2 h-2 -mt-1 rotate-45 border-r border-b" style={{ background: 'rgba(32,37,47,0.96)', borderColor: 'rgba(240,197,88,0.45)' }} />
                   </div>
                 )}
                 {isNear && (
                   <div
                     className={`mb-0.5 px-2 py-0.5 rounded-full text-white text-[11px] font-black flex items-center gap-1 shadow-lg ${(usedActionIds || []).includes(e.member!.id) ? '' : 'animate-bounce'}`}
-                    style={{ background: (usedActionIds || []).includes(e.member!.id) ? 'rgba(8,6,16,0.7)' : '#5B6BB0' }}
+                    style={{ background: (usedActionIds || []).includes(e.member!.id) ? 'rgba(19,22,32,0.7)' : '#6A79C0' }}
                   >
                     <MessageCircle className="w-2.5 h-2.5" /> {(usedActionIds || []).includes(e.member!.id) ? (tw ? '續聊' : '续聊') : (tw ? '對話' : '对话')}
                   </div>
@@ -520,7 +538,7 @@ export default function WorldView({
                 </div>
                 {!e.isPlayer && activity && <div className="px-1 rounded text-[11px] text-white/80 bg-black/30">{activity.mood.split('、')[0]}</div>}
               </div>
-              <div className={!e.isPlayer ? 'cursor-pointer' : ''} style={{ filter: ms ? 'drop-shadow(0 0 12px rgba(230,195,74,0.95)) drop-shadow(0 0 4px rgba(255,230,150,0.9))' : isNear ? 'drop-shadow(0 0 9px rgba(201,162,39,0.85)) drop-shadow(0 3px 4px rgba(0,0,0,0.5))' : 'drop-shadow(0 3px 4px rgba(0,0,0,0.45))' }}>
+              <div className={!e.isPlayer ? 'cursor-pointer' : ''} style={{ filter: ms ? 'drop-shadow(0 0 12px rgba(230,195,74,0.95)) drop-shadow(0 0 4px rgba(255,230,150,0.9))' : isNear ? 'drop-shadow(0 0 9px rgba(240,197,88,0.85)) drop-shadow(0 3px 4px rgba(0,0,0,0.5))' : 'drop-shadow(0 3px 4px rgba(0,0,0,0.45))' }}>
                 <PixelSprite sheet={stripsRef.current[e.id] ?? null} facing={e.facing} frame={e.frame} size={SPRITE} />
               </div>
             </div>
@@ -557,7 +575,7 @@ export default function WorldView({
 
       {/* 身份门禁提示 */}
       {lockToast && (
-        <div className="absolute bottom-16 left-1/2 -translate-x-1/2 z-40 px-4 py-2.5 rounded-2xl bg-[#2A2A3D]/95 text-white text-[11px] font-bold flex items-center gap-2 shadow-xl border border-white/10 max-w-[86%] animate-[fadeIn_0.2s_ease]">
+        <div className="absolute bottom-16 left-1/2 -translate-x-1/2 z-40 px-4 py-2.5 rounded-2xl bg-[#2A2A3D]/95 text-white text-[11px] font-bold flex items-center gap-2 shadow-xl border border-white/20 max-w-[86%] animate-[fadeIn_0.2s_ease]">
           <Lock className="w-3.5 h-3.5 text-[#FF7A93] flex-shrink-0" /> {lockToast}
         </div>
       )}
@@ -566,29 +584,139 @@ export default function WorldView({
       {showMap && <CityMap members={members} day={day} slot={slot} locationId={locationId} identity={identity}
         lang={lang} onTravel={tryTravel} onClose={() => setShowMap(false)} />}
 
-      {/* 世界动态流 */}
-      {showFeed && (
-        <div className="absolute inset-0 z-40 bg-black/70 backdrop-blur-md flex items-center justify-center p-4" onClick={() => setShowFeed(false)}>
-          <div className="ink-panel ink-scroll rounded-[18px] p-5 max-w-md w-full max-h-[80%] overflow-auto" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-[14px] font-black text-[#F1ECFF] flex items-center gap-2"><Rss className="w-4 h-4 text-[#C9A227]" /> {tw ? '世界動態' : '世界动态'}</h3>
-              <button onClick={() => setShowFeed(false)} className="w-7 h-7 rounded-lg bg-white/[0.06] hover:bg-white/[0.12] text-[#B7B2D9] flex items-center justify-center transition-colors"><X className="w-4 h-4" /></button>
-            </div>
+      {/* 右上浮层：世界动态 / 日程 / 年历（不遮住舞台，顶栏按钮开关） */}
+      {dock && (
+        <aside aria-label={tw ? '世界動態與日程' : '世界动态与日程'}
+          className="world-dock absolute top-14 right-3 bottom-3 z-40 w-[min(23rem,46vw)] rounded-2xl border border-white/20 shadow-2xl flex flex-col overflow-hidden"
+          style={{ background: 'rgba(32,37,47,0.94)', backdropFilter: 'blur(10px)' }}>
+          <div className="flex items-center gap-1 p-2 border-b border-white/[0.14] shrink-0">
+            {DOCK_TABS.map(t => (
+              <button key={t.id} onClick={() => setDock(t.id)} aria-pressed={dock === t.id}
+                className={`flex-1 min-h-9 px-1 rounded-xl text-[12px] font-black flex items-center justify-center gap-1 transition-all ${dock === t.id ? 'text-[#1A1E28]' : 'text-[#C8C4E4] hover:bg-white/10'}`}
+                style={dock === t.id ? { background: 'linear-gradient(135deg,#F0C558,#FFDB86)' } : undefined}>
+                <t.icon className="w-3.5 h-3.5" />{tw ? t.tw : t.cn}
+              </button>
+            ))}
+            <button onClick={() => setDock(null)} className="min-h-9 px-2.5 rounded-xl text-[11px] font-black text-[#C8C4E4] hover:bg-white/10">{tw ? '收起' : '收起'}</button>
+          </div>
+          <div className="flex-1 min-h-0 overflow-auto p-3 ink-scroll">
+            {dock === 'feed' && (<div className="flex flex-col gap-2">
             {worldFeed.length === 0 ? (
-              <div className="text-[11px] text-[#8B86B8] py-3 leading-relaxed">{tw ? '暫無動態。推進時段後，其它地點的愛豆也會各自相處，這裡會記錄下來。' : '暂无动态。推进时段后，其它地点的爱豆也会各自相处，这里会记录下来。'}</div>
+              <div className="text-[11px] text-[#A6A1CC] py-3 leading-relaxed">{tw ? '暫無動態。推進時段後，其它地點的愛豆也會各自相處，這裡會記錄下來。' : '暂无动态。推进时段后，其它地点的爱豆也会各自相处，这里会记录下来。'}</div>
             ) : (
               <div className="flex flex-col gap-2">
                 {worldFeed.map(f => (
-                  <div key={f.id} className="flex items-center gap-2.5 bg-white/[0.03] rounded-[10px] px-3 py-2.5">
-                    <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: f.kind === 'romance' ? '#FF7A93' : f.kind === 'tension' ? '#C9A227' : '#6C79C4' }} />
+                  <div key={f.id} className="flex items-center gap-2.5 bg-white/[0.10] rounded-[10px] px-3 py-2.5">
+                    <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: f.kind === 'romance' ? '#FF7A93' : f.kind === 'tension' ? '#F0C558' : '#7B87D0' }} />
                     <span className="text-[11px] text-[#F1ECFF] flex-1">{f.text}</span>
-                    <span className="text-[11px] text-[#8B86B8] whitespace-nowrap">D{f.day}·{TIME_SLOTS[f.slot]}</span>
+                    <span className="text-[11px] text-[#A6A1CC] whitespace-nowrap">D{f.day}·{TIME_SLOTS[f.slot]}</span>
                   </div>
                 ))}
               </div>
             )}
+            </div>)}
+            {dock === 'calendar' && (<div>
+            <p className="text-[10px] text-[#A6A1CC] mb-4">{tw ? `第 ${weekOf(day)} 週 · 第 ${day} 天（第 ${dayInWeek(day)} 日）` : `第 ${weekOf(day)} 周 · 第 ${day} 天（周内第 ${dayInWeek(day)} 日）`}</p>
+
+            {involvedGroups.length === 0 ? (
+              <div className="text-[11px] text-[#A6A1CC] py-3">{tw ? '你關注的角色裡沒有需要打歌的團體。' : '你关注的角色里没有需要打歌的团体。'}</div>
+            ) : involvedGroups.map(g => {
+              const phases = buildYearPhases(g);
+              return (
+                <div key={g} className="mb-5">
+                  <div className="gold-caption mb-2">{g}</div>
+                  {/* 52 周条带 */}
+                  <div className="grid gap-1 mb-2.5" style={{ gridTemplateColumns: 'repeat(13, minmax(0, 1fr))' }}>
+                    {Array.from({ length: WEEKS_PER_YEAR }, (_, i) => i + 1).map(w => {
+                      const p = phases.find(ph => w >= ph.startWeek && w <= ph.endWeek);
+                      const isNow = w === weekOf(day);
+                      const bg = p?.kind === 'promo' ? 'rgba(240,197,88,0.55)'
+                        : p?.kind === 'comeback' ? 'rgba(240,197,88,0.28)'
+                        : p?.kind === 'tour' ? 'rgba(123,135,208,0.5)'
+                        : p?.kind === 'awards' ? 'rgba(255,122,147,0.5)'
+                        : 'rgba(255,255,255,0.06)';
+                      return (
+                        <div key={w} title={`第${w}周${p ? ' · ' + p.label : ''}`}
+                          className="h-6 rounded flex items-center justify-center text-[11px] font-bold"
+                          style={{ background: bg, color: p ? '#F1ECFF' : '#8781A8', outline: isNow ? '2px solid #F0C558' : 'none' }}>
+                          {p ? p.icon : w % 4 === 1 ? w : ''}
+                        </div>
+                      );
+                    })}
+                  </div>
+                  {/* 档期清单 */}
+                  <div className="flex flex-col gap-1.5">
+                    {phases.map((p, i) => {
+                      const now = weekOf(day) >= p.startWeek && weekOf(day) <= p.endWeek;
+                      const past = weekOf(day) > p.endWeek;
+                      return (
+                        <div key={i} className="flex items-center gap-3 rounded-[10px] px-3 py-2 bg-white/[0.10]"
+                          style={{ border: now ? '1px solid rgba(240,197,88,0.5)' : '1px solid transparent', opacity: past ? 0.45 : 1 }}>
+                          <span className="text-base">{p.icon}</span>
+                          <span className="text-[12px] font-black text-[#F1ECFF] flex-1">{p.label}</span>
+                          <span className="text-[10px] text-[#A6A1CC]">{tw ? `第 ${p.startWeek}-${p.endWeek} 週` : `第 ${p.startWeek}-${p.endWeek} 周`}</span>
+                          {now && <span className="text-[11px] font-black text-[#F0C558]">{tw ? '進行中' : '进行中'}</span>}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+            <p className="text-[10px] text-[#A6A1CC] mt-1 leading-relaxed">
+              {tw ? '打歌期每週第 4、7 天有打歌舞台，成績由你平時的應援與她的狀態決定。' : '打歌期每周第 4、7 天有打歌舞台，成绩由你平时的应援与她的状态决定。'}
+            </p>
+            </div>)}
+            {dock === 'schedule' && (<div className="overflow-x-auto">
+            <table className="w-full text-[11px] border-collapse">
+              <thead>
+                <tr className="text-[#A6A1CC]">
+                  <th className="text-left py-2 px-2 font-black">成员</th>
+                  {TIME_SLOTS.map((s, i) => (
+                    <th key={s} className={`text-left py-2 px-2 font-black ${i === slot ? 'text-[#F0C558]' : ''}`}>{s}{i === slot ? ' ●' : ''}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {Object.entries(members.reduce((acc, m) => {
+                  (acc[m.group] = acc[m.group] || []).push(m); return acc;
+                }, {} as Record<string, Member[]>)).flatMap(([g, gm]) => [
+                  <tr key={`g-${g}`}>
+                    <td colSpan={TIME_SLOTS.length + 1} className="pt-3 pb-1 px-2">
+                      <span className="gold-caption">{g}</span>
+                      <span className="ml-2 text-[11px] font-bold" style={{ color: isGroupDay(g, day) ? '#F0C558' : '#A6A1CC' }}>
+                        {isGroupDay(g, day) ? (tw ? '· 團體行程日（白天同行，晚上各自休息）' : '· 团体行程日（白天同行，晚上各自休息）') : (tw ? '· 休息日（各自散開，好約）' : '· 休息日（各自散开，好约）')}
+                      </span>
+                    </td>
+                  </tr>,
+                  ...gm.map(m => (
+                  <tr key={m.id} className="border-t border-white/[0.16]">
+                    <td className="py-2 px-2 font-bold text-[#F1ECFF] whitespace-nowrap">{m.name}</td>
+                    {TIME_SLOTS.map((_, i) => {
+                      const a = getActivity(m.id, day, i, m.group);
+                      const here = a.available && a.loc === baseLoc;
+                      const loc = a.loc === AWAY ? null : getLocation(a.loc);
+                      const gated = a.available && a.loc !== AWAY && !accessible.has(a.loc);
+                      return (
+                        <td key={i} className={`py-2 px-2 ${i === slot ? 'bg-[rgba(240,197,88,0.08)]' : ''}`}>
+                          <div className={`flex items-center gap-1 ${!a.available ? 'text-[#6E698F] line-through' : gated ? 'text-[#6E698F]' : 'text-[#F1ECFF]'}`}>
+                            {loc && <span className={gated ? 'grayscale opacity-70' : ''}>{loc.icon}</span>}
+                            <span className="font-bold">{a.label}</span>
+                            {gated && <Lock className="w-2.5 h-2.5 text-[#6E698F]" />}
+                            {here && i === slot && <span className="text-[11px] text-[#F0C558] font-black">· 在这</span>}
+                          </div>
+                        </td>
+                      );
+                    })}
+                  </tr>
+                  )),
+                ])}
+              </tbody>
+            </table>
+            <p className="text-[10px] text-[#A6A1CC] mt-3 flex items-center gap-1 flex-wrap leading-relaxed">{tw ? '劃掉=在外地/聯繫不上；' : '划掉=在外地/联系不上；'}<Lock className="w-2.5 h-2.5" />{tw ? '=你的身份進不去。點右上角「地圖」選位置過去找人；沒人就「推進時段」等日程變化。' : '=你的身份进不去。点右上角「地图」选位置过去找人；没人就「推进时段」等日程变化。'}</p>
+            </div>)}
           </div>
-        </div>
+        </aside>
       )}
 
       {/* 关系网面板 */}
@@ -605,18 +733,18 @@ export default function WorldView({
         <div className="absolute inset-0 z-40 bg-black/70 backdrop-blur-md flex items-center justify-center p-4" onClick={() => setShowFacePick(false)}>
           <div className="ink-panel ink-scroll rounded-[18px] p-5 max-w-md w-full max-h-[80%] overflow-auto" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-[14px] font-black text-[#F1ECFF] flex items-center gap-2"><Palette className="w-4 h-4 text-[#C9A227]" /> {tw ? '捏誰的臉' : '捏谁的脸'}</h3>
-              <button onClick={() => setShowFacePick(false)} className="w-7 h-7 rounded-lg bg-white/[0.06] hover:bg-white/[0.12] text-[#B7B2D9] flex items-center justify-center"><X className="w-4 h-4" /></button>
+              <h3 className="text-[14px] font-black text-[#F1ECFF] flex items-center gap-2"><Palette className="w-4 h-4 text-[#F0C558]" /> {tw ? '捏誰的臉' : '捏谁的脸'}</h3>
+              <button onClick={() => setShowFacePick(false)} className="w-7 h-7 rounded-lg bg-white/[0.10] hover:bg-white/[0.12] text-[#C8C4E4] flex items-center justify-center"><X className="w-4 h-4" /></button>
             </div>
             <div className="grid grid-cols-3 gap-2.5">
               <button onClick={() => { setShowFacePick(false); onCustomize({ kind: 'player' }); }}
-                className="flex flex-col items-center gap-1 p-2 rounded-xl bg-white/[0.03] border border-[rgba(201,162,39,0.3)] hover:border-[rgba(201,162,39,0.6)] transition-all">
+                className="flex flex-col items-center gap-1 p-2 rounded-xl bg-white/[0.10] border border-[rgba(240,197,88,0.3)] hover:border-[rgba(240,197,88,0.6)] transition-all">
                 <SpritePreview appearance={normalizeAppearance(playerAppearance, getPlayerAppearance(playerName || 'you'))} size={52} />
                 <span className="text-[11px] font-black text-[#F1ECFF]">{tw ? '你' : '你'}</span>
               </button>
               {members.map(m => (
                 <button key={m.id} onClick={() => { setShowFacePick(false); onCustomize({ kind: 'idol', id: m.id }); }}
-                  className="flex flex-col items-center gap-1 p-2 rounded-xl bg-white/[0.03] border border-white/10 hover:border-[rgba(201,162,39,0.5)] transition-all">
+                  className="flex flex-col items-center gap-1 p-2 rounded-xl bg-white/[0.10] border border-white/20 hover:border-[rgba(240,197,88,0.5)] transition-all">
                   <SpritePreview appearance={normalizeAppearance(appearances[m.id], getDefaultAppearance(m.id))} size={52} />
                   <span className="text-[11px] font-black text-[#F1ECFF] truncate max-w-[64px]">{m.name}</span>
                 </button>
@@ -626,131 +754,7 @@ export default function WorldView({
         </div>
       )}
 
-      {/* 年历：一年的档期一眼看完，玩家能提前规划 */}
-      {showPlanner && plannerTab === 'calendar' && (
-        <div className="absolute inset-0 z-40 bg-black/70 backdrop-blur-md flex items-center justify-center p-4" onClick={() => setShowPlanner(false)}>
-          <div className="ink-panel ink-scroll rounded-[18px] p-5 max-w-2xl w-full max-h-[85%] overflow-auto" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex gap-1.5 p-1 rounded-xl bg-white/[0.05]">
-                <button onClick={() => setPlannerTab('schedule')} className="px-3 py-1.5 rounded-lg text-[12px] font-black text-[#B7B2D9] hover:text-white flex items-center gap-1.5"><CalendarDays className="w-3.5 h-3.5" /> {tw ? '日程' : '日程'}</button>
-                <button onClick={() => setPlannerTab('calendar')} className="px-3 py-1.5 rounded-lg text-[12px] font-black text-[#211D33] flex items-center gap-1.5" style={{ background: 'linear-gradient(135deg,#C9A227,#E6C34A)' }}><CalendarRange className="w-3.5 h-3.5" /> {tw ? '年曆' : '年历'}</button>
-              </div>
-              <button onClick={() => setShowPlanner(false)} className="w-7 h-7 rounded-lg bg-white/[0.06] hover:bg-white/[0.12] text-[#B7B2D9] flex items-center justify-center transition-colors"><X className="w-4 h-4" /></button>
-            </div>
-            <p className="text-[10px] text-[#8B86B8] mb-4">{tw ? `第 ${weekOf(day)} 週 · 第 ${day} 天（第 ${dayInWeek(day)} 日）` : `第 ${weekOf(day)} 周 · 第 ${day} 天（周内第 ${dayInWeek(day)} 日）`}</p>
 
-            {involvedGroups.length === 0 ? (
-              <div className="text-[11px] text-[#8B86B8] py-3">{tw ? '你關注的角色裡沒有需要打歌的團體。' : '你关注的角色里没有需要打歌的团体。'}</div>
-            ) : involvedGroups.map(g => {
-              const phases = buildYearPhases(g);
-              return (
-                <div key={g} className="mb-5">
-                  <div className="gold-caption mb-2">{g}</div>
-                  {/* 52 周条带 */}
-                  <div className="grid gap-1 mb-2.5" style={{ gridTemplateColumns: 'repeat(13, minmax(0, 1fr))' }}>
-                    {Array.from({ length: WEEKS_PER_YEAR }, (_, i) => i + 1).map(w => {
-                      const p = phases.find(ph => w >= ph.startWeek && w <= ph.endWeek);
-                      const isNow = w === weekOf(day);
-                      const bg = p?.kind === 'promo' ? 'rgba(201,162,39,0.55)'
-                        : p?.kind === 'comeback' ? 'rgba(201,162,39,0.28)'
-                        : p?.kind === 'tour' ? 'rgba(108,121,196,0.5)'
-                        : p?.kind === 'awards' ? 'rgba(255,122,147,0.5)'
-                        : 'rgba(255,255,255,0.06)';
-                      return (
-                        <div key={w} title={`第${w}周${p ? ' · ' + p.label : ''}`}
-                          className="h-6 rounded flex items-center justify-center text-[11px] font-bold"
-                          style={{ background: bg, color: p ? '#F1ECFF' : '#6b6790', outline: isNow ? '2px solid #C9A227' : 'none' }}>
-                          {p ? p.icon : w % 4 === 1 ? w : ''}
-                        </div>
-                      );
-                    })}
-                  </div>
-                  {/* 档期清单 */}
-                  <div className="flex flex-col gap-1.5">
-                    {phases.map((p, i) => {
-                      const now = weekOf(day) >= p.startWeek && weekOf(day) <= p.endWeek;
-                      const past = weekOf(day) > p.endWeek;
-                      return (
-                        <div key={i} className="flex items-center gap-3 rounded-[10px] px-3 py-2 bg-white/[0.03]"
-                          style={{ border: now ? '1px solid rgba(201,162,39,0.5)' : '1px solid transparent', opacity: past ? 0.45 : 1 }}>
-                          <span className="text-base">{p.icon}</span>
-                          <span className="text-[12px] font-black text-[#F1ECFF] flex-1">{p.label}</span>
-                          <span className="text-[10px] text-[#8B86B8]">{tw ? `第 ${p.startWeek}-${p.endWeek} 週` : `第 ${p.startWeek}-${p.endWeek} 周`}</span>
-                          {now && <span className="text-[11px] font-black text-[#C9A227]">{tw ? '進行中' : '进行中'}</span>}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              );
-            })}
-            <p className="text-[10px] text-[#8B86B8] mt-1 leading-relaxed">
-              {tw ? '打歌期每週第 4、7 天有打歌舞台，成績由你平時的應援與她的狀態決定。' : '打歌期每周第 4、7 天有打歌舞台，成绩由你平时的应援与她的状态决定。'}
-            </p>
-          </div>
-        </div>
-      )}
-
-      {/* 日程 / 年历 面板（日程 tab） */}
-      {showPlanner && plannerTab === 'schedule' && (
-        <div className="absolute inset-0 z-40 bg-black/70 backdrop-blur-md flex items-center justify-center p-4" onClick={() => setShowPlanner(false)}>
-          <div className="ink-panel ink-scroll rounded-[18px] p-5 max-w-2xl w-full max-h-[85%] overflow-auto" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex gap-1.5 p-1 rounded-xl bg-white/[0.05]">
-                <button onClick={() => setPlannerTab('schedule')} className="px-3 py-1.5 rounded-lg text-[12px] font-black text-[#211D33] flex items-center gap-1.5" style={{ background: 'linear-gradient(135deg,#C9A227,#E6C34A)' }}><CalendarDays className="w-3.5 h-3.5" /> {tw ? `第${day}天 · 日程` : `第${day}天 · 日程`}</button>
-                <button onClick={() => setPlannerTab('calendar')} className="px-3 py-1.5 rounded-lg text-[12px] font-black text-[#B7B2D9] hover:text-white flex items-center gap-1.5"><CalendarRange className="w-3.5 h-3.5" /> {tw ? '年曆' : '年历'}</button>
-              </div>
-              <button onClick={() => setShowPlanner(false)} className="w-7 h-7 rounded-lg bg-white/[0.06] hover:bg-white/[0.12] text-[#B7B2D9] flex items-center justify-center transition-colors"><X className="w-4 h-4" /></button>
-            </div>
-            <table className="w-full text-[11px] border-collapse">
-              <thead>
-                <tr className="text-[#8B86B8]">
-                  <th className="text-left py-2 px-2 font-black">成员</th>
-                  {TIME_SLOTS.map((s, i) => (
-                    <th key={s} className={`text-left py-2 px-2 font-black ${i === slot ? 'text-[#C9A227]' : ''}`}>{s}{i === slot ? ' ●' : ''}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {Object.entries(members.reduce((acc, m) => {
-                  (acc[m.group] = acc[m.group] || []).push(m); return acc;
-                }, {} as Record<string, Member[]>)).flatMap(([g, gm]) => [
-                  <tr key={`g-${g}`}>
-                    <td colSpan={TIME_SLOTS.length + 1} className="pt-3 pb-1 px-2">
-                      <span className="gold-caption">{g}</span>
-                      <span className="ml-2 text-[11px] font-bold" style={{ color: isGroupDay(g, day) ? '#C9A227' : '#8B86B8' }}>
-                        {isGroupDay(g, day) ? (tw ? '· 團體行程日（白天同行，晚上各自休息）' : '· 团体行程日（白天同行，晚上各自休息）') : (tw ? '· 休息日（各自散開，好約）' : '· 休息日（各自散开，好约）')}
-                      </span>
-                    </td>
-                  </tr>,
-                  ...gm.map(m => (
-                  <tr key={m.id} className="border-t border-white/[0.08]">
-                    <td className="py-2 px-2 font-bold text-[#F1ECFF] whitespace-nowrap">{m.name}</td>
-                    {TIME_SLOTS.map((_, i) => {
-                      const a = getActivity(m.id, day, i, m.group);
-                      const here = a.available && a.loc === baseLoc;
-                      const loc = a.loc === AWAY ? null : getLocation(a.loc);
-                      const gated = a.available && a.loc !== AWAY && !accessible.has(a.loc);
-                      return (
-                        <td key={i} className={`py-2 px-2 ${i === slot ? 'bg-[rgba(201,162,39,0.08)]' : ''}`}>
-                          <div className={`flex items-center gap-1 ${!a.available ? 'text-[#5b5678] line-through' : gated ? 'text-[#5b5678]' : 'text-[#F1ECFF]'}`}>
-                            {loc && <span className={gated ? 'grayscale opacity-70' : ''}>{loc.icon}</span>}
-                            <span className="font-bold">{a.label}</span>
-                            {gated && <Lock className="w-2.5 h-2.5 text-[#5b5678]" />}
-                            {here && i === slot && <span className="text-[11px] text-[#C9A227] font-black">· 在这</span>}
-                          </div>
-                        </td>
-                      );
-                    })}
-                  </tr>
-                  )),
-                ])}
-              </tbody>
-            </table>
-            <p className="text-[10px] text-[#8B86B8] mt-3 flex items-center gap-1 flex-wrap leading-relaxed">{tw ? '劃掉=在外地/聯繫不上；' : '划掉=在外地/联系不上；'}<Lock className="w-2.5 h-2.5" />{tw ? '=你的身份進不去。點右上角「地圖」選位置過去找人；沒人就「推進時段」等日程變化。' : '=你的身份进不去。点右上角「地图」选位置过去找人；没人就「推进时段」等日程变化。'}</p>
-          </div>
-        </div>
-      )}
       </div>
     </div>
   );

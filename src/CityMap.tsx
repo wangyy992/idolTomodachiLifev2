@@ -42,11 +42,11 @@ export default function CityMap({ members, day, slot, locationId, identity, lang
     return () => { document.removeEventListener('keydown', keydown); previous?.focus(); };
   }, []);
   return (
-    <div className="city-map-overlay fixed inset-0 z-[150] bg-[#100f1d]/80 backdrop-blur-md p-2 sm:p-6 flex items-center justify-center" onClick={onClose}>
-      <div ref={panel} role="dialog" aria-modal="true" aria-label="城市地图" className="city-map-dialog w-full max-w-6xl max-h-full overflow-hidden rounded-3xl bg-[#19172a] border border-[#c8bca4]/25 shadow-2xl flex flex-col" onClick={e => e.stopPropagation()}>
-        <header className="flex items-center justify-between gap-3 px-5 py-3 sm:px-6 border-b border-white/10 shrink-0">
-          <div><div className="text-[10px] tracking-[.22em] text-[#cdbfa2]">OUR LITTLE WORLD</div><h2 className="text-xl font-bold text-[#f8f1e5] mt-1">今天，想去哪里？</h2></div>
-          <div className="flex items-center gap-4"><span className="hidden sm:block text-sm text-[#c9c2dc]">第 {day} 天 · {TIME_SLOTS[slot]}</span><button ref={close} aria-label="关闭地图" onClick={onClose} className="min-w-11 min-h-11 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-white/20"><X size={20}/></button></div>
+    <div className="city-map-overlay fixed inset-0 z-[150] bg-[#131620]/80 backdrop-blur-md p-2 sm:p-6 flex items-center justify-center" onClick={onClose}>
+      <div ref={panel} role="dialog" aria-modal="true" aria-label="城市地图" className="city-map-dialog w-full max-w-6xl max-h-full overflow-hidden rounded-3xl bg-[#20252F] border border-[#D6CAB4]/25 shadow-2xl flex flex-col" onClick={e => e.stopPropagation()}>
+        <header className="flex items-center justify-between gap-3 px-5 py-3 sm:px-6 border-b border-white/20 shrink-0">
+          <div><div className="text-[10px] tracking-[.22em] text-[#DCCFB4]">OUR LITTLE WORLD</div><h2 className="text-xl font-bold text-[#FAF5EC] mt-1">今天，想去哪里？</h2></div>
+          <div className="flex items-center gap-4"><span className="hidden sm:block text-sm text-[#D5D0E6]">第 {day} 天 · {TIME_SLOTS[slot]}</span><button ref={close} aria-label="关闭地图" onClick={onClose} className="min-w-11 min-h-11 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-white/20"><X size={20}/></button></div>
         </header>
         <div className="city-map-body min-h-0 flex flex-col lg:flex-row">
           <div className="city-map-scroll overflow-auto min-h-0 flex-1 bg-[#aca7b0]" tabIndex={0} aria-label="城市插画，可左右滑动查看地点">
@@ -62,25 +62,25 @@ export default function CityMap({ members, day, slot, locationId, identity, lang
                   className="city-map-pin absolute -translate-x-1/2 -translate-y-1/2 min-h-11 px-2 flex flex-col items-center justify-center gap-1 transition-transform hover:scale-[1.06]"
                   style={{ left: x+'%', top: y+'%' }}>
                   <span className={'city-map-name text-[15px] leading-none font-black tracking-wide ' +
-                    (active ? 'text-[#ffe3a3]' : locked ? 'text-white/60' : 'text-white')}>
+                    (active ? 'text-[#FFE9B8]' : locked ? 'text-white/60' : 'text-white')}>
                     {loc.label}{!locked && count > 0 && <span className="ml-1 text-[12px] font-bold opacity-85">{count}</span>}
                   </span>
-                  <span className={'h-[3px] rounded-full transition-all ' + (active ? 'w-7 bg-[#e9bf66]' : isCurrent ? 'w-2 bg-[#e9bf66]' : 'w-0')} />
+                  <span className={'h-[3px] rounded-full transition-all ' + (active ? 'w-7 bg-[#F0C558]' : isCurrent ? 'w-2 bg-[#F0C558]' : 'w-0')} />
                 </button>;
               })}
             </div>
           </div>
-          <aside className="city-map-details lg:w-64 shrink-0 p-4 sm:p-5 text-[#f5f0ff] flex flex-col gap-3 border-t lg:border-t-0 lg:border-l border-white/10">
-            <div className="flex items-center gap-2"><h3 className="text-lg font-bold">{location.label}</h3>{isCurrentSelected && <span className="text-xs text-[#e9bf66]">你在这里</span>}</div>
-            {scoped && units.length > 0 && <label className="text-xs text-[#bbb2d0]">选择{LOCATION_SCOPE[selected] === 'company' ? '公司' : '团体'}<select aria-label="选择地点所属单位" value={unit} onChange={e => setSelectedUnit(e.target.value)} className="block w-full mt-1 p-2 rounded-xl bg-[#302b46] text-white border border-white/15">{units.map(u => <option key={u}>{u}</option>)}</select></label>}
-            <div className="text-sm text-[#c9c2dc] flex items-center gap-2"><Users size={15}/>{present.length ? present.map(m => m.name).join('、') : '此刻没有关注的人在这里'}</div>
-            <p className="text-xs leading-relaxed text-[#aaa1bd]">{allowed.has(selected) ? '选中建筑查看地点，再点击前往。人数会随日程更新。' : lockReason(selected, lang === 'traditional')}</p>
-            <button disabled={!allowed.has(selected)} onClick={() => { if (allowed.has(selected)) { onTravel(destination); onClose(); } }} className="min-h-12 mt-auto rounded-xl bg-[#eed5a0] text-[#35273f] font-bold px-4 flex items-center justify-center gap-2 disabled:bg-white/10 disabled:text-white/40">
+          <aside className="city-map-details lg:w-64 shrink-0 p-4 sm:p-5 text-[#f5f0ff] flex flex-col gap-3 border-t lg:border-t-0 lg:border-l border-white/20">
+            <div className="flex items-center gap-2"><h3 className="text-lg font-bold">{location.label}</h3>{isCurrentSelected && <span className="text-xs text-[#F0C558]">你在这里</span>}</div>
+            {scoped && units.length > 0 && <label className="text-xs text-[#C8C1DC]">选择{LOCATION_SCOPE[selected] === 'company' ? '公司' : '团体'}<select aria-label="选择地点所属单位" value={unit} onChange={e => setSelectedUnit(e.target.value)} className="block w-full mt-1 p-2 rounded-xl bg-[#2C333F] text-white border border-white/25">{units.map(u => <option key={u}>{u}</option>)}</select></label>}
+            <div className="text-sm text-[#D5D0E6] flex items-center gap-2"><Users size={15}/>{present.length ? present.map(m => m.name).join('、') : '此刻没有关注的人在这里'}</div>
+            <p className="text-xs leading-relaxed text-[#B9B2CF]">{allowed.has(selected) ? '选中建筑查看地点，再点击前往。人数会随日程更新。' : lockReason(selected, lang === 'traditional')}</p>
+            <button disabled={!allowed.has(selected)} onClick={() => { if (allowed.has(selected)) { onTravel(destination); onClose(); } }} className="min-h-12 mt-auto rounded-xl bg-[#F3D89B] text-[#1A1E28] font-bold px-4 flex items-center justify-center gap-2 disabled:bg-white/10 disabled:text-white/40">
               {allowed.has(selected) ? <>{here ? '返回这里' : '前往这里'}<ArrowRight size={17}/></> : <><Lock size={15}/>尚未解锁</>}
             </button>
           </aside>
         </div>
-        <footer className="hidden sm:flex px-5 py-2 text-xs text-[#a59ab6] gap-4 border-t border-white/10"><span>地名后的数字是此刻在那里的人数</span><span>金色下划线是你的位置</span><span>灰掉的地名点开可看进入条件</span></footer>
+        <footer className="hidden sm:flex px-5 py-2 text-xs text-[#B4ACC8] gap-4 border-t border-white/20"><span>地名后的数字是此刻在那里的人数</span><span>金色下划线是你的位置</span><span>灰掉的地名点开可看进入条件</span></footer>
       </div>
     </div>
   );

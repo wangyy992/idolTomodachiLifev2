@@ -1,22 +1,22 @@
 @import "tailwindcss";
 
-/* ── 墨黑 + 鎏金 设计令牌 ── */
+/* ── 深蓝灰 + 鎏金 设计令牌（整体比初版提亮一档，文字/分隔线对比拉高）── */
 :root {
-  --bg-deep: #05040a;
-  --bg-deep-2: #0B0A14;
-  --panel-grad: linear-gradient(165deg, #1C1830, #0E0C1C);
-  --border-gold-soft: rgba(201,162,39,0.15);
-  --border-gold: rgba(201,162,39,0.3);
-  --border-gold-strong: rgba(201,162,39,0.5);
-  --gold: #C9A227;
-  --violet: #5B6BB0;
-  --violet-dark: #454F87;
-  --violet-light: #6C79C4;
-  --violet-grad: linear-gradient(135deg, #6C79C4, #454F87);
+  --bg-deep: #0F131C;
+  --bg-deep-2: #131620;
+  --panel-grad: linear-gradient(165deg, #242A36, #20252F);
+  --border-gold-soft: rgba(240,197,88,0.15);
+  --border-gold: rgba(240,197,88,0.3);
+  --border-gold-strong: rgba(240,197,88,0.5);
+  --gold: #F0C558;
+  --violet: #6A79C0;
+  --violet-dark: #505C99;
+  --violet-light: #7B87D0;
+  --violet-grad: linear-gradient(135deg, #7B87D0, #505C99);
   --pink: #FF7A93;
   --text-primary: #F1ECFF;
-  --text-secondary: #B7B2D9;
-  --text-muted: #8B86B8;
+  --text-secondary: #C8C4E4;
+  --text-muted: #A6A1CC;
 }
 
 /* 不要再加全局 `* { margin: 0; padding: 0 }`：Tailwind preflight 已经做了同样的事，
@@ -66,14 +66,14 @@ input, textarea, select {
   background: transparent;
 }
 .custom-scroll::-webkit-scrollbar-thumb {
-  background: rgba(201, 162, 39, 0.45);
+  background: rgba(240,197,88,0.45);
   border-radius: 10px;
 }
 /* 暗色面板内的滚动条 */
 .ink-scroll::-webkit-scrollbar { width: 4px; }
 .ink-scroll::-webkit-scrollbar-track { background: transparent; }
-.ink-scroll::-webkit-scrollbar-thumb { background: rgba(201,162,39,0.35); border-radius: 10px; }
-.ink-scroll::-webkit-scrollbar-thumb:hover { background: rgba(201,162,39,0.6); }
+.ink-scroll::-webkit-scrollbar-thumb { background: rgba(240,197,88,0.35); border-radius: 10px; }
+.ink-scroll::-webkit-scrollbar-thumb:hover { background: rgba(240,197,88,0.6); }
 
 /* 对话框文字动画 */
 @keyframes fadeInChar {
@@ -127,12 +127,18 @@ input, textarea, select {
 }
 .city-map-scroll { max-height: 65dvh; overscroll-behavior: contain; }
 .city-map-details { max-height: 40dvh; overflow-y: auto; }
-button:focus-visible, [tabindex]:focus-visible { outline: 3px solid #e9bf66; outline-offset: 3px; }
+button:focus-visible, [tabindex]:focus-visible { outline: 3px solid #F0C558; outline-offset: 3px; }
 @media (max-width: 639px) {
   .city-map-scroll { max-height: 45dvh; }
   .city-map-details { gap: 8px; padding: 12px 16px; }
   .dialogue-stage { min-height: 96px; }
   .dialogue-sprite { transform: scale(.8); margin: -8px; }
+}
+/* 建号向导：矮屏（横屏手机）下头尾收紧，「下一步 / 开始！」永远点得到 */
+@media (max-height: 620px) {
+  .setup-head { padding: 10px 16px; }
+  .setup-body { padding: 12px 16px; }
+  .setup-foot { padding: 10px 16px; }
 }
 @media (max-height: 500px) {
   .city-map-body { flex-direction: row; }

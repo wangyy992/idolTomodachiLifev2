@@ -98,9 +98,9 @@ export const SCENE_CONFIG: Record<string, {
   },
   'stage_wing': {
     label: '舞台',
-    bg: "#150f22 url('/scenes/concert.webp') center/cover no-repeat",
+    bg: "#1B202A url('/scenes/concert.webp') center/cover no-repeat",
     blur: "url('/scenes/concert_blur.webp') center/cover no-repeat",
-    sceneBase: '#150f22',
+    sceneBase: '#1B202A',
     ratio: 1.791045,
     overlay: 'rgba(0,0,0,0.04)',
   },
@@ -122,9 +122,9 @@ export const SCENE_CONFIG: Record<string, {
   },
   'concert': {
     label: '演唱会现场',
-    bg: "#150f22 url('/scenes/concert.webp') center/cover no-repeat",
+    bg: "#1B202A url('/scenes/concert.webp') center/cover no-repeat",
     blur: "url('/scenes/concert_blur.webp') center/cover no-repeat",
-    sceneBase: '#150f22',
+    sceneBase: '#1B202A',
     ratio: 1.791044776119403,
     overlay: 'rgba(0,0,0,0.04)',
   },

@@ -81,10 +81,10 @@ export default function SceneView({
               {typed}<span className={typing ? 'opacity-70' : 'opacity-0'}>▍</span>
               <span className="absolute top-full left-1/2 -translate-x-1/2 -mt-1.5 w-3 h-3 bg-white rotate-45 rounded-[2px]" />
             </div>}
-            <div className={`dialogue-sprite transition-transform ${active ? 'scale-105' : ''}`} style={{ filter: active ? 'drop-shadow(0 0 10px rgba(201,162,39,0.5))' : 'none' }}>
+            <div className={`dialogue-sprite transition-transform ${active ? 'scale-105' : ''}`} style={{ filter: active ? 'drop-shadow(0 0 10px rgba(240,197,88,0.5))' : 'none' }}>
               <SpritePreview appearance={c.appearance} size={112} />
             </div>
-            <span className={`mt-1 text-xs px-3 py-1 rounded-full ${active ? 'bg-[#6C79C4]' : 'bg-black/40'}`}>{label}</span>
+            <span className={`mt-1 text-xs px-3 py-1 rounded-full ${active ? 'bg-[#7B87D0]' : 'bg-black/40'}`}>{label}</span>
           </div>;
         })}
       </div>
@@ -94,24 +94,24 @@ export default function SceneView({
         {atEnd && !typing && !isLoading && <div className="w-full max-w-3xl mx-auto min-h-[3.25rem] max-h-[46dvh] overflow-y-auto grid gap-2">
           {showInput ? <form onSubmit={e => { e.preventDefault(); send(); }} className="flex gap-2">
             <input aria-label="自由对话" value={input} onChange={e => setInput(e.target.value)} placeholder="想说什么，或想做什么？" className="min-w-0 flex-1 rounded-2xl bg-white text-[#29233e] px-4 py-3 text-base" />
-            <button aria-label="发送" disabled={!input.trim()} className="min-w-12 rounded-2xl bg-[#6C79C4] p-3 disabled:opacity-40"><Send size={18}/></button>
+            <button aria-label="发送" disabled={!input.trim()} className="min-w-12 rounded-2xl bg-[#7B87D0] p-3 disabled:opacity-40"><Send size={18}/></button>
           </form> : options.map((o, i) => <button key={i} onClick={() => onChoose(o.action)} className="dialogue-option flex gap-3 items-center min-h-12 bg-[#f5f1ff] text-[#29233e] text-left px-4 py-3 rounded-2xl text-sm sm:text-base hover:bg-white">
-            <span className="text-[#72638c] font-bold">{String.fromCharCode(65+i)}</span>{o.text.replace(/^[A-C][.、。]\s*/, '')}
+            <span className="text-[#7E6E9C] font-bold">{String.fromCharCode(65+i)}</span>{o.text.replace(/^[A-C][.、。]\s*/, '')}
           </button>)}
-          {needLabel && !needDone && canCompleteNeed && <button onClick={onCompleteNeed} className="min-h-11 rounded-xl border border-[#c9b67b]/50 text-[#eee0ad] text-sm flex items-center justify-center gap-2"><Check size={16}/>这件事已经办好 · 完成照顾</button>}
+          {needLabel && !needDone && canCompleteNeed && <button onClick={onCompleteNeed} className="min-h-11 rounded-xl border border-[#DCC98D]/50 text-[#F6E9BE] text-sm flex items-center justify-center gap-2"><Check size={16}/>这件事已经办好 · 完成照顾</button>}
         </div>}
-        <div className="dialogue-box w-full max-w-3xl mx-auto shrink-0 rounded-3xl bg-[#18142b]/95 border border-[#a69bd1]/40 shadow-xl p-4 sm:p-6">
-          {needLabel && <div className="mb-2 text-xs text-[#d9ceaa]">{needDone ? '✓ 已完成照顾' : '这次的小心愿'} · {needLabel}</div>}
-          {entry?.kind === 'line' && <div className="inline-flex items-center mb-2 px-3 py-1 rounded-xl text-white text-[12.5px] font-bold border border-white/15" style={{ background: 'linear-gradient(90deg,#6C79C4,#6C79C4 60%,#C9A227)' }}>{entry.speaker}</div>}
+        <div className="dialogue-box w-full max-w-3xl mx-auto shrink-0 rounded-3xl bg-[#242A36]/95 border border-[#a69bd1]/40 shadow-xl p-4 sm:p-6">
+          {needLabel && <div className="mb-2 text-xs text-[#EADFBB]">{needDone ? '✓ 已完成照顾' : '这次的小心愿'} · {needLabel}</div>}
+          {entry?.kind === 'line' && <div className="inline-flex items-center mb-2 px-3 py-1 rounded-xl text-white text-[12.5px] font-bold border border-white/25" style={{ background: 'linear-gradient(90deg,#7B87D0,#7B87D0 60%,#F0C558)' }}>{entry.speaker}</div>}
           <button onClick={advance} className="block w-full text-left min-h-16 max-h-[34dvh] overflow-y-auto" aria-label={typing ? '显示完整文字' : !atEnd ? '阅读下一段' : '当前对话'}>
             <span className={`block text-base sm:text-lg leading-relaxed whitespace-pre-wrap ${entry?.kind === 'narration' ? 'text-white/85' : ''}`}>{entry ? typed : isLoading ? '正在等待回应…' : '可以继续刚才的话题。'}</span>
             {!atEnd && <span className="flex justify-end items-center gap-1 text-xs text-white/60 mt-3">点击继续 <ChevronDown size={14}/></span>}
           </button>
-          <div className="mt-3 pt-3 border-t border-white/10 flex items-center justify-between text-xs text-white/60">
+          <div className="mt-3 pt-3 border-t border-white/20 flex items-center justify-between text-xs text-white/60">
             <span>{script.length ? `${Math.min(idx + 1, script.length)} / ${script.length}` : ''}</span>
             {atEnd && !isLoading && <button className="min-h-11 px-2 flex items-center gap-2 text-white/85" onClick={() => setShowInput(v => !v)}><MessageSquareText size={16}/>{showInput ? '返回选项' : '自己说点什么'}</button>}
           </div>
-          {isLoading && <div role="status" aria-live="polite" className="mt-3 flex flex-wrap justify-between gap-3 items-center text-sm text-[#d5cbea]">
+          {isLoading && <div role="status" aria-live="polite" className="mt-3 flex flex-wrap justify-between gap-3 items-center text-sm text-[#E0D8F1]">
             <span>{requestProgress?.phase === 'retrying' ? `连接较慢，正在重试（${requestProgress.attempt}/3）` : elapsed >= 15 ? '回应还在生成，可以稍等或取消' : '正在回应…'} <span className="text-white/50">{elapsed}s</span></span>
             <button onClick={onCancel} className="min-h-11 px-4 rounded-xl border border-white/25">取消等待</button>
           </div>}

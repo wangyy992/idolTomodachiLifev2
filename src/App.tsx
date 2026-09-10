@@ -968,22 +968,22 @@ export default function App() {
   return (
     <div className="flex h-dvh overflow-hidden relative">
       {/* 手机竖屏：这个世界是宽屏的，提示横过来玩 */}
-      <div className="rotate-gate fixed inset-0 z-[300] bg-[#1b1830] flex-col items-center justify-center gap-5 px-8 text-center">
-        <div className="w-16 h-24 rounded-xl border-[3px] border-[#8f9bd6] relative animate-[tilt_1.8s_ease-in-out_infinite]">
-          <div className="absolute inset-x-3 top-2 h-1 rounded bg-[#8f9bd6]/70" />
-          <div className="absolute inset-x-4 bottom-2 h-1.5 rounded-full bg-[#8f9bd6]/70" />
+      <div className="rotate-gate fixed inset-0 z-[300] bg-[#20252F] flex-col items-center justify-center gap-5 px-8 text-center">
+        <div className="w-16 h-24 rounded-xl border-[3px] border-[#9AA6E0] relative animate-[tilt_1.8s_ease-in-out_infinite]">
+          <div className="absolute inset-x-3 top-2 h-1 rounded bg-[#9AA6E0]/70" />
+          <div className="absolute inset-x-4 bottom-2 h-1.5 rounded-full bg-[#9AA6E0]/70" />
         </div>
         <div className="text-white font-black text-base">{lang === 'traditional' ? '請橫過手機遊玩' : '请横过手机游玩'}</div>
-        <div className="text-[#b6bde6] text-xs leading-relaxed">{lang === 'traditional' ? '這個世界是寬螢幕的，橫屏才能完整看到場景' : '这个世界是宽屏的，横屏才能完整看到场景'}</div>
+        <div className="text-[#C3C9EE] text-xs leading-relaxed">{lang === 'traditional' ? '這個世界是寬螢幕的，橫屏才能完整看到場景' : '这个世界是宽屏的，横屏才能完整看到场景'}</div>
       </div>
       {/* 新手引导：首次进世界 */}
       {showIntro && worldMode && (
         <div className="fixed inset-0 z-[200] bg-black/70 backdrop-blur-sm flex items-center justify-center p-5" onClick={dismissIntro}>
-          <div className="ink-panel ink-scroll rounded-[24px] w-full max-w-sm p-6 border border-[rgba(201,162,39,0.3)] max-h-[92vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+          <div className="ink-panel ink-scroll rounded-[24px] w-full max-w-sm p-6 border border-[rgba(240,197,88,0.3)] max-h-[92vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
             <div className="text-center mb-4">
               <div className="text-3xl mb-1.5">🏝️</div>
               <h2 className="text-[17px] font-black text-[#F1ECFF]">{lang === 'traditional' ? '歡迎來到這座島' : '欢迎来到这座岛'}</h2>
-              <p className="text-[11px] text-[#8B86B8] mt-1">{lang === 'traditional' ? '她們有自己的作息，你來照看她們的日常' : '她们有自己的作息，你来照看她们的日常'}</p>
+              <p className="text-[11px] text-[#A6A1CC] mt-1">{lang === 'traditional' ? '她們有自己的作息，你來照看她們的日常' : '她们有自己的作息，你来照看她们的日常'}</p>
             </div>
             <div className="flex flex-col gap-2.5">
               {[
@@ -992,28 +992,28 @@ export default function App() {
                 { e: '⏭️', t: lang === 'traditional' ? '「推進時段」讓世界往前走，她們會自己發生事' : '「推进时段」让世界往前走，她们会自己发生事' },
                 { e: '📡', t: lang === 'traditional' ? '右上角看島嶼動態和手機；🎤 進打歌舞台' : '右上角看岛屿动态和手机；🎤 进打歌舞台' },
               ].map((r, i) => (
-                <div key={i} className="flex items-start gap-3 rounded-2xl bg-white/[0.03] border border-white/10 px-3.5 py-3">
+                <div key={i} className="flex items-start gap-3 rounded-2xl bg-white/[0.10] border border-white/20 px-3.5 py-3">
                   <span className="text-[18px] leading-none">{r.e}</span>
-                  <span className="text-[12.5px] text-[#D8D4EE] leading-relaxed">{r.t}</span>
+                  <span className="text-[12.5px] text-[#E2DFF4] leading-relaxed">{r.t}</span>
                 </div>
               ))}
             </div>
-            <button onClick={dismissIntro} className="w-full mt-5 py-3 rounded-2xl text-white text-[13px] font-black transition-all hover:-translate-y-0.5" style={{ background: 'linear-gradient(135deg,#6C79C4,#454F87)', boxShadow: '0 8px 20px -6px rgba(91,107,176,0.7)' }}>
+            <button onClick={dismissIntro} className="w-full mt-5 py-3 rounded-2xl text-white text-[13px] font-black transition-all hover:-translate-y-0.5" style={{ background: 'linear-gradient(135deg,#7B87D0,#505C99)', boxShadow: '0 8px 20px -6px rgba(106,121,192,0.7)' }}>
               {lang === 'traditional' ? '開始遊玩' : '开始游玩'}
             </button>
           </div>
         </div>
       )}
-      <button onClick={() => { setKeyDraft(getSessionApiKey()); setShowAISettings(true); }} className="fixed bottom-3 right-3 z-[170] min-h-11 rounded-full bg-[#342d4c] border border-white/20 px-4 text-xs text-white shadow-lg">AI 设置</button>
+      <button onClick={() => { setKeyDraft(getSessionApiKey()); setShowAISettings(true); }} className="fixed bottom-3 right-3 z-[170] min-h-11 rounded-full bg-[#2C333F] border border-white/20 px-4 text-xs text-white shadow-lg">AI 设置</button>
       {showAISettings && <div className="fixed inset-0 z-[220] bg-black/70 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label="AI 设置">
-        <div className="w-full max-w-md rounded-3xl bg-[#211b34] border border-white/20 p-6 text-white">
+        <div className="w-full max-w-md rounded-3xl bg-[#242A36] border border-white/20 p-6 text-white">
           <h2 className="text-lg font-bold">AI 连接设置</h2>
           <p className="text-sm text-white/70 my-3">Key 只用于当前页面，刷新后需重新填写，不会写入存档。留空则使用网站提供的服务。API 用量按服务商计费。</p>
           <input aria-label="DeepSeek API Key" type="password" autoComplete="off" value={keyDraft} onChange={e => setKeyDraft(e.target.value)} className="w-full rounded-xl bg-white/10 p-3 border border-white/20" />
-          <div className="mt-4 flex gap-3"><button className="min-h-11 px-4 rounded-xl bg-[#6C79C4]" onClick={() => { setSessionApiKey(keyDraft); setKeyDraft(''); setShowAISettings(false); }}>保存本次设置</button><button className="min-h-11 px-4" onClick={() => { setKeyDraft(''); setShowAISettings(false); }}>取消</button></div>
+          <div className="mt-4 flex gap-3"><button className="min-h-11 px-4 rounded-xl bg-[#7B87D0]" onClick={() => { setSessionApiKey(keyDraft); setKeyDraft(''); setShowAISettings(false); }}>保存本次设置</button><button className="min-h-11 px-4" onClick={() => { setKeyDraft(''); setShowAISettings(false); }}>取消</button></div>
         </div>
       </div>}
-      {!scene && (isLoading || requestError) && <div className="fixed bottom-16 inset-x-3 mx-auto max-w-lg z-[165] rounded-2xl bg-[#211b34] border border-white/20 text-white p-4 text-sm" role="status">
+      {!scene && (isLoading || requestError) && <div className="fixed bottom-16 inset-x-3 mx-auto max-w-lg z-[165] rounded-2xl bg-[#242A36] border border-white/20 text-white p-4 text-sm" role="status">
         <p>{isLoading ? requestProgress?.phase === 'retrying' ? '连接较慢，正在重试…' : '正在生成回应…' : requestError}</p>
         {isLoading ? <button className="min-h-11" onClick={cancelRequest}>取消等待</button> : <button className="min-h-11" onClick={retryLastRequest}>重试刚才的行动</button>}
       </div>}
@@ -1079,7 +1079,7 @@ export default function App() {
         <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[200] flex flex-col items-center gap-2 pointer-events-none">
           {toasts.map(t => (
             <motion.div key={t.id} initial={{ opacity: 0, y: -12, scale: 0.9 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0 }}
-              className={`px-4 py-2 rounded-full text-xs font-black text-white shadow-lg ${t.kind === 'romance' ? 'bg-[#FF7A93]' : t.kind === 'tension' ? 'bg-[#c0392b]' : 'bg-[#5B6BB0]'}`}>
+              className={`px-4 py-2 rounded-full text-xs font-black text-white shadow-lg ${t.kind === 'romance' ? 'bg-[#FF7A93]' : t.kind === 'tension' ? 'bg-[#c0392b]' : 'bg-[#6A79C0]'}`}>
               {t.text}
             </motion.div>
           ))}
@@ -1100,11 +1100,11 @@ export default function App() {
       {showConfirmReset && (
         <div className="absolute inset-0 z-[100] bg-black/60 backdrop-blur-md flex items-center justify-center p-4">
           <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="ink-panel rounded-[3rem] p-10 max-w-sm w-full text-center flex flex-col gap-6">
-            <div className="w-20 h-20 bg-white/[0.06] rounded-full flex items-center justify-center mx-auto"><RefreshCw className="w-10 h-10 text-[#C9A227] animate-spin-slow" /></div>
-            <div><h3 className="text-xl font-black text-[#F1ECFF]">{lang === "traditional" ? "確定重置嗎？" : "确定重置吗？"}</h3><p className="text-sm text-[#B7B2D9] mt-2">{lang === "traditional" ? "所有進度將永久刪除。" : "所有进度将永久删除。"}</p></div>
+            <div className="w-20 h-20 bg-white/[0.10] rounded-full flex items-center justify-center mx-auto"><RefreshCw className="w-10 h-10 text-[#F0C558] animate-spin-slow" /></div>
+            <div><h3 className="text-xl font-black text-[#F1ECFF]">{lang === "traditional" ? "確定重置嗎？" : "确定重置吗？"}</h3><p className="text-sm text-[#C8C4E4] mt-2">{lang === "traditional" ? "所有進度將永久刪除。" : "所有进度将永久删除。"}</p></div>
             <div className="flex flex-col gap-3">
-              <button onClick={executeReset} className="w-full py-4 bg-white text-[#211D33] rounded-3xl font-black text-sm hover:bg-white/90 transition-all">{lang === "traditional" ? "確認重置" : "确认重置"}</button>
-              <button onClick={() => setShowConfirmReset(false)} className="w-full py-4 bg-white/[0.06] text-[#B7B2D9] rounded-3xl font-black text-sm hover:bg-white/[0.12] transition-all">{lang === "traditional" ? "返回" : "返回"}</button>
+              <button onClick={executeReset} className="w-full py-4 bg-white text-[#1A1E28] rounded-3xl font-black text-sm hover:bg-white/90 transition-all">{lang === "traditional" ? "確認重置" : "确认重置"}</button>
+              <button onClick={() => setShowConfirmReset(false)} className="w-full py-4 bg-white/[0.10] text-[#C8C4E4] rounded-3xl font-black text-sm hover:bg-white/[0.12] transition-all">{lang === "traditional" ? "返回" : "返回"}</button>
             </div>
           </motion.div>
         </div>
@@ -1120,19 +1120,19 @@ export default function App() {
       </AnimatePresence>
 
       {/* 桌面端不再用全屏遮罩罩住地图（会把点爱豆的第一下吃掉）——侧栏浮在左侧，地图随时可点，收起用顶栏按钮 */}
-      <aside className={`${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} w-56 border-r border-white/[0.06] flex-col hidden lg:flex fixed left-0 top-0 bottom-0 z-[95] transition-transform duration-300 shadow-2xl`} style={{background: 'linear-gradient(180deg, #14121f, #0B0A14)'}}>
-        <div className="p-4 border-b border-white/[0.06] relative">
+      <aside className={`${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} w-56 border-r border-white/[0.14] flex-col hidden lg:flex fixed left-0 top-0 bottom-0 z-[95] transition-transform duration-300 shadow-2xl`} style={{background: 'linear-gradient(180deg, #1B202A, #131620)'}}>
+        <div className="p-4 border-b border-white/[0.14] relative">
           <button
             onClick={() => setSidebarOpen(false)}
             title={lang === 'traditional' ? '收起側欄' : '收起侧栏'}
-            className="absolute top-3 right-3 w-7 h-7 rounded-lg bg-white/[0.06] hover:bg-white/[0.14] text-[#B7A9E8] flex items-center justify-center transition-colors"
+            className="absolute top-3 right-3 w-7 h-7 rounded-lg bg-white/[0.10] hover:bg-white/[0.14] text-[#C6BAF2] flex items-center justify-center transition-colors"
           >
             <PanelLeftClose className="w-4 h-4" />
           </button>
-          <h1 className="text-sm font-black text-[#F1ECFF] tracking-tighter flex items-center gap-1.5 pr-8"><Gamepad2 className="w-4 h-4 flex-shrink-0 text-[#C9A227]" /> 爱豆收集梦想生活</h1>
+          <h1 className="text-sm font-black text-[#F1ECFF] tracking-tighter flex items-center gap-1.5 pr-8"><Gamepad2 className="w-4 h-4 flex-shrink-0 text-[#F0C558]" /> 爱豆收集梦想生活</h1>
           <div className="flex items-center gap-2 mt-2">
-            <span className="text-[9px] text-white px-2 py-0.5 rounded-full font-black uppercase" style={{ background: 'linear-gradient(135deg,#6C79C4,#454F87)' }}>{modeLabel}</span>
-            <span className="text-[10px] text-[#8B86B8] font-bold">Idol Tomodachi Life</span>
+            <span className="text-[9px] text-white px-2 py-0.5 rounded-full font-black uppercase" style={{ background: 'linear-gradient(135deg,#7B87D0,#505C99)' }}>{modeLabel}</span>
+            <span className="text-[10px] text-[#A6A1CC] font-bold">Idol Tomodachi Life</span>
           </div>
         </div>
         <div className="flex-1 overflow-y-auto p-3.5 flex flex-col gap-5 ink-scroll">
@@ -1153,77 +1153,77 @@ export default function App() {
             <h3 className="gold-caption mb-3 flex items-center gap-2"><Users className="w-3 h-3" /> {sidebarLabel}</h3>
             {(
               <div className="flex flex-col gap-2">{targetMembers.map(member => (
-                <div key={member.id} className="bg-white/[0.03] p-4 rounded-2xl border border-white/10">
-                  <div className="flex justify-between items-center mb-2"><span className="text-xs font-bold text-[#F1ECFF]">{member.name}</span><span className="text-[10px] text-[#C9A227] font-mono font-bold">{member.affection}/100</span></div>
-                  <div className="h-[3px] bg-white/[0.08] rounded-full overflow-hidden"><motion.div animate={{ width: `${member.affection}%` }} className="h-full rounded-full" style={{ background: 'linear-gradient(90deg,#6C79C4,#C9A227)' }} /></div>
-                  <div className="text-[9px] text-[#8B86B8] mt-1">{member.status}</div>
+                <div key={member.id} className="bg-white/[0.10] p-4 rounded-2xl border border-white/20">
+                  <div className="flex justify-between items-center mb-2"><span className="text-xs font-bold text-[#F1ECFF]">{member.name}</span><span className="text-[10px] text-[#F0C558] font-mono font-bold">{member.affection}/100</span></div>
+                  <div className="h-[3px] bg-white/[0.08] rounded-full overflow-hidden"><motion.div animate={{ width: `${member.affection}%` }} className="h-full rounded-full" style={{ background: 'linear-gradient(90deg,#7B87D0,#F0C558)' }} /></div>
+                  <div className="text-[9px] text-[#A6A1CC] mt-1">{member.status}</div>
                 </div>
               ))}</div>
             )}
           </section>
           )}
         </div>
-        <div className="p-3.5 border-t border-white/[0.06] flex flex-col gap-2.5">
+        <div className="p-3.5 border-t border-white/[0.14] flex flex-col gap-2.5">
           <div className="flex gap-2.5">
-            <button onClick={saveGame} className="flex-1 flex items-center justify-center gap-1.5 py-3 text-white rounded-2xl text-[11px] font-black hover:-translate-y-0.5 transition-all" style={{ background: 'linear-gradient(135deg,#6C79C4,#454F87)', boxShadow: '0 6px 16px -6px rgba(91,107,176,0.7)' }}><Save className="w-3.5 h-3.5" />{lang === "traditional" ? "存檔" : "存档"}</button>
-            <button onClick={() => setShowSaveSlots(!showSaveSlots)} className={`flex-1 flex items-center justify-center gap-1.5 py-3 rounded-2xl text-[11px] font-black border transition-all ${showSaveSlots ? 'bg-[rgba(201,162,39,0.1)] text-[#F1ECFF] border-[rgba(201,162,39,0.45)]' : 'bg-white/[0.04] text-[#B7B2D9] border-white/10 hover:bg-white/[0.09]'}`}><FolderOpen className="w-3.5 h-3.5" />{lang === "traditional" ? "讀檔" : "读档"} <span className="px-1.5 rounded-full bg-white/10 text-[9px]">{saveSlots.length}</span></button>
+            <button onClick={saveGame} className="flex-1 flex items-center justify-center gap-1.5 py-3 text-white rounded-2xl text-[11px] font-black hover:-translate-y-0.5 transition-all" style={{ background: 'linear-gradient(135deg,#7B87D0,#505C99)', boxShadow: '0 6px 16px -6px rgba(106,121,192,0.7)' }}><Save className="w-3.5 h-3.5" />{lang === "traditional" ? "存檔" : "存档"}</button>
+            <button onClick={() => setShowSaveSlots(!showSaveSlots)} className={`flex-1 flex items-center justify-center gap-1.5 py-3 rounded-2xl text-[11px] font-black border transition-all ${showSaveSlots ? 'bg-[rgba(240,197,88,0.1)] text-[#F1ECFF] border-[rgba(240,197,88,0.45)]' : 'bg-white/[0.07] text-[#C8C4E4] border-white/20 hover:bg-white/[0.09]'}`}><FolderOpen className="w-3.5 h-3.5" />{lang === "traditional" ? "讀檔" : "读档"} <span className="px-1.5 rounded-full bg-white/10 text-[9px]">{saveSlots.length}</span></button>
           </div>
           {showSaveSlots && (
-            <div className="rounded-2xl bg-white/[0.03] border border-white/10 p-2.5 flex flex-col gap-2 max-h-56 overflow-y-auto ink-scroll">
+            <div className="rounded-2xl bg-white/[0.10] border border-white/20 p-2.5 flex flex-col gap-2 max-h-56 overflow-y-auto ink-scroll">
               {saveSlots.length > 0 ? saveSlots.map((slot, si) => (
-                <div key={slot.id} className="group bg-white/[0.03] border border-white/10 rounded-xl p-2.5 flex items-center gap-2.5 hover:border-[rgba(201,162,39,0.45)] transition-all">
-                  <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#6C79C4] to-[#454F87] text-white flex items-center justify-center text-[11px] font-black flex-shrink-0">{saveSlots.length - si}</div>
+                <div key={slot.id} className="group bg-white/[0.10] border border-white/20 rounded-xl p-2.5 flex items-center gap-2.5 hover:border-[rgba(240,197,88,0.45)] transition-all">
+                  <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#7B87D0] to-[#505C99] text-white flex items-center justify-center text-[11px] font-black flex-shrink-0">{saveSlots.length - si}</div>
                   <button onClick={() => loadGame(slot.id)} className="flex-1 min-w-0 text-left">
                     <div className="text-[11px] font-black text-[#F1ECFF] truncate">{(slot as any).subject || slot.scene}</div>
-                    <div className="text-[9px] text-[#8B86B8] truncate mt-0.5">{slot.scene} · R{slot.round} · {slot.time}</div>
+                    <div className="text-[9px] text-[#A6A1CC] truncate mt-0.5">{slot.scene} · R{slot.round} · {slot.time}</div>
                   </button>
-                  <button onClick={() => deleteSlot(slot.id)} title={lang === "traditional" ? "刪除" : "删除"} className="w-6 h-6 rounded-lg text-[#8b90b8] hover:bg-[#FF7A93]/10 hover:text-[#FF7A93] flex items-center justify-center flex-shrink-0 transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
+                  <button onClick={() => deleteSlot(slot.id)} title={lang === "traditional" ? "刪除" : "删除"} className="w-6 h-6 rounded-lg text-[#A6A1CC] hover:bg-[#FF7A93]/10 hover:text-[#FF7A93] flex items-center justify-center flex-shrink-0 transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
                 </div>
               )) : (
-                <div className="text-[10px] text-[#8B86B8] text-center py-4 font-bold">{lang === "traditional" ? "暫無存檔" : "暂无存档"}</div>
+                <div className="text-[10px] text-[#A6A1CC] text-center py-4 font-bold">{lang === "traditional" ? "暫無存檔" : "暂无存档"}</div>
               )}
             </div>
           )}
-          <button onClick={handleReset} className="w-full flex items-center justify-center gap-2 py-2.5 text-[#8b90b8] rounded-2xl text-[10px] font-black hover:bg-white/[0.04] hover:text-[#B7A9E8] transition-all"><RefreshCw className="w-3.5 h-3.5" /> {lang === "traditional" ? "重新開始" : "重新开始"}</button>
+          <button onClick={handleReset} className="w-full flex items-center justify-center gap-2 py-2.5 text-[#A6A1CC] rounded-2xl text-[10px] font-black hover:bg-white/[0.07] hover:text-[#C6BAF2] transition-all"><RefreshCw className="w-3.5 h-3.5" /> {lang === "traditional" ? "重新開始" : "重新开始"}</button>
         </div>
       </aside>
 
-      <main className={`flex-1 flex flex-col h-full lg:rounded-l-[2rem] lg:shadow-sm overflow-hidden transition-[margin] duration-300 ${sidebarOpen ? 'lg:ml-56' : ''}`} style={{background: 'rgba(11,10,20,0.72)'}}>
-        <header className="h-11 border-b border-white/[0.06] px-2 sm:px-4 gap-2 flex items-center justify-between z-10 flex-shrink-0" style={{ background: 'rgba(14,12,28,0.85)' }}>
+      <main className={`flex-1 flex flex-col h-full lg:rounded-l-[2rem] lg:shadow-sm overflow-hidden transition-[margin] duration-300 ${sidebarOpen ? 'lg:ml-56' : ''}`} style={{background: 'rgba(19,22,32,0.72)'}}>
+        <header className="h-11 border-b border-white/[0.14] px-2 sm:px-4 gap-2 flex items-center justify-between z-10 flex-shrink-0" style={{ background: 'rgba(26,30,40,0.85)' }}>
           <div className="flex items-center gap-3 min-w-0">
-            <button onClick={handleReset} className="lg:hidden p-2 text-[#B7A9E8] hover:bg-white/10 rounded-xl"><RefreshCw className="w-4 h-4" /></button>
+            <button onClick={handleReset} className="lg:hidden p-2 text-[#C6BAF2] hover:bg-white/10 rounded-xl"><RefreshCw className="w-4 h-4" /></button>
             <button
               onClick={() => setSidebarOpen(v => !v)}
               title={sidebarOpen ? (lang === 'traditional' ? '收起側欄' : '收起侧栏') : (lang === 'traditional' ? '展開側欄' : '展开侧栏')}
-              className="hidden lg:flex p-2 text-[#B7A9E8] hover:bg-white/10 rounded-xl transition-colors"
+              className="hidden lg:flex p-2 text-[#C6BAF2] hover:bg-white/10 rounded-xl transition-colors"
             >
               {sidebarOpen ? <PanelLeftClose className="w-4 h-4" /> : <PanelLeftOpen className="w-4 h-4" />}
             </button>
             <div className="min-w-0">
-              <div className="text-[10px] text-[#8B86B8] font-black uppercase tracking-widest">Scene</div>
-              <h2 className="text-sm font-bold flex items-center gap-1 text-[#F1ECFF] min-w-0"><MapPin className="w-3 h-3 flex-shrink-0 text-[#C9A227]" /> <span className="truncate">{gameState.currentScene}</span></h2>
+              <div className="text-[10px] text-[#A6A1CC] font-black uppercase tracking-widest">Scene</div>
+              <h2 className="text-sm font-bold flex items-center gap-1 text-[#F1ECFF] min-w-0"><MapPin className="w-3 h-3 flex-shrink-0 text-[#F0C558]" /> <span className="truncate">{gameState.currentScene}</span></h2>
             </div>
           </div>
           {primaryTarget && (
-            <button onClick={() => setShowDrawer(true)} className="lg:hidden flex items-center gap-2 whitespace-nowrap bg-white/[0.06] px-3 py-2 rounded-2xl border border-white/10 active:scale-95 transition-all">
-              <Heart className="w-3 h-3 text-[#C9A227]" />
+            <button onClick={() => setShowDrawer(true)} className="lg:hidden flex items-center gap-2 whitespace-nowrap bg-white/[0.10] px-3 py-2 rounded-2xl border border-white/20 active:scale-95 transition-all">
+              <Heart className="w-3 h-3 text-[#F0C558]" />
               <span className="text-[11px] font-bold text-[#F1ECFF]">{primaryTarget?.name}</span>
-              <span className="text-[11px] font-black text-[#C9A227]">{primaryTarget?.affection || 0}</span>
-              <ChevronUp className="w-3 h-3 text-[#8B86B8]" />
+              <span className="text-[11px] font-black text-[#F0C558]">{primaryTarget?.affection || 0}</span>
+              <ChevronUp className="w-3 h-3 text-[#A6A1CC]" />
             </button>
           )}
-          {apiKeyMissing && <div className="bg-white/[0.06] text-[#C9A227] text-[10px] font-black px-3 py-1 rounded-full border border-[rgba(201,162,39,0.3)] animate-pulse">API KEY MISSING</div>}
+          {apiKeyMissing && <div className="bg-white/[0.10] text-[#F0C558] text-[10px] font-black px-3 py-1 rounded-full border border-[rgba(240,197,88,0.3)] animate-pulse">API KEY MISSING</div>}
           <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
             {!worldMode && (
-              <button onClick={openPhone} className="relative flex items-center gap-1.5 text-[11px] font-black px-3 py-1.5 rounded-xl border bg-white/[0.06] text-[#B7B2D9] border-white/10 hover:bg-white/[0.12] transition-all">
+              <button onClick={openPhone} className="relative flex items-center gap-1.5 text-[11px] font-black px-3 py-1.5 rounded-xl border bg-white/[0.10] text-[#C8C4E4] border-white/20 hover:bg-white/[0.12] transition-all">
                 <Smartphone className="w-3.5 h-3.5" /> {lang === 'traditional' ? '手機' : '手机'}
                 {phoneUnread > 0 && <span className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 px-1 rounded-full bg-[#FF3B30] text-white text-[9px] font-black flex items-center justify-center animate-pulse">{phoneUnread}</span>}
               </button>
             )}
             <button
               onClick={() => setWorldMode(v => !v)}
-              className={`flex items-center gap-1.5 text-[11px] font-black px-3 py-1.5 rounded-xl border transition-all ${worldMode ? 'text-white border-transparent' : 'bg-white/[0.06] text-[#B7B2D9] border-white/10 hover:bg-white/[0.12]'}`}
-              style={worldMode ? { background: 'linear-gradient(135deg,#6C79C4,#454F87)' } : undefined}
+              className={`flex items-center gap-1.5 text-[11px] font-black px-3 py-1.5 rounded-xl border transition-all ${worldMode ? 'text-white border-transparent' : 'bg-white/[0.10] text-[#C8C4E4] border-white/20 hover:bg-white/[0.12]'}`}
+              style={worldMode ? { background: 'linear-gradient(135deg,#7B87D0,#505C99)' } : undefined}
               title={lang === 'traditional' ? '切換世界 / 回憶' : '切换世界 / 回忆'}
             >
               {worldMode ? <Zap className="w-3.5 h-3.5" /> : <Users className="w-3.5 h-3.5" />}
@@ -1235,13 +1235,13 @@ export default function App() {
                 setIsTraditional(newVal);
                 setGameState(prev => ({ ...prev, language: newVal ? 'traditional' : 'simplified' }));
               }}
-              className="text-[10px] font-black text-[#B7B2D9] bg-white/[0.06] px-2 py-1 rounded-lg border border-white/10 hover:bg-white/[0.12] transition-all"
+              className="text-[10px] font-black text-[#C8C4E4] bg-white/[0.10] px-2 py-1 rounded-lg border border-white/20 hover:bg-white/[0.12] transition-all"
             >
               {gameState.language === 'traditional' ? '简' : '繁'}
             </button>
             <div className="text-right whitespace-nowrap">
-              <div className="text-[10px] text-[#8B86B8] font-bold">第 {worldDay} 天</div>
-              <div className="text-sm font-bold text-[#C9A227]">{['上午', '下午', '晚上'][worldSlot]}</div>
+              <div className="text-[10px] text-[#A6A1CC] font-bold">第 {worldDay} 天</div>
+              <div className="text-sm font-bold text-[#F0C558]">{['上午', '下午', '晚上'][worldSlot]}</div>
             </div>
           </div>
         </header>
@@ -1289,11 +1289,11 @@ export default function App() {
               title={autoDemo ? (lang === 'traditional' ? '停止自動演示' : '停止自动演示') : (lang === 'traditional' ? '開始自動演示' : '开始自动演示')}
               className={`absolute bottom-4 left-1/2 -translate-x-1/2 z-[60] px-4 py-2 rounded-full text-[12px] font-black flex items-center gap-2 border transition-all shadow-lg ${
                 autoDemo
-                  ? 'bg-[rgba(201,162,39,0.16)] border-[rgba(201,162,39,0.6)] text-[#F1ECFF]'
-                  : 'bg-black/45 border-white/15 text-[#B7B2D9] hover:bg-black/60'
+                  ? 'bg-[rgba(240,197,88,0.16)] border-[rgba(240,197,88,0.6)] text-[#F1ECFF]'
+                  : 'bg-black/45 border-white/25 text-[#C8C4E4] hover:bg-black/60'
               }`}
             >
-              <span className={`w-2 h-2 rounded-full ${autoDemo ? 'bg-[#C9A227] animate-pulse' : 'bg-white/40'}`} />
+              <span className={`w-2 h-2 rounded-full ${autoDemo ? 'bg-[#F0C558] animate-pulse' : 'bg-white/40'}`} />
               {autoDemo ? (lang === 'traditional' ? '自動演示中 · 點擊停止' : '自动演示中 · 点击停止') : (lang === 'traditional' ? '▶ 自動演示' : '▶ 自动演示')}
             </button>
           )}
@@ -1302,8 +1302,8 @@ export default function App() {
         <>
         <div className="flex-1 overflow-y-auto px-4 py-6 md:px-8 md:py-8 custom-scrollbar" style={{background: "transparent"}}>
           <div className="max-w-2xl w-full mx-auto flex flex-col gap-6">
-            <div className="flex items-center justify-center gap-2 text-[10px] font-black text-[#8B86B8] uppercase tracking-[0.2em]">
-              <span className="h-px w-8 bg-white/10" /><Zap className="w-3 h-3 text-[#C9A227]" /> {lang === 'traditional' ? '劇情回顧' : '剧情回顾'}<span className="h-px w-8 bg-white/10" />
+            <div className="flex items-center justify-center gap-2 text-[10px] font-black text-[#A6A1CC] uppercase tracking-[0.2em]">
+              <span className="h-px w-8 bg-white/10" /><Zap className="w-3 h-3 text-[#F0C558]" /> {lang === 'traditional' ? '劇情回顧' : '剧情回顾'}<span className="h-px w-8 bg-white/10" />
             </div>
             <AnimatePresence initial={false}>
             {gameState.history.map((msg, i) => {
@@ -1313,13 +1313,13 @@ export default function App() {
                 return (
                   <motion.div key={i} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-3 my-0.5">
                     <div className="flex-1 h-px bg-white/10" />
-                    <div className="px-3.5 py-1.5 rounded-full bg-white/[0.06] text-[#B7B2D9] text-[12px] font-bold max-w-[80%] truncate border border-white/10">{msg.content}</div>
+                    <div className="px-3.5 py-1.5 rounded-full bg-white/[0.10] text-[#C8C4E4] text-[12px] font-bold max-w-[80%] truncate border border-white/20">{msg.content}</div>
                     <div className="flex-1 h-px bg-white/10" />
                   </motion.div>
                 );
               }
               return (
-                <motion.div key={i} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="rounded-3xl border border-[rgba(201,162,39,0.2)] shadow-[0_20px_50px_-24px_rgba(0,0,0,0.7)] overflow-hidden" style={{ background: 'linear-gradient(165deg, rgba(28,24,48,0.92), rgba(14,12,28,0.92))' }}>
+                <motion.div key={i} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="rounded-3xl border border-[rgba(240,197,88,0.2)] shadow-[0_20px_50px_-24px_rgba(0,0,0,0.7)] overflow-hidden" style={{ background: 'linear-gradient(165deg, rgba(36,42,54,0.92), rgba(26,30,40,0.92))' }}>
                   <div className="flex flex-col gap-4 p-5 md:p-6">
                     {blocks && blocks.length > 0 ? blocks.map((block, bi) => {
                       if (block.type === 'text') return <StoryText key={bi} content={block.content} />;
@@ -1331,7 +1331,7 @@ export default function App() {
                       if (block.type === 'musicshow') return isLatest ? <MusicShowUI key={bi} result={block.data} /> : null;
                       return null;
                     }) : <StoryText content={msg.content || '（剧情推进中...）'} />}
-                    {msg.options && <div className="text-xs text-[#b9aed0] border-t border-white/10 pt-3">当时的选择：{msg.options.map(o => o.text).join(' / ')}</div>}
+                    {msg.options && <div className="text-xs text-[#b9aed0] border-t border-white/20 pt-3">当时的选择：{msg.options.map(o => o.text).join(' / ')}</div>}
 
                   </div>
                 </motion.div>
@@ -1339,17 +1339,17 @@ export default function App() {
             })}
             </AnimatePresence>
             {isLoading && (
-              <div className="rounded-3xl border border-[rgba(201,162,39,0.2)] p-5 flex gap-2 w-fit" style={{ background: 'linear-gradient(165deg, rgba(28,24,48,0.92), rgba(14,12,28,0.92))' }}>
-                <div className="w-2 h-2 bg-[#B7A9E8] rounded-full animate-bounce" />
-                <div className="w-2 h-2 bg-[#B7A9E8] rounded-full animate-bounce [animation-delay:0.2s]" />
-                <div className="w-2 h-2 bg-[#C9A227] rounded-full animate-bounce [animation-delay:0.4s]" />
+              <div className="rounded-3xl border border-[rgba(240,197,88,0.2)] p-5 flex gap-2 w-fit" style={{ background: 'linear-gradient(165deg, rgba(36,42,54,0.92), rgba(26,30,40,0.92))' }}>
+                <div className="w-2 h-2 bg-[#C6BAF2] rounded-full animate-bounce" />
+                <div className="w-2 h-2 bg-[#C6BAF2] rounded-full animate-bounce [animation-delay:0.2s]" />
+                <div className="w-2 h-2 bg-[#F0C558] rounded-full animate-bounce [animation-delay:0.4s]" />
               </div>
             )}
             <div ref={chatEndRef} />
           </div>
         </div>
 
-        <div className="p-4 border-t border-white/10 text-center text-sm text-[#c5bbdc]">
+        <div className="p-4 border-t border-white/20 text-center text-sm text-[#c5bbdc]">
           回忆只记录已经发生的故事。<button className="min-h-11 px-4 text-[#e9d2a3] underline" onClick={() => setWorldMode(true)}>回到世界继续生活</button>
         </div>
         </>
@@ -1365,15 +1365,15 @@ export default function App() {
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #DAD8EE; border-radius: 10px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #5B6BB0; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #6A79C0; }
         .markdown-container p { margin-bottom: 0.6rem; } .markdown-container p:last-child { margin-bottom: 0; }
         .markdown-container ul,.markdown-container ol { margin-left: 1.5rem; margin-bottom: 0.6rem; }
         .markdown-container ul { list-style-type: disc; } .markdown-container ol { list-style-type: decimal; }
-        .markdown-container blockquote { border-left: 3px solid rgba(201,162,39,0.35); padding-left: 0.75rem; color: #B7B2D9; margin: 0.75rem 0; }
-        .markdown-container strong { font-weight: 900; color: #B7A9E8; }
+        .markdown-container blockquote { border-left: 3px solid rgba(240,197,88,0.35); padding-left: 0.75rem; color: #C8C4E4; margin: 0.75rem 0; }
+        .markdown-container strong { font-weight: 900; color: #C6BAF2; }
         .markdown-container hr { border: none; border-top: 1px solid rgba(255,255,255,0.1); margin: 1rem 0; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(201,162,39,0.3) !important; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(201,162,39,0.55) !important; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(240,197,88,0.3) !important; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(240,197,88,0.55) !important; }
         @keyframes spin-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         .animate-spin-slow { animation: spin-slow 8s linear infinite; }
       `}</style>

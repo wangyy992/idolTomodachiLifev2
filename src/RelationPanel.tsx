@@ -41,14 +41,14 @@ export default function RelationPanel({
     <div className="absolute inset-0 z-40 bg-black/70 backdrop-blur-md flex items-center justify-center p-4" onClick={onClose}>
       <div className="ink-panel ink-scroll rounded-[20px] p-5 max-w-2xl w-full max-h-[88%] overflow-auto" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-[15px] font-black text-[#F1ECFF] flex items-center gap-2"><Users className="w-4 h-4 text-[#C9A227]" /> {tw ? '關係網' : '关系网'}</h3>
-          <button onClick={onClose} className="w-7 h-7 rounded-lg bg-white/[0.06] hover:bg-white/[0.12] text-[#B7B2D9] flex items-center justify-center transition-colors"><X className="w-4 h-4" /></button>
+          <h3 className="text-[15px] font-black text-[#F1ECFF] flex items-center gap-2"><Users className="w-4 h-4 text-[#F0C558]" /> {tw ? '關係網' : '关系网'}</h3>
+          <button onClick={onClose} className="w-7 h-7 rounded-lg bg-white/[0.10] hover:bg-white/[0.12] text-[#C8C4E4] flex items-center justify-center transition-colors"><X className="w-4 h-4" /></button>
         </div>
 
         {/* 你 与 爱豆 */}
         <div className="flex items-center justify-between mb-2.5">
           <div className="gold-caption">{tw ? '你 與 愛豆' : '你 与 爱豆'}</div>
-          <button onClick={() => onCustomize({ kind: 'player' })} className="px-2.5 py-1 rounded-lg bg-white/[0.04] text-[#B7B2D9] border border-white/10 text-[10px] font-black flex items-center gap-1 hover:bg-white/[0.09] transition-colors"><Palette className="w-3 h-3" /> {tw ? '捏我的臉' : '捏我的脸'}</button>
+          <button onClick={() => onCustomize({ kind: 'player' })} className="px-2.5 py-1 rounded-lg bg-white/[0.07] text-[#C8C4E4] border border-white/20 text-[10px] font-black flex items-center gap-1 hover:bg-white/[0.09] transition-colors"><Palette className="w-3 h-3" /> {tw ? '捏我的臉' : '捏我的脸'}</button>
         </div>
         <div className="flex flex-col gap-2.5 mb-6">
           {members.map(m => {
@@ -58,19 +58,19 @@ export default function RelationPanel({
             const canConfess = romance && m.affection >= 75 && !confessed;
             const activeIntent = intents[m.id] || 'none';
             return (
-              <div key={m.id} className="rounded-[14px] p-3.5 bg-white/[0.03] border border-[rgba(201,162,39,0.3)]">
+              <div key={m.id} className="rounded-[14px] p-3.5 bg-white/[0.10] border border-[rgba(240,197,88,0.3)]">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
                     <span className="text-[13.5px] font-black text-[#F1ECFF]">{m.name}</span>
-                    <span className="text-[9px] font-black text-[#C9A227] uppercase tracking-[0.06em]">{type}</span>
+                    <span className="text-[9px] font-black text-[#F0C558] uppercase tracking-[0.06em]">{type}</span>
                   </div>
                   <div className="flex items-center gap-2.5">
-                    <button onClick={() => onCustomize({ kind: 'idol', id: m.id })} title={tw ? '捏臉' : '捏脸'} className="p-1 rounded-lg bg-white/[0.04] text-[#B7B2D9] border border-white/10 hover:bg-white/[0.09] transition-colors"><Palette className="w-3 h-3" /></button>
-                    <span className="text-[10px] font-mono font-bold text-[#8B86B8]">{m.affection}/100</span>
+                    <button onClick={() => onCustomize({ kind: 'idol', id: m.id })} title={tw ? '捏臉' : '捏脸'} className="p-1 rounded-lg bg-white/[0.07] text-[#C8C4E4] border border-white/20 hover:bg-white/[0.09] transition-colors"><Palette className="w-3 h-3" /></button>
+                    <span className="text-[10px] font-mono font-bold text-[#A6A1CC]">{m.affection}/100</span>
                   </div>
                 </div>
                 <div className="h-[3px] bg-white/[0.08] rounded-full overflow-hidden mb-3">
-                  <div className="h-full rounded-full" style={{ width: `${m.affection}%`, background: 'linear-gradient(90deg,#6C79C4,#C9A227)' }} />
+                  <div className="h-full rounded-full" style={{ width: `${m.affection}%`, background: 'linear-gradient(90deg,#7B87D0,#F0C558)' }} />
                 </div>
                 <div className="flex items-center gap-1.5 flex-wrap">
                   {INTENT_ORDER.map(it => {
@@ -79,8 +79,8 @@ export default function RelationPanel({
                       <button
                         key={it}
                         onClick={() => onSetIntent(m.id, it)}
-                        className={`px-3 py-1 rounded-full text-[10px] font-black transition-all border ${on ? 'text-white border-transparent' : 'bg-transparent text-[#B7B2D9] border-white/15 hover:border-white/30'}`}
-                        style={on ? { background: 'linear-gradient(135deg,#6C79C4,#454F87)' } : undefined}
+                        className={`px-3 py-1 rounded-full text-[10px] font-black transition-all border ${on ? 'text-white border-transparent' : 'bg-transparent text-[#C8C4E4] border-white/25 hover:border-white/30'}`}
+                        style={on ? { background: 'linear-gradient(135deg,#7B87D0,#505C99)' } : undefined}
                       >
                         {INTENT_LABEL[it]}
                       </button>
@@ -104,15 +104,15 @@ export default function RelationPanel({
           <button
             onClick={() => setShowPicker(true)}
             disabled={pairs.length === 0}
-            className="px-2.5 py-1 rounded-lg bg-white/[0.04] text-[#B7B2D9] border border-white/10 text-[10px] font-black flex items-center gap-1 hover:bg-white/[0.09] disabled:opacity-40 transition-colors"
+            className="px-2.5 py-1 rounded-lg bg-white/[0.07] text-[#C8C4E4] border border-white/20 text-[10px] font-black flex items-center gap-1 hover:bg-white/[0.09] disabled:opacity-40 transition-colors"
           >
             <Plus className="w-3 h-3" /> {tw ? '撮合' : '撮合'}
           </button>
         </div>
         {pairs.length === 0 ? (
-          <div className="text-[10px] text-[#8B86B8] py-2">{tw ? '所選愛豆之間暫無既有關係。' : '所选爱豆之间暂无既有关系。'}</div>
+          <div className="text-[10px] text-[#A6A1CC] py-2">{tw ? '所選愛豆之間暫無既有關係。' : '所选爱豆之间暂无既有关系。'}</div>
         ) : shownPairs.length === 0 ? (
-          <div className="text-[10px] text-[#8B86B8] py-2 leading-relaxed">{tw ? '還沒有選擇要撮合的 CP —— 點右上「撮合」挑選。' : '还没有选择要撮合的 CP —— 点右上「撮合」挑选。'}</div>
+          <div className="text-[10px] text-[#A6A1CC] py-2 leading-relaxed">{tw ? '還沒有選擇要撮合的 CP —— 點右上「撮合」挑選。' : '还没有选择要撮合的 CP —— 点右上「撮合」挑选。'}</div>
         ) : (
           <div className="flex flex-col gap-2.5">
             {shownPairs.map(({ a, b, rel }) => {
@@ -120,15 +120,15 @@ export default function RelationPanel({
               const wantMatch = matchmakes.includes(key);
               const type = deriveType(rel.affinity, rel.tension, { romance: wantMatch, confessed: hasFlag(rel, 'confessed') });
               return (
-                <div key={key} className="rounded-[14px] p-3.5 bg-white/[0.03] border flex items-center gap-3" style={{ borderColor: wantMatch ? 'rgba(255,122,147,0.4)' : 'rgba(201,162,39,0.15)' }}>
+                <div key={key} className="rounded-[14px] p-3.5 bg-white/[0.10] border flex items-center gap-3" style={{ borderColor: wantMatch ? 'rgba(255,122,147,0.4)' : 'rgba(240,197,88,0.15)' }}>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="text-[13px] font-black text-[#F1ECFF]">{a.name} <span className="text-[#6C79C4]">×</span> {b.name}</span>
-                      <span className="text-[9px] font-black text-[#C9A227] uppercase tracking-[0.06em]">{type}</span>
+                      <span className="text-[13px] font-black text-[#F1ECFF]">{a.name} <span className="text-[#7B87D0]">×</span> {b.name}</span>
+                      <span className="text-[9px] font-black text-[#F0C558] uppercase tracking-[0.06em]">{type}</span>
                     </div>
-                    <div className="flex items-center gap-3 text-[10px] text-[#B7B2D9]">
+                    <div className="flex items-center gap-3 text-[10px] text-[#C8C4E4]">
                       <span>{tw ? '親密' : '亲密'} {rel.affinity}</span>
-                      {a.group === b.group && <span className="text-[#8B86B8]">{tw ? '隊友' : '队友'}</span>}
+                      {a.group === b.group && <span className="text-[#A6A1CC]">{tw ? '隊友' : '队友'}</span>}
                     </div>
                   </div>
                   <button
@@ -144,7 +144,7 @@ export default function RelationPanel({
             })}
           </div>
         )}
-        <p className="text-[10px] text-[#8B86B8] mt-4 leading-relaxed">{tw ? '設「攻略/朋友/隨緣」定你對每個愛豆的方向；「撮合」把兩個愛豆往一起推。這些意圖會影響劇情走向。' : '设「攻略/朋友/随缘」定你对每个爱豆的方向；「撮合」把两个爱豆往一起推。这些意图会影响剧情走向。'}</p>
+        <p className="text-[10px] text-[#A6A1CC] mt-4 leading-relaxed">{tw ? '設「攻略/朋友/隨緣」定你對每個愛豆的方向；「撮合」把兩個愛豆往一起推。這些意圖會影響劇情走向。' : '设「攻略/朋友/随缘」定你对每个爱豆的方向；「撮合」把两个爱豆往一起推。这些意图会影响剧情走向。'}</p>
       </div>
 
       {/* 撮合选择器：从所有配对里挑要撮合的 */}
@@ -153,9 +153,9 @@ export default function RelationPanel({
           <div className="ink-panel ink-scroll rounded-[20px] p-5 max-w-lg w-full max-h-[85%] overflow-auto" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-[14px] font-black text-[#F1ECFF] flex items-center gap-2"><Heart className="w-4 h-4 text-[#FF7A93]" /> {tw ? '挑選要撮合的 CP' : '挑选要撮合的 CP'}</h3>
-              <button onClick={() => setShowPicker(false)} className="w-7 h-7 rounded-lg bg-white/[0.06] hover:bg-white/[0.12] text-[#B7B2D9] flex items-center justify-center transition-colors"><X className="w-4 h-4" /></button>
+              <button onClick={() => setShowPicker(false)} className="w-7 h-7 rounded-lg bg-white/[0.10] hover:bg-white/[0.12] text-[#C8C4E4] flex items-center justify-center transition-colors"><X className="w-4 h-4" /></button>
             </div>
-            <p className="text-[10px] text-[#8B86B8] mb-3.5 leading-relaxed">{tw ? '選中的會顯示在關係網主頁，並影響劇情推演。右側可自己設定兩人的起始親密度。' : '选中的会显示在关系网主页，并影响剧情推演。右侧可自己设定两人的起始亲密度。'}</p>
+            <p className="text-[10px] text-[#A6A1CC] mb-3.5 leading-relaxed">{tw ? '選中的會顯示在關係網主頁，並影響劇情推演。右側可自己設定兩人的起始親密度。' : '选中的会显示在关系网主页，并影响剧情推演。右侧可自己设定两人的起始亲密度。'}</p>
             <div className="flex flex-col gap-2">
               {pairs.map(({ a, b, rel }) => {
                 const key = pairKey(a.id, b.id);
@@ -163,7 +163,7 @@ export default function RelationPanel({
                 return (
                   <div
                     key={key}
-                    className="rounded-[12px] px-3.5 py-2.5 bg-white/[0.03] border flex items-center gap-3 transition-all"
+                    className="rounded-[12px] px-3.5 py-2.5 bg-white/[0.10] border flex items-center gap-3 transition-all"
                     style={{ borderColor: on ? 'rgba(255,122,147,0.5)' : 'rgba(255,255,255,0.1)' }}
                   >
                     <button onClick={() => onToggleMatchmake(key)} className="flex items-center gap-3 flex-1 min-w-0 text-left">
@@ -176,25 +176,25 @@ export default function RelationPanel({
                         {on && <Heart className="w-2.5 h-2.5 text-white fill-current" />}
                       </span>
                       <span className="flex-1 min-w-0">
-                        <span className="block text-[12.5px] font-black text-[#F1ECFF] truncate">{a.name} <span className="text-[#6C79C4]">×</span> {b.name}</span>
-                        <span className="block text-[9.5px] text-[#8B86B8] mt-0.5">
+                        <span className="block text-[12.5px] font-black text-[#F1ECFF] truncate">{a.name} <span className="text-[#7B87D0]">×</span> {b.name}</span>
+                        <span className="block text-[9.5px] text-[#A6A1CC] mt-0.5">
                           {a.group === b.group ? `${a.group} · ${tw ? '隊友' : '队友'}` : `${a.group} / ${b.group}`}
                         </span>
                       </span>
                     </button>
                     <div className="flex items-center gap-1.5 flex-shrink-0">
-                      <span className="text-[9px] font-black text-[#8B86B8]">{tw ? '親密' : '亲密'}</span>
+                      <span className="text-[9px] font-black text-[#A6A1CC]">{tw ? '親密' : '亲密'}</span>
                       <input
                         type="number" min={0} max={100} value={rel.affinity}
                         onChange={e => onSetPairAffinity(key, Number(e.target.value))}
-                        className="w-14 bg-white/[0.05] border border-white/10 rounded-lg px-2 py-1 text-[12px] font-mono font-bold text-[#F1ECFF] text-center outline-none focus:border-[#C9A227]"
+                        className="w-14 bg-white/[0.09] border border-white/20 rounded-lg px-2 py-1 text-[12px] font-mono font-bold text-[#F1ECFF] text-center outline-none focus:border-[#F0C558]"
                       />
                     </div>
                   </div>
                 );
               })}
             </div>
-            <button onClick={() => setShowPicker(false)} className="w-full mt-4 py-3 rounded-xl text-white font-black text-[13px] transition-all" style={{ background: 'linear-gradient(135deg,#6C79C4,#454F87)', boxShadow: '0 8px 20px -6px rgba(91,107,176,0.7)' }}>
+            <button onClick={() => setShowPicker(false)} className="w-full mt-4 py-3 rounded-xl text-white font-black text-[13px] transition-all" style={{ background: 'linear-gradient(135deg,#7B87D0,#505C99)', boxShadow: '0 8px 20px -6px rgba(106,121,192,0.7)' }}>
               {tw ? '完成' : '完成'}（{matchmakes.length}）
             </button>
           </div>

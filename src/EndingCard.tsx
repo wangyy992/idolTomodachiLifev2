@@ -18,7 +18,7 @@ export default function EndingCard({
   milestoneLog?: { title: string; name: string; day: number; memory: string }[];
 }) {
   const tw = lang === 'traditional';
-  const accent = ending?.color || '#C9A227';
+  const accent = ending?.color || '#F0C558';
 
   return (
     <div className="fixed inset-0 z-[150] bg-black/85 backdrop-blur-md flex items-center justify-center p-4" onClick={onClose}>
@@ -31,7 +31,7 @@ export default function EndingCard({
         {/* 定格舞台 */}
         <div className="relative flex items-end justify-center gap-6 pt-10 pb-6"
           style={{ background: `radial-gradient(60% 70% at 50% 45%, ${accent}22, transparent 70%)` }}>
-          <button onClick={onClose} className="absolute top-3 right-3 w-7 h-7 rounded-lg bg-white/[0.06] hover:bg-white/[0.12] text-[#B7B2D9] flex items-center justify-center"><X className="w-4 h-4" /></button>
+          <button onClick={onClose} className="absolute top-3 right-3 w-7 h-7 rounded-lg bg-white/[0.10] hover:bg-white/[0.12] text-[#C8C4E4] flex items-center justify-center"><X className="w-4 h-4" /></button>
           {cast.slice(0, 3).map((c, i) => (
             <div key={i} className="relative flex flex-col items-center">
               <div className="absolute bottom-1 w-16 h-3 rounded-full bg-black/45 blur-[4px]" />
@@ -48,7 +48,7 @@ export default function EndingCard({
             <div className="text-3xl mb-2">{ending.icon}</div>
             <div className="gold-caption mb-1" style={{ color: accent }}>{ending.subtitle}</div>
             <h2 className="text-[22px] font-black text-[#F1ECFF] mb-3">{ending.title}</h2>
-            <p className="text-[13.5px] leading-[1.9] text-[#B7B2D9] text-left">{ending.body}</p>
+            <p className="text-[13.5px] leading-[1.9] text-[#C8C4E4] text-left">{ending.body}</p>
           </div>
         )}
 
@@ -56,16 +56,16 @@ export default function EndingCard({
           <div className="px-7 pb-5">
             <div className="gold-caption mb-2.5">{tw ? '這一年的重要時刻' : '这一年的重要时刻'}</div>
             <div className="relative flex flex-col gap-3 pl-4">
-              <div className="absolute left-[5px] top-1 bottom-1 w-px bg-[rgba(201,162,39,0.35)]" />
+              <div className="absolute left-[5px] top-1 bottom-1 w-px bg-[rgba(240,197,88,0.35)]" />
               {milestoneLog.map((e, i) => (
                 <div key={i} className="relative">
-                  <div className="absolute -left-4 top-1 w-2.5 h-2.5 rounded-full" style={{ background: '#C9A227', boxShadow: '0 0 8px rgba(201,162,39,0.8)' }} />
+                  <div className="absolute -left-4 top-1 w-2.5 h-2.5 rounded-full" style={{ background: '#F0C558', boxShadow: '0 0 8px rgba(240,197,88,0.8)' }} />
                   <div className="flex items-baseline gap-2">
-                    <span className="text-[9px] font-black text-[#8B86B8]">D{e.day}</span>
+                    <span className="text-[9px] font-black text-[#A6A1CC]">D{e.day}</span>
                     <span className="text-[12.5px] font-black text-[#F1ECFF]">{e.title}</span>
-                    {e.name && <span className="text-[10px] text-[#C9A227]">· {e.name}</span>}
+                    {e.name && <span className="text-[10px] text-[#F0C558]">· {e.name}</span>}
                   </div>
-                  {e.memory && <p className="text-[11px] text-[#B7B2D9] leading-relaxed mt-0.5">{e.memory}</p>}
+                  {e.memory && <p className="text-[11px] text-[#C8C4E4] leading-relaxed mt-0.5">{e.memory}</p>}
                 </div>
               ))}
             </div>
@@ -77,9 +77,9 @@ export default function EndingCard({
             <div className="gold-caption mb-2.5">{tw ? '這一年' : '这一年'}</div>
             <div className="flex flex-col gap-1.5">
               {yearbook.map((r, i) => (
-                <div key={i} className="flex items-center justify-between rounded-[10px] px-3 py-2 bg-white/[0.03]">
-                  <span className="text-[11px] text-[#8B86B8]">{r.label}</span>
-                  <span className="text-[12px] font-black" style={{ color: r.tone === 'gold' ? '#C9A227' : r.tone === 'pink' ? '#FF7A93' : '#D8D4EE' }}>{r.value}</span>
+                <div key={i} className="flex items-center justify-between rounded-[10px] px-3 py-2 bg-white/[0.10]">
+                  <span className="text-[11px] text-[#A6A1CC]">{r.label}</span>
+                  <span className="text-[12px] font-black" style={{ color: r.tone === 'gold' ? '#F0C558' : r.tone === 'pink' ? '#FF7A93' : '#E2DFF4' }}>{r.value}</span>
                 </div>
               ))}
             </div>
@@ -88,7 +88,7 @@ export default function EndingCard({
 
         <div className="px-7 pb-7 flex gap-2.5">
           {onContinue && (
-            <button onClick={onContinue} className="flex-1 py-3 rounded-2xl bg-white/[0.05] border border-white/10 text-[#B7B2D9] text-[13px] font-black hover:bg-white/[0.1] transition-all">
+            <button onClick={onContinue} className="flex-1 py-3 rounded-2xl bg-white/[0.09] border border-white/20 text-[#C8C4E4] text-[13px] font-black hover:bg-white/[0.1] transition-all">
               {tw ? '再來一年' : '再来一年'}
             </button>
           )}

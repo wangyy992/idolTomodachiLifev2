@@ -102,3 +102,32 @@ test('phone portrait asks to rotate; landscape plays and legacy secrets are remo
   await expect(page.getByRole('dialog',{name:'城市地图'})).toBeVisible();
   await page.screenshot({path:'test-results/map-mobile.png',fullPage:true});
 });
+
+test('right dock opens on the world feed, switches tabs and collapses',async({page})=>{
+  await setup(page);
+  const dock=page.getByRole('complementary',{name:'世界动态与日程'});
+  await expect(dock).toBeVisible();                       // 默认开在「动态」
+  await expect(dock.getByText(/暂无动态/)).toBeVisible();
+  await dock.getByRole('button',{name:'日程'}).click();
+  await expect(dock.getByText('成员',{exact:true})).toBeVisible();
+  await dock.getByRole('button',{name:'年历'}).click();
+  await expect(dock.getByText(/打歌期每周/)).toBeVisible();
+  await dock.getByRole('button',{name:'收起'}).click();
+  await expect(dock).toHaveCount(0);
+  await page.getByTitle('动态').click();                   // 顶栏按钮再开回来
+  await expect(page.getByRole('complementary',{name:'世界动态与日程'})).toBeVisible();
+});
+test('setup wizard keeps the confirm button reachable on a landscape phone',async({page})=>{
+  await page.setViewportSize({width:844,height:390});
+  await page.addInitScript(()=>localStorage.clear());
+  await page.goto('/');
+  await page.getByPlaceholder('请输入角色昵称...').fill('测试玩家');
+  for (let i=0;i<2;i++) await page.getByRole('button',{name:/下一步/}).click();
+  await page.getByRole('button',{name:/圈内工作人员/}).click();
+  await page.getByRole('button',{name:/下一步/}).click();
+  await page.locator('button',{hasText:'ITZY'}).first().click();
+  const start=page.getByRole('button',{name:/开始！/});
+  await expect(start).toBeVisible();
+  const box=(await start.boundingBox())!;
+  expect(box.y + box.height).toBeLessThanOrEqual(390);    // 整个按钮都在屏幕里，点得到
+});

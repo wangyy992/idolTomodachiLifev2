@@ -71,7 +71,7 @@ export function availableEnding(ctx: EndingCtx): Ending | null {
       return na && nb ? `${na}×${nb}` : null;
     }).filter(Boolean).join('、');
     return {
-      kind: 'matchmaker', icon: '🔗', color: '#C9A227',
+      kind: 'matchmaker', icon: '🔗', color: '#F0C558',
       title: '红娘',
       subtitle: `你撮合成了 ${ctx.pairedKeys.length} 对`,
       body: `${names} —— 她们大概永远不会知道，最初那点微妙的火花是谁在旁边悄悄扇的风。你什么也没得到，但你看着她们走到了一起。`,
