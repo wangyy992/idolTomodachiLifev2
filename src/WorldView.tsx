@@ -487,17 +487,17 @@ export default function WorldView({
             >
               <div className="absolute left-1/2 -translate-x-1/2" style={{ bottom: -4, width: SPRITE * 0.5, height: SPRITE * 0.16, borderRadius: '50%', background: 'rgba(0,0,0,0.35)', filter: 'blur(2px)' }} />
               <div className="absolute left-1/2 -translate-x-1/2 -top-6 flex flex-col items-center gap-0.5 whitespace-nowrap">
-                {!e.isPlayer && !isNear && <span className="text-sm rounded-full bg-black/50 px-1.5">{completedNeedIds.includes(e.id) ? '✓' : ms ? '⚡' : need ? need.emoji : ''}</span>}
-                {ms && isNear && (
+                {!e.isPlayer && completedNeedIds.includes(e.id) && <span className="text-[11px] font-black text-[#c9e7b8] bg-black/50 rounded-full px-1.5">✓</span>}
+                {ms && (
                   <div className="mb-0.5 px-2 py-0.5 rounded-full text-[11px] font-black flex items-center gap-1 shadow-lg animate-pulse"
                     style={{ background: 'linear-gradient(135deg,#C9A227,#E6C34A)', color: '#1a1408' }}>
                     ⚡ {ms.omen}
                   </div>
                 )}
-                {mood && isNear && (
+                {mood && (
                   <div className="need-bob text-[12px] leading-none mb-0.5 select-none" style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.6))' }}>{mood}</div>
                 )}
-                {need && isNear && (
+                {need && (
                   <div className="need-bob mb-1 flex flex-col items-center">
                     <div className="px-2 py-1 rounded-2xl flex items-center gap-1 shadow-[0_6px_14px_-4px_rgba(0,0,0,0.7)] border"
                       style={{ background: 'linear-gradient(165deg, rgba(40,34,66,0.96), rgba(20,17,38,0.96))', borderColor: 'rgba(201,162,39,0.45)' }}>
@@ -518,7 +518,7 @@ export default function WorldView({
                 <div className={`px-1.5 py-0.5 rounded text-[11px] font-black ${e.isPlayer ? 'bg-white/90 text-[#2A2A3D]' : 'bg-black/45 text-white'}`}>
                   {e.isPlayer ? (tw ? '你' : '你') : e.name}
                 </div>
-                {!e.isPlayer && activity && isNear && <div className="px-1 rounded text-[11px] text-white/80 bg-black/30">{activity.mood.split('、')[0]}</div>}
+                {!e.isPlayer && activity && <div className="px-1 rounded text-[11px] text-white/80 bg-black/30">{activity.mood.split('、')[0]}</div>}
               </div>
               <div className={!e.isPlayer ? 'cursor-pointer' : ''} style={{ filter: ms ? 'drop-shadow(0 0 12px rgba(230,195,74,0.95)) drop-shadow(0 0 4px rgba(255,230,150,0.9))' : isNear ? 'drop-shadow(0 0 9px rgba(201,162,39,0.85)) drop-shadow(0 3px 4px rgba(0,0,0,0.5))' : 'drop-shadow(0 3px 4px rgba(0,0,0,0.45))' }}>
                 <PixelSprite sheet={stripsRef.current[e.id] ?? null} facing={e.facing} frame={e.frame} size={SPRITE} />

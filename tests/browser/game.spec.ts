@@ -51,6 +51,8 @@ test('leaving and reopening resumes a conversation; care completes once and memo
   await page.getByRole('button',{name:'与黄礼志交谈'}).click();
   await expect(page.getByRole('dialog',{name:'当前对话'})).toBeVisible();
   await expect(page.getByText('正在回应…',{exact:true})).not.toBeVisible();
+  // 台词落在头顶气泡里，剧情框在页面下方
+  await expect(page.locator('.dialogue-bubble')).toContainText('谢谢你过来');
   await readAll(page);
   await page.getByRole('button',{name:'暂别 · 进度保留'}).click();
   await page.getByRole('button',{name:'与黄礼志交谈'}).click();
@@ -88,12 +90,14 @@ test('cancelled response does not mutate the save and can be retried without a d
   state=await page.evaluate(()=>JSON.parse(localStorage.getItem('star_reality_kpop_game_state')!));
   expect(state.history.filter((h:any)=>h.role==='user')).toHaveLength(1);
 });
-test('portrait UI is usable and legacy secrets are removed',async({page})=>{
+test('phone portrait asks to rotate; landscape plays and legacy secrets are removed',async({page})=>{
   await page.setViewportSize({width:390,height:844});
   await setup(page,{...seed,playerApiKey:'legacy-secret'});
   const stored=await page.evaluate(()=>localStorage.getItem('star_reality_kpop_game_state'));
   expect(stored).not.toContain('legacy-secret');
-  await expect(page.getByText('请横过手机游玩')).toHaveCount(0);
+  await expect(page.getByText('请横过手机游玩')).toBeVisible();
+  await page.setViewportSize({width:844,height:390});
+  await expect(page.getByText('请横过手机游玩')).not.toBeVisible();
   await page.getByRole('button',{name:'地图',exact:true}).click();
   await expect(page.getByRole('dialog',{name:'城市地图'})).toBeVisible();
   await page.screenshot({path:'test-results/map-mobile.png',fullPage:true});

@@ -14,8 +14,6 @@
     "test:e2e": "playwright test"
   },
   "dependencies": {
-    "@dicebear/avataaars": "^9.0.0",
-    "@dicebear/core": "^9.0.0",
     "@tailwindcss/vite": "^4.1.14",
     "@vercel/analytics": "^1.6.1",
     "@vitejs/plugin-react": "^5.0.4",
@@ -31,7 +29,6 @@
     "@types/node": "^22.14.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
-    "autoprefixer": "^10.4.21",
     "tailwindcss": "^4.1.14",
     "tsx": "^4.23.13",
     "typescript": "~5.8.2",

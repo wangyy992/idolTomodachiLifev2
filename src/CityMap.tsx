@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ArrowRight, Lock, MapPin, X, Users } from 'lucide-react';
+import { ArrowRight, Lock, X, Users } from 'lucide-react';
 import type { Member } from './types';
 import { WORLD_LOCATIONS, getAccessibleLocations, idolsAt, LOCATION_SCOPE, lockReason, parseLocKey, TIME_SLOTS, unitKeyOf } from './worldConfig';
 
@@ -25,6 +25,7 @@ export default function CityMap({ members, day, slot, locationId, identity, lang
   const present = idolsAt(members, selected, day, slot).filter(m => !scoped || unitKeyOf(selected, m) === unit);
   const destination = selected + (scoped && unit ? '@' + unit : '');
   const here = selected === current.base && (!scoped || !current.unit || current.unit === unit);
+  const isCurrentSelected = selected === current.base;
   useEffect(() => {
     const previous = document.activeElement as HTMLElement | null;
     close.current?.focus();
@@ -55,20 +56,22 @@ export default function CityMap({ members, day, slot, locationId, identity, lang
                 const [x,y] = MAP_POINTS[loc.id];
                 const locked = !allowed.has(loc.id), active = selected === loc.id, isCurrent = current.base === loc.id;
                 const count = idolsAt(members, loc.id, day, slot).length;
+                // 地图上只写地名：不加底框、不加 emoji，靠字重和描边压住插画
                 return <button key={loc.id} aria-label={loc.label + (locked ? '，未解锁' : '') + (isCurrent ? '，你在这里' : '')} aria-pressed={active}
                   onClick={() => { setSelected(loc.id); setSelectedUnit(loc.id === current.base ? current.unit || '' : ''); }}
-                  className={'city-map-pin absolute -translate-x-1/2 -translate-y-1/2 min-h-11 rounded-xl px-3 py-2 shadow-lg border-2 flex items-center gap-1.5 text-xs font-bold transition-transform hover:scale-105 ' + (active ? 'bg-[#fff6dd] text-[#302641] border-[#e9bf66]' : locked ? 'bg-[#29253e]/90 text-[#d0c9d9] border-white/20' : 'bg-[#f5f0ff]/95 text-[#403452] border-white/70')}
+                  className="city-map-pin absolute -translate-x-1/2 -translate-y-1/2 min-h-11 px-2 flex flex-col items-center justify-center gap-1 transition-transform hover:scale-[1.06]"
                   style={{ left: x+'%', top: y+'%' }}>
-                  {isCurrent ? <MapPin size={14} className="text-[#9a572a]"/> : locked ? <Lock size={13}/> : <span>{loc.icon}</span>}
-                  <span>{loc.label}</span>
-                  {!locked && count > 0 && <span className="rounded-full bg-[#6e618f] text-white min-w-4 px-1 text-[10px]">{count}</span>}
-                  {isCurrent && <span className="absolute -top-5 left-1/2 -translate-x-1/2 whitespace-nowrap bg-[#fff6dd] text-[#694c2e] rounded-full px-2 text-[10px]">你在这里</span>}
+                  <span className={'city-map-name text-[15px] leading-none font-black tracking-wide ' +
+                    (active ? 'text-[#ffe3a3]' : locked ? 'text-white/60' : 'text-white')}>
+                    {loc.label}{!locked && count > 0 && <span className="ml-1 text-[12px] font-bold opacity-85">{count}</span>}
+                  </span>
+                  <span className={'h-[3px] rounded-full transition-all ' + (active ? 'w-7 bg-[#e9bf66]' : isCurrent ? 'w-2 bg-[#e9bf66]' : 'w-0')} />
                 </button>;
               })}
             </div>
           </div>
           <aside className="city-map-details lg:w-64 shrink-0 p-4 sm:p-5 text-[#f5f0ff] flex flex-col gap-3 border-t lg:border-t-0 lg:border-l border-white/10">
-            <div className="flex items-center gap-2"><span className="text-2xl">{location.icon}</span><h3 className="text-lg font-bold">{location.label}</h3></div>
+            <div className="flex items-center gap-2"><h3 className="text-lg font-bold">{location.label}</h3>{isCurrentSelected && <span className="text-xs text-[#e9bf66]">你在这里</span>}</div>
             {scoped && units.length > 0 && <label className="text-xs text-[#bbb2d0]">选择{LOCATION_SCOPE[selected] === 'company' ? '公司' : '团体'}<select aria-label="选择地点所属单位" value={unit} onChange={e => setSelectedUnit(e.target.value)} className="block w-full mt-1 p-2 rounded-xl bg-[#302b46] text-white border border-white/15">{units.map(u => <option key={u}>{u}</option>)}</select></label>}
             <div className="text-sm text-[#c9c2dc] flex items-center gap-2"><Users size={15}/>{present.length ? present.map(m => m.name).join('、') : '此刻没有关注的人在这里'}</div>
             <p className="text-xs leading-relaxed text-[#aaa1bd]">{allowed.has(selected) ? '选中建筑查看地点，再点击前往。人数会随日程更新。' : lockReason(selected, lang === 'traditional')}</p>
@@ -77,7 +80,7 @@ export default function CityMap({ members, day, slot, locationId, identity, lang
             </button>
           </aside>
         </div>
-        <footer className="hidden sm:flex px-5 py-2 text-xs text-[#a59ab6] gap-4 border-t border-white/10"><span>● 地点人数实时更新</span><span>⌖ 金色标记是你的位置</span><span>锁定地点可查看进入条件</span></footer>
+        <footer className="hidden sm:flex px-5 py-2 text-xs text-[#a59ab6] gap-4 border-t border-white/10"><span>地名后的数字是此刻在那里的人数</span><span>金色下划线是你的位置</span><span>灰掉的地名点开可看进入条件</span></footer>
       </div>
     </div>
   );

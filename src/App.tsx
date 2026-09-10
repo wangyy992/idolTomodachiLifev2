@@ -967,6 +967,15 @@ export default function App() {
 
   return (
     <div className="flex h-dvh overflow-hidden relative">
+      {/* 手机竖屏：这个世界是宽屏的，提示横过来玩 */}
+      <div className="rotate-gate fixed inset-0 z-[300] bg-[#1b1830] flex-col items-center justify-center gap-5 px-8 text-center">
+        <div className="w-16 h-24 rounded-xl border-[3px] border-[#8f9bd6] relative animate-[tilt_1.8s_ease-in-out_infinite]">
+          <div className="absolute inset-x-3 top-2 h-1 rounded bg-[#8f9bd6]/70" />
+          <div className="absolute inset-x-4 bottom-2 h-1.5 rounded-full bg-[#8f9bd6]/70" />
+        </div>
+        <div className="text-white font-black text-base">{lang === 'traditional' ? '請橫過手機遊玩' : '请横过手机游玩'}</div>
+        <div className="text-[#b6bde6] text-xs leading-relaxed">{lang === 'traditional' ? '這個世界是寬螢幕的，橫屏才能完整看到場景' : '这个世界是宽屏的，横屏才能完整看到场景'}</div>
+      </div>
       {/* 新手引导：首次进世界 */}
       {showIntro && worldMode && (
         <div className="fixed inset-0 z-[200] bg-black/70 backdrop-blur-sm flex items-center justify-center p-5" onClick={dismissIntro}>

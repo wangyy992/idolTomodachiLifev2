@@ -60,32 +60,54 @@ export default function SceneView({
     ...members.map(m => ({ id: m.id, name: m.name, appearance: normalizeAppearance(appearances[m.id], getDefaultAppearance(m.id)) })),
     { id: '__player__', name: playerName || '你', appearance: normalizeAppearance(playerAppearance, getPlayerAppearance(playerName || 'you')) },
   ];
+  // 说话人 → 舞台上的哪个立绘：台词气泡浮在他/她头顶，正文照旧落在下方剧情框
+  const speaking = (name: string) => entry?.kind === 'line' && (entry.speaker.includes(name) || name.includes(entry.speaker));
   const send = () => { if (!input.trim() || isLoading) return; onSend(input.trim()); setInput(''); setShowInput(false); };
   return (
     <section className="dialogue-screen fixed inset-0 z-[160] flex flex-col text-white" style={{ background: sceneBg }} role="dialog" aria-modal="true" aria-label="当前对话">
       <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-[#171326]/40 via-transparent to-[#171326]/90" />
-      <header className="relative flex items-center justify-between gap-3 p-3 sm:p-5 shrink-0">
+      <header className="dialogue-head relative flex items-center justify-between gap-3 p-3 sm:p-5 shrink-0">
         <span className="rounded-full bg-black/40 px-4 py-2 text-sm">{sceneLabel}</span>
         <button onClick={onLeave} className="min-h-11 px-4 rounded-full bg-white/90 text-[#29233e] flex items-center gap-2 text-sm"><X size={16} />{tw ? '暫別 · 進度保留' : '暂别 · 进度保留'}</button>
       </header>
-      <div className="relative flex-1 min-h-0 overflow-y-auto dialogue-content px-4 pb-4 sm:px-6">
-        <div className="dialogue-cast flex justify-center items-end gap-3 sm:gap-10 py-3">
-          {cast.map(c => {
-            const active = entry?.kind === 'line' && (entry.speaker.includes(c.name) || c.name.includes(entry.speaker));
-            return <div key={c.id} className={`flex flex-col items-center transition-opacity ${entry?.kind === 'line' && !active ? 'opacity-55' : ''}`}>
-              <div className="dialogue-sprite"><SpritePreview appearance={c.appearance} size={96} /></div>
-              <span className={`text-xs px-3 py-1 rounded-full ${active ? 'bg-[#6C79C4]' : 'bg-black/40'}`}>{c.id === '__player__' ? '你' : c.name}</span>
-            </div>;
-          })}
-        </div>
-        <div className="max-w-3xl mx-auto rounded-3xl bg-[#18142b]/95 border border-[#a69bd1]/40 shadow-xl p-5 sm:p-7">
-          {needLabel && <div className="mb-3 text-xs text-[#d9ceaa]">{needDone ? '✓ 已完成照顾' : '这次的小心愿'} · {needLabel}</div>}
-          <button onClick={advance} className="block w-full text-left min-h-24" aria-label={typing ? '显示完整文字' : !atEnd ? '阅读下一段' : '当前对话'}>
-            {entry?.kind === 'line' && <span className="block text-sm font-bold text-[#c7bcf4] mb-3">{entry.speaker}</span>}
-            <span className="block text-base sm:text-lg leading-relaxed whitespace-pre-wrap">{entry ? typed : isLoading ? '正在等待回应…' : '可以继续刚才的话题。'}</span>
-            {!atEnd && <span className="flex justify-end items-center gap-1 text-xs text-white/60 mt-4">点击继续 <ChevronDown size={14}/></span>}
+
+      {/* 舞台：立绘贴着底部剧情框站，说话的人头顶冒气泡 */}
+      <div className="dialogue-stage relative flex-1 min-h-0 flex items-end justify-center gap-6 sm:gap-14 px-4 pb-2" onClick={advance}>
+        {cast.map(c => {
+          const active = speaking(c.name);
+          const label = c.id === '__player__' ? (tw ? '你' : '你') : c.name;
+          return <div key={c.id} className={`relative flex flex-col items-center transition-opacity ${entry?.kind === 'line' && !active ? 'opacity-55' : ''}`}>
+            {active && <div className="dialogue-bubble absolute bottom-full left-1/2 -translate-x-1/2 mb-3 w-max max-w-[72vw] sm:max-w-[20rem] px-4 py-3 rounded-[1.4rem] bg-white text-[#29233e] text-[13.5px] sm:text-sm leading-relaxed shadow-[0_10px_30px_rgba(12,8,28,0.45)]">
+              {typed}<span className={typing ? 'opacity-70' : 'opacity-0'}>▍</span>
+              <span className="absolute top-full left-1/2 -translate-x-1/2 -mt-1.5 w-3 h-3 bg-white rotate-45 rounded-[2px]" />
+            </div>}
+            <div className={`dialogue-sprite transition-transform ${active ? 'scale-105' : ''}`} style={{ filter: active ? 'drop-shadow(0 0 10px rgba(201,162,39,0.5))' : 'none' }}>
+              <SpritePreview appearance={c.appearance} size={112} />
+            </div>
+            <span className={`mt-1 text-xs px-3 py-1 rounded-full ${active ? 'bg-[#6C79C4]' : 'bg-black/40'}`}>{label}</span>
+          </div>;
+        })}
+      </div>
+
+      {/* 页面下方：选项 + 剧情框 */}
+      <div className="dialogue-dock relative min-h-0 flex flex-col gap-2.5 px-3 pb-3 sm:px-6 sm:pb-5">
+        {atEnd && !typing && !isLoading && <div className="w-full max-w-3xl mx-auto min-h-[3.25rem] max-h-[46dvh] overflow-y-auto grid gap-2">
+          {showInput ? <form onSubmit={e => { e.preventDefault(); send(); }} className="flex gap-2">
+            <input aria-label="自由对话" value={input} onChange={e => setInput(e.target.value)} placeholder="想说什么，或想做什么？" className="min-w-0 flex-1 rounded-2xl bg-white text-[#29233e] px-4 py-3 text-base" />
+            <button aria-label="发送" disabled={!input.trim()} className="min-w-12 rounded-2xl bg-[#6C79C4] p-3 disabled:opacity-40"><Send size={18}/></button>
+          </form> : options.map((o, i) => <button key={i} onClick={() => onChoose(o.action)} className="dialogue-option flex gap-3 items-center min-h-12 bg-[#f5f1ff] text-[#29233e] text-left px-4 py-3 rounded-2xl text-sm sm:text-base hover:bg-white">
+            <span className="text-[#72638c] font-bold">{String.fromCharCode(65+i)}</span>{o.text.replace(/^[A-C][.、。]\s*/, '')}
+          </button>)}
+          {needLabel && !needDone && canCompleteNeed && <button onClick={onCompleteNeed} className="min-h-11 rounded-xl border border-[#c9b67b]/50 text-[#eee0ad] text-sm flex items-center justify-center gap-2"><Check size={16}/>这件事已经办好 · 完成照顾</button>}
+        </div>}
+        <div className="dialogue-box w-full max-w-3xl mx-auto shrink-0 rounded-3xl bg-[#18142b]/95 border border-[#a69bd1]/40 shadow-xl p-4 sm:p-6">
+          {needLabel && <div className="mb-2 text-xs text-[#d9ceaa]">{needDone ? '✓ 已完成照顾' : '这次的小心愿'} · {needLabel}</div>}
+          {entry?.kind === 'line' && <div className="inline-flex items-center mb-2 px-3 py-1 rounded-xl text-white text-[12.5px] font-bold border border-white/15" style={{ background: 'linear-gradient(90deg,#6C79C4,#6C79C4 60%,#C9A227)' }}>{entry.speaker}</div>}
+          <button onClick={advance} className="block w-full text-left min-h-16 max-h-[34dvh] overflow-y-auto" aria-label={typing ? '显示完整文字' : !atEnd ? '阅读下一段' : '当前对话'}>
+            <span className={`block text-base sm:text-lg leading-relaxed whitespace-pre-wrap ${entry?.kind === 'narration' ? 'text-white/85' : ''}`}>{entry ? typed : isLoading ? '正在等待回应…' : '可以继续刚才的话题。'}</span>
+            {!atEnd && <span className="flex justify-end items-center gap-1 text-xs text-white/60 mt-3">点击继续 <ChevronDown size={14}/></span>}
           </button>
-          <div className="mt-4 pt-3 border-t border-white/10 flex items-center justify-between text-xs text-white/60">
+          <div className="mt-3 pt-3 border-t border-white/10 flex items-center justify-between text-xs text-white/60">
             <span>{script.length ? `${Math.min(idx + 1, script.length)} / ${script.length}` : ''}</span>
             {atEnd && !isLoading && <button className="min-h-11 px-2 flex items-center gap-2 text-white/85" onClick={() => setShowInput(v => !v)}><MessageSquareText size={16}/>{showInput ? '返回选项' : '自己说点什么'}</button>}
           </div>
@@ -95,15 +117,6 @@ export default function SceneView({
           </div>}
           {requestError && !isLoading && <div role="alert" className="mt-3 p-3 rounded-xl bg-[#4f2938]/60 text-sm"><p>{requestError}</p><button onClick={onRetry} className="min-h-11 flex gap-2 items-center"><RotateCcw size={15}/>重试刚才的行动</button></div>}
         </div>
-        {atEnd && !typing && !isLoading && <div className="max-w-3xl mx-auto mt-3 grid gap-2">
-          {showInput ? <form onSubmit={e => { e.preventDefault(); send(); }} className="flex gap-2">
-            <input aria-label="自由对话" value={input} onChange={e => setInput(e.target.value)} placeholder="想说什么，或想做什么？" className="min-w-0 flex-1 rounded-2xl bg-white text-[#29233e] px-4 py-3 text-base" />
-            <button aria-label="发送" disabled={!input.trim()} className="min-w-12 rounded-2xl bg-[#6C79C4] p-3 disabled:opacity-40"><Send size={18}/></button>
-          </form> : options.map((o, i) => <button key={i} onClick={() => onChoose(o.action)} className="flex gap-3 items-center min-h-12 bg-[#f5f1ff] text-[#29233e] text-left px-4 py-3 rounded-2xl text-sm sm:text-base hover:bg-white">
-            <span className="text-[#72638c] font-bold">{String.fromCharCode(65+i)}</span>{o.text.replace(/^[A-C][.、。]\s*/, '')}
-          </button>)}
-          {needLabel && !needDone && canCompleteNeed && <button onClick={onCompleteNeed} className="min-h-11 rounded-xl border border-[#c9b67b]/50 text-[#eee0ad] text-sm flex items-center justify-center gap-2"><Check size={16}/>这件事已经办好 · 完成照顾</button>}
-        </div>}
       </div>
     </section>
   );

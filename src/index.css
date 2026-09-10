@@ -113,26 +113,40 @@ input, textarea, select {
   60%, 100% { transform: rotate(90deg); }
 }
 
-/* Portrait play and short landscape screens both remain usable. */
-.rotate-gate { display: none !important; }
+/* 手机横屏 / 矮横屏都要能玩：舞台可以压扁，但台词气泡和剧情框始终在。 */
 .dialogue-screen { height: 100dvh; }
-.dialogue-content { overscroll-behavior: contain; }
-.dialogue-cast { min-height: 120px; }
+.dialogue-dock { overscroll-behavior: contain; }
+.dialogue-stage { min-height: 140px; }
 .city-map-dialog { max-height: calc(100dvh - 16px); }
+/* 地名直接压在插画上：靠描边+投影保证可读，不用底框 */
+.city-map-name {
+  text-shadow:
+    0 1px 2px rgba(8,6,18,.95), 0 0 10px rgba(8,6,18,.85),
+    -1px 0 0 rgba(8,6,18,.75), 1px 0 0 rgba(8,6,18,.75),
+    0 -1px 0 rgba(8,6,18,.75), 0 1px 0 rgba(8,6,18,.75);
+}
 .city-map-scroll { max-height: 65dvh; overscroll-behavior: contain; }
 .city-map-details { max-height: 40dvh; overflow-y: auto; }
 button:focus-visible, [tabindex]:focus-visible { outline: 3px solid #e9bf66; outline-offset: 3px; }
 @media (max-width: 639px) {
   .city-map-scroll { max-height: 45dvh; }
   .city-map-details { gap: 8px; padding: 12px 16px; }
-  .dialogue-cast { min-height: 96px; padding: 4px 0 12px; }
+  .dialogue-stage { min-height: 96px; }
   .dialogue-sprite { transform: scale(.8); margin: -8px; }
 }
 @media (max-height: 500px) {
   .city-map-body { flex-direction: row; }
   .city-map-details { width: 210px; max-height: 65dvh; }
   .city-map-scroll { max-height: 65dvh; }
-  .dialogue-cast { display: none; }
+  .dialogue-stage { min-height: 84px; }
+  .dialogue-head { padding: 6px 10px; }
+  .dialogue-box { padding: 10px 14px; }
+  .dialogue-box button { min-height: 40px; }
+  .dialogue-sprite { transform: scale(.58); margin: -24px; }
+  .dialogue-bubble { font-size: 12.5px; padding: 8px 12px; }
+  .dialogue-option { min-height: 40px; padding-top: 6px; padding-bottom: 6px; }
+  /* 给右下角浮动的「AI 设置」让位，别压住剧情框 */
+  .dialogue-dock { padding-right: 72px; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
