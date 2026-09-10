@@ -935,7 +935,8 @@ export default function App() {
   if (scene) {
     const hist = gameState.history;
     let msg: any = null;
-    for (let i = hist.length - 1; i >= scene.anchor; i--) { if (hist[i].role === MessageRole.ASSISTANT) { msg = hist[i]; break; } }
+    // 续聊同一场相遇：按 encounterKey 找回上一条回复，anchor 只在没有 key 时兜底
+    for (let i = hist.length - 1; i >= 0; i--) { if (hist[i].role === MessageRole.ASSISTANT && (scene.key ? hist[i].encounterKey === scene.key : i >= scene.anchor)) { msg = hist[i]; break; } }
     if (msg) {
       sceneMessageTimestamp = msg.timestamp;
       const txt = (msg.contentBlocks || []).filter((b: any) => b.type === 'text').map((b: any) => b.content).join('\n') || msg.content || '';
@@ -1179,8 +1180,8 @@ export default function App() {
       </aside>
 
       <main className={`flex-1 flex flex-col h-full lg:rounded-l-[2rem] lg:shadow-sm overflow-hidden transition-[margin] duration-300 ${sidebarOpen ? 'lg:ml-56' : ''}`} style={{background: 'rgba(11,10,20,0.72)'}}>
-        <header className="h-11 border-b border-white/[0.06] px-4 flex items-center justify-between z-10 flex-shrink-0" style={{ background: 'rgba(14,12,28,0.85)' }}>
-          <div className="flex items-center gap-3">
+        <header className="h-11 border-b border-white/[0.06] px-2 sm:px-4 gap-2 flex items-center justify-between z-10 flex-shrink-0" style={{ background: 'rgba(14,12,28,0.85)' }}>
+          <div className="flex items-center gap-3 min-w-0">
             <button onClick={handleReset} className="lg:hidden p-2 text-[#B7A9E8] hover:bg-white/10 rounded-xl"><RefreshCw className="w-4 h-4" /></button>
             <button
               onClick={() => setSidebarOpen(v => !v)}
@@ -1189,13 +1190,13 @@ export default function App() {
             >
               {sidebarOpen ? <PanelLeftClose className="w-4 h-4" /> : <PanelLeftOpen className="w-4 h-4" />}
             </button>
-            <div>
+            <div className="min-w-0">
               <div className="text-[10px] text-[#8B86B8] font-black uppercase tracking-widest">Scene</div>
-              <h2 className="text-sm font-bold flex items-center gap-1 text-[#F1ECFF]"><MapPin className="w-3 h-3 text-[#C9A227]" /> {gameState.currentScene}</h2>
+              <h2 className="text-sm font-bold flex items-center gap-1 text-[#F1ECFF] min-w-0"><MapPin className="w-3 h-3 flex-shrink-0 text-[#C9A227]" /> <span className="truncate">{gameState.currentScene}</span></h2>
             </div>
           </div>
           {primaryTarget && (
-            <button onClick={() => setShowDrawer(true)} className="lg:hidden flex items-center gap-2 bg-white/[0.06] px-3 py-2 rounded-2xl border border-white/10 active:scale-95 transition-all">
+            <button onClick={() => setShowDrawer(true)} className="lg:hidden flex items-center gap-2 whitespace-nowrap bg-white/[0.06] px-3 py-2 rounded-2xl border border-white/10 active:scale-95 transition-all">
               <Heart className="w-3 h-3 text-[#C9A227]" />
               <span className="text-[11px] font-bold text-[#F1ECFF]">{primaryTarget?.name}</span>
               <span className="text-[11px] font-black text-[#C9A227]">{primaryTarget?.affection || 0}</span>
@@ -1203,7 +1204,7 @@ export default function App() {
             </button>
           )}
           {apiKeyMissing && <div className="bg-white/[0.06] text-[#C9A227] text-[10px] font-black px-3 py-1 rounded-full border border-[rgba(201,162,39,0.3)] animate-pulse">API KEY MISSING</div>}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
             {!worldMode && (
               <button onClick={openPhone} className="relative flex items-center gap-1.5 text-[11px] font-black px-3 py-1.5 rounded-xl border bg-white/[0.06] text-[#B7B2D9] border-white/10 hover:bg-white/[0.12] transition-all">
                 <Smartphone className="w-3.5 h-3.5" /> {lang === 'traditional' ? '手機' : '手机'}
@@ -1229,7 +1230,7 @@ export default function App() {
             >
               {gameState.language === 'traditional' ? '简' : '繁'}
             </button>
-            <div className="text-right">
+            <div className="text-right whitespace-nowrap">
               <div className="text-[10px] text-[#8B86B8] font-bold">第 {worldDay} 天</div>
               <div className="text-sm font-bold text-[#C9A227]">{['上午', '下午', '晚上'][worldSlot]}</div>
             </div>

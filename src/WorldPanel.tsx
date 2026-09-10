@@ -27,13 +27,13 @@ export default function WorldPanel({
   return (
     <div className="flex flex-col gap-5">
       {/* 玩家卡片 */}
-      <div className="rounded-2xl p-4 text-white shadow-lg relative overflow-hidden border border-[rgba(201,162,39,0.35)]" style={{ background: 'linear-gradient(135deg, #6C79C4, #454F87)' }}>
+      <div className="rounded-2xl p-3 text-white shadow-lg relative overflow-hidden border border-[rgba(201,162,39,0.35)]" style={{ background: 'linear-gradient(135deg, #6C79C4, #454F87)' }}>
         <div className="absolute -right-6 -top-6 w-24 h-24 rounded-full bg-white/10" />
-        <div className="relative flex items-center gap-3">
-          <div className="rounded-2xl bg-white/15 p-1 flex items-center justify-center" style={{ imageRendering: 'pixelated' }}><SpritePreview appearance={playerA} size={52} /></div>
+        <div className="relative flex items-center gap-2.5">
+          <div className="rounded-2xl bg-white/15 p-1 flex items-center justify-center" style={{ imageRendering: 'pixelated' }}><SpritePreview appearance={playerA} size={46} /></div>
           <div className="flex-1 min-w-0">
-            <div className="text-base font-black truncate">{playerName || (tw ? '你' : '你')}</div>
-            <div className="text-[10px] text-white/75 font-bold mt-0.5">{tw ? `第${day}天` : `第${day}天`} · {TIME_SLOTS[slot]}</div>
+            <div className="text-sm font-black truncate">{playerName || (tw ? '你' : '你')}</div>
+            <div className="text-[10px] text-white/75 font-bold mt-0.5 truncate">{tw ? `第${day}天` : `第${day}天`} · {TIME_SLOTS[slot]}</div>
           </div>
           <button onClick={() => onCustomize({ kind: 'player' })} title={tw ? '捏臉' : '捏脸'} className="p-2 rounded-xl bg-white/15 hover:bg-white/30 transition-colors"><Palette className="w-4 h-4" /></button>
         </div>

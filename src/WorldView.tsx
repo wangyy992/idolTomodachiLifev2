@@ -380,8 +380,8 @@ export default function WorldView({
       <div className="absolute inset-0 pointer-events-none" style={{ boxShadow: 'inset 0 0 140px 30px rgba(10,6,25,0.35)' }} />
 
       {/* 顶部：时间 + 地点 + 日程按钮 */}
-      <div className="absolute top-3 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center gap-1.5">
-        <div className="flex items-center gap-2">
+      <div className="absolute top-14 sm:top-3 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center gap-1.5 max-w-[calc(100%-1.5rem)]">
+        <div className="flex items-center justify-center flex-wrap gap-2">
           <div className="px-3 py-1.5 rounded-full text-[#F1ECFF] text-xs font-black flex items-center gap-1.5" style={{ background: 'rgba(14,11,26,0.6)', backdropFilter: 'blur(6px)', border: '1px solid rgba(255,255,255,0.1)' }}>
             <Clock className="w-3.5 h-3.5" /> {tw ? '第' : '第'}{day}{tw ? '天' : '天'} · {TIME_SLOTS[slot]}
           </div>
@@ -438,7 +438,7 @@ export default function WorldView({
           <Rss className="w-4 h-4" />
           {worldFeed.length > 0 && <span className="absolute -top-1 -right-1 min-w-[15px] h-[15px] px-1 rounded-full bg-[#FF7A93] text-white text-[11px] flex items-center justify-center">{worldFeed.length}</span>}
         </button>
-        <button onClick={() => setShowMap(true)} title={tw ? '地圖 · 選位置' : '地图 · 选位置'} className="w-8 h-8 rounded-xl flex items-center justify-center text-[#F1ECFF] transition-all hover:bg-white/10" style={{ background: 'rgba(14,11,26,0.6)', backdropFilter: 'blur(6px)', border: '1px solid rgba(255,255,255,0.1)' }}>
+        <button onClick={() => setShowMap(true)} aria-label={tw ? '地圖' : '地图'} title={tw ? '地圖 · 選位置' : '地图 · 选位置'} className="w-8 h-8 rounded-xl flex items-center justify-center text-[#F1ECFF] transition-all hover:bg-white/10" style={{ background: 'rgba(14,11,26,0.6)', backdropFilter: 'blur(6px)', border: '1px solid rgba(255,255,255,0.1)' }}>
           <MapIcon className="w-4 h-4" />
         </button>
         <button onClick={() => { setPlannerTab('schedule'); setShowPlanner(true); }} title={tw ? '日程 / 年曆' : '日程 / 年历'} className="w-8 h-8 rounded-xl flex items-center justify-center text-[#F1ECFF] transition-all hover:bg-white/10" style={{ background: 'rgba(14,11,26,0.6)', backdropFilter: 'blur(6px)', border: '1px solid rgba(255,255,255,0.1)' }}>

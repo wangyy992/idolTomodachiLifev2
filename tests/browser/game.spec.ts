@@ -36,7 +36,7 @@ test('map opens as an illustrated dialog, retains locks and supports travel', as
   const map=page.getByRole('dialog',{name:'城市地图'});
   await expect(map).toBeVisible();
   await expect.poll(() => map.locator('img').evaluate((img:HTMLImageElement)=>img.naturalWidth)).toBeGreaterThan(0);
-  await page.screenshot({path:'../../outputs/map-desktop.png',fullPage:true});
+  await page.screenshot({path:'test-results/map-desktop.png',fullPage:true});
   await map.getByRole('button',{name:'练习室，未解锁'}).click();
   await expect(map.getByRole('button',{name:'尚未解锁'})).toBeDisabled();
   await map.getByRole('button',{name:'汉江',exact:true}).click();
@@ -96,5 +96,5 @@ test('portrait UI is usable and legacy secrets are removed',async({page})=>{
   await expect(page.getByText('请横过手机游玩')).toHaveCount(0);
   await page.getByRole('button',{name:'地图',exact:true}).click();
   await expect(page.getByRole('dialog',{name:'城市地图'})).toBeVisible();
-  await page.screenshot({path:'../../outputs/map-mobile.png',fullPage:true});
+  await page.screenshot({path:'test-results/map-mobile.png',fullPage:true});
 });

@@ -19,12 +19,8 @@
   --text-muted: #8B86B8;
 }
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
+/* 不要再加全局 `* { margin: 0; padding: 0 }`：Tailwind preflight 已经做了同样的事，
+   而写在这里的版本没有 @layer，会盖掉全站所有 p-* / m-* 工具类。 */
 body {
   font-family: 'Noto Sans SC', sans-serif;
   -webkit-font-smoothing: antialiased;
