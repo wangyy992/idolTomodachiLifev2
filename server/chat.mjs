@@ -55,9 +55,16 @@ export async function readJSON(req) {
 export async function handleChat(req, res, serverKey = '') {
   const send = (code, value) => {
     if (res.destroyed) return;
-    res.writeHead(code, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
+    res.writeHead(code, {
+      'Content-Type': 'application/json; charset=utf-8',
+      'Cache-Control': 'no-store',
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type',
+    });
     res.end(JSON.stringify(value));
   };
+  if (req.method === 'OPTIONS') return send(204, {});
   if (req.method !== 'POST') return send(405, { error: 'Method not allowed' });
   const controller = new AbortController();
   const cancel = () => { if (!res.writableEnded) controller.abort(); };
