@@ -1,6 +1,7 @@
 export interface RequestProgress { phase: 'generating' | 'retrying'; attempt: number; }
 export interface RequestOptions { signal?: AbortSignal; onProgress?: (progress: RequestProgress) => void; }
 let sessionKey = '';
+const chatApiUrl = (import.meta as ImportMeta & { env?: Record<string, string> }).env?.VITE_CHAT_API_URL || '/api/chat';
 export const setSessionApiKey = (key: string) => { sessionKey = key.trim(); };
 export const getSessionApiKey = () => sessionKey;
 
@@ -24,7 +25,7 @@ export async function requestChat(payload: string, options: RequestOptions = {})
     options.signal?.addEventListener('abort', cancel, { once: true });
     const timer = setTimeout(() => controller.abort(), 60000);
     try {
-      const response = await fetch('/api/chat', {
+      const response = await fetch(chatApiUrl, {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: payload, signal: controller.signal,
       });
       if (!response.ok) {
